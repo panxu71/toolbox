@@ -1,0 +1,53 @@
+{
+  "name": "toolbox",
+  "private": false,
+  "version": "1.0.0",
+  "description": "专业的在线工具箱 - 包含JSON格式化、代码格式化、进制转换、密码生成等实用工具",
+  "keywords": [
+    "工具箱",
+    "JSON",
+    "格式化",
+    "转换",
+    "开发工具",
+    "chrome-extension"
+  ],
+  "author": "Toolbox Team",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run web",
+    "web": "set BUILD_TARGET=web&& vite build",
+    "web:serve": "npm run web && vite preview --outDir dist/web",
+    "standalone": "set BUILD_TARGET=standalone&& vite build --config vite.standalone.config.ts",
+    "ext": "set BUILD_TARGET=extension&& vite build",
+    "build:all": "npm run web && npm run ext",
+    "serve": "npm run web && cd dist/web && npx serve -s . -p 8080",
+    "preview": "vite preview",
+    "pack:ext": "npm run ext && cd dist/chrome && powershell Compress-Archive -Path * -DestinationPath ../toolbox-extension-v1.0.0.zip -Force && cd ../..",
+    "pack:web": "npm run web && cd dist/web && powershell Compress-Archive -Path * -DestinationPath ../toolbox-web-v1.0.0.zip -Force && cd ../..",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/xlsx": "^0.0.35",
+    "highlight.js": "^11.11.1",
+    "js-beautify": "^1.15.4",
+    "opencc-js": "^1.0.5",
+    "prettier": "^3.7.4",
+    "qrcode": "^1.5.4",
+    "vue": "^3.5.24",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.32",
+    "@types/js-beautify": "^1.14.3",
+    "@types/node": "^24.10.1",
+    "@types/qrcode": "^1.5.6",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "terser": "^5.44.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vue-tsc": "^3.1.4"
+  }
+}

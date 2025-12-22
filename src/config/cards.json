@@ -1,0 +1,298 @@
+{
+    "cards": {
+        "json": [
+            {
+                "id": "json-format",
+                "title": "JSON格式化",
+                "description": "美化和格式化JSON数据",
+                "icon": "📋",
+                "action": "formatJson",
+                "color": "#10b981",
+                "badge": {
+                    "text": "热门",
+                    "color": "#ef4444"
+                }
+            },
+            {
+                "id": "json-to-excel",
+                "title": "Excel ⇄ JSON 互转",
+                "description": "Excel与JSON数据格式互相转换",
+                "icon": "📊",
+                "action": "jsonToExcel",
+                "color": "#059669",
+                "badge": {
+                    "text": "实用",
+                    "color": "#06b6d4"
+                }
+            },
+            {
+                "id": "json-postman-converter",
+                "title": "Postman ⇄ JSON 互转",
+                "description": "Postman参数与JSON数据格式互相转换",
+                "icon": "🔄",
+                "action": "jsonPostmanConverter",
+                "color": "#f97316"
+            },
+            {
+                "id": "json-to-php",
+                "title": "PHP ⇄ JSON 互转",
+                "description": "PHP数组与JSON数据格式互相转换",
+                "icon": "🐘",
+                "action": "jsonToPhp",
+                "color": "#8b5cf6"
+            }
+        ],
+        "time": [
+            {
+                "id": "timestamp-convert",
+                "title": "时间戳转换",
+                "description": "时间戳与日期格式互转",
+                "icon": "🕐",
+                "action": "convertTimestamp",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "常用",
+                    "color": "#f59e0b"
+                }
+            },
+            {
+                "id": "date-calculator",
+                "title": "日期计算器",
+                "description": "计算日期间隔和加减",
+                "icon": "📅",
+                "action": "calculateDate",
+                "color": "#84cc16"
+            },
+            {
+                "id": "timezone-convert",
+                "title": "时区转换",
+                "description": "不同时区时间转换",
+                "icon": "🌍",
+                "action": "convertTimezone",
+                "color": "#f97316"
+            },
+            {
+                "id": "countdown-timer",
+                "title": "倒计时器",
+                "description": "创建倒计时和定时器",
+                "icon": "⏱️",
+                "action": "countdownTimer",
+                "color": "#ef4444"
+            }
+        ],
+        "crypto": [
+            {
+                "id": "base64-encode",
+                "title": "Base64编码",
+                "description": "Base64编码和解码",
+                "icon": "🔤",
+                "action": "base64Encode",
+                "color": "#6366f1",
+                "badge": {
+                    "text": "热门",
+                    "color": "#ef4444"
+                }
+            },
+            {
+                "id": "url-encode",
+                "title": "URL编码",
+                "description": "URL编码和解码",
+                "icon": "🔗",
+                "action": "urlEncode",
+                "color": "#8b5cf6"
+            },
+            {
+                "id": "md5-hash",
+                "title": "MD5哈希",
+                "description": "生成MD5哈希值",
+                "icon": "🔒",
+                "action": "md5Hash",
+                "color": "#10b981"
+            },
+            {
+                "id": "rsa-key-generator",
+                "title": "RSA密钥生成",
+                "description": "生成RSA公私钥对",
+                "icon": "🔐",
+                "action": "generateRsaKeys",
+                "color": "#dc2626"
+            },
+            {
+                "id": "text-encoder",
+                "title": "文本编码转换",
+                "description": "Base64、URL、HTML、Unicode、ASCII编码转换",
+                "icon": "📝",
+                "action": "encodeText",
+                "color": "#06b6d4"
+            },
+            {
+                "id": "jwt-generator",
+                "title": "JWT 生成器",
+                "description": "生成和解析 JWT Token",
+                "icon": "🔑",
+                "action": "generateJWT",
+                "color": "#f59e0b",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            }
+        ],
+        "convert": [
+            {
+                "id": "chinese-converter",
+                "title": "简繁体转换",
+                "description": "简体中文与繁体中文互相转换",
+                "icon": "🈳",
+                "action": "convertChinese",
+                "color": "#ef4444"
+            },
+            {
+                "id": "text-replacer",
+                "title": "全局文本替换",
+                "description": "支持正则表达式的文本查找替换工具",
+                "icon": "🔍",
+                "action": "replaceText",
+                "color": "#f59e0b"
+            },
+            {
+                "id": "php-serializer",
+                "title": "PHP序列化转换",
+                "description": "PHP序列化与数组、JSON、XML互转",
+                "icon": "🐘",
+                "action": "phpSerialize",
+                "color": "#8b5cf6"
+            },
+            {
+                "id": "unit-convert",
+                "title": "单位转换",
+                "description": "长度、重量、温度单位转换",
+                "icon": "📏",
+                "action": "convertUnit",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "实用",
+                    "color": "#06b6d4"
+                }
+            },
+            {
+                "id": "number-base",
+                "title": "进制转换",
+                "description": "二进制、八进制、十六进制转换",
+                "icon": "🔢",
+                "action": "convertBase",
+                "color": "#84cc16"
+            },
+            {
+                "id": "number-format",
+                "title": "数字格式转换",
+                "description": "阿拉伯数字转罗马数字、中文数字等格式",
+                "icon": "🏛️",
+                "action": "convertNumber",
+                "color": "#8b5cf6",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
+                "id": "code-formatter",
+                "title": "JS/HTML格式化",
+                "description": "JavaScript、HTML、CSS代码格式化和压缩",
+                "icon": "💻",
+                "action": "formatCode",
+                "color": "#6366f1"
+            },
+            {
+                "id": "image-base64",
+                "title": "图片 ⇄ Base64 互转",
+                "description": "图片与Base64编码格式互相转换",
+                "icon": "🖼️",
+                "action": "convertImageBase64",
+                "color": "#f97316",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            }
+        ],
+        "create": [
+            {
+                "id": "password-generator",
+                "title": "密码生成器",
+                "description": "生成安全随机密码",
+                "icon": "🛡️",
+                "action": "generatePassword",
+                "color": "#f59e0b",
+                "badge": {
+                    "text": "常用",
+                    "color": "#f59e0b"
+                }
+            },
+            {
+                "id": "qr-generator",
+                "title": "二维码生成",
+                "description": "生成自定义二维码",
+                "icon": "📱",
+                "action": "generateQR",
+                "color": "#6366f1"
+            },
+            {
+                "id": "crontab-generator",
+                "title": "Crontab表达式",
+                "description": "生成和解析Cron定时任务表达式",
+                "icon": "⏰",
+                "action": "generateCrontab",
+                "color": "#ec4899",
+                "badge": {
+                    "text": "专业",
+                    "color": "#8b5cf6"
+                }
+            }
+        ],
+        "query": [
+            {
+                "id": "string-counter",
+                "title": "字符串长度统计",
+                "description": "统计文本字符数、字节数、单词数等信息",
+                "icon": "📏",
+                "action": "countString",
+                "color": "#06b6d4"
+            },
+            {
+                "id": "ascii-lookup",
+                "title": "ASCII编码查询",
+                "description": "查询字符的ASCII编码值和ASCII表",
+                "icon": "🔤",
+                "action": "lookupAscii",
+                "color": "#8b5cf6"
+            },
+            {
+                "id": "color-reference",
+                "title": "颜色对照表",
+                "description": "常用颜色的HEX、RGB、HSL格式对照",
+                "icon": "🎨",
+                "action": "convertColor",
+                "color": "#ec4899",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
+                "id": "surname-lookup",
+                "title": "百家姓查询",
+                "description": "查询中国传统百家姓的排名、起源和分布",
+                "icon": "👨‍👩‍👧‍👦",
+                "action": "lookupSurname",
+                "color": "#f59e0b",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            }
+        ],
+        "navigation": [],
+        "settings": []
+    }
+}

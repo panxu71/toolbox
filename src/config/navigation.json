@@ -1,0 +1,40 @@
+{
+    "navigation": [
+        {
+            "id": "json",
+            "name": "JSON工具",
+            "icon": "🔧",
+            "active": true
+        },
+        {
+            "id": "time",
+            "name": "时间类工具",
+            "icon": "⏰",
+            "active": false
+        },
+        {
+            "id": "crypto",
+            "name": "加/解密类工具",
+            "icon": "🔐",
+            "active": false
+        },
+        {
+            "id": "convert",
+            "name": "转换类工具",
+            "icon": "🔄",
+            "active": false
+        },
+        {
+            "id": "create",
+            "name": "创建类工具",
+            "icon": "✨",
+            "active": false
+        },
+        {
+            "id": "query",
+            "name": "查询类工具",
+            "icon": "🔍",
+            "active": false
+        }
+    ]
+}

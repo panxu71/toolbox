@@ -1,0 +1,734 @@
+/* 夜间模式（默认） */
+:root,
+:root.dark,
+:root[data-theme="dark"] {
+  /* 主题色 */
+  --primary-color: #6366f1;
+  --primary-color-dark: #4f46e5;
+  --primary-color-alpha: rgba(99, 102, 241, 0.1);
+  --primary-hover: #4f46e5;
+  --primary-light: #818cf8;
+
+  /* 背景色 */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-quaternary: #475569;
+  --bg-card: #1e293b;
+  --bg-hover: #475569;
+
+  /* 文字色 */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* 边框色 */
+  --border-color: #334155;
+  --border-hover: #475569;
+
+  /* 状态色 */
+  --success-color: #10b981;
+  --success-color-dark: #059669;
+  --success-color-alpha: rgba(16, 185, 129, 0.1);
+  --warning-color: #f59e0b;
+  --warning-color-dark: #d97706;
+  --warning-color-alpha: rgba(245, 158, 11, 0.1);
+  --error-color: #ef4444;
+  --error-color-dark: #dc2626;
+  --error-color-alpha: rgba(239, 68, 68, 0.1);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* 白天模式 */
+:root.light,
+:root[data-theme="light"] {
+  /* 主题色 */
+  --primary-color: #6366f1;
+  --primary-color-dark: #4f46e5;
+  --primary-color-alpha: rgba(99, 102, 241, 0.1);
+  --primary-hover: #4f46e5;
+  --primary-light: #818cf8;
+
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-quaternary: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-hover: #e2e8f0;
+
+  /* 文字色 */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
+  /* 边框色 */
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+
+  /* 状态色 */
+  --success-color: #10b981;
+  --success-color-dark: #059669;
+  --success-color-alpha: rgba(16, 185, 129, 0.1);
+  --warning-color: #f59e0b;
+  --warning-color-dark: #d97706;
+  --warning-color-alpha: rgba(245, 158, 11, 0.1);
+  --error-color: #ef4444;
+  --error-color-dark: #dc2626;
+  --error-color-alpha: rgba(239, 68, 68, 0.1);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.25);
+}
+
+/* 通用样式 */
+:root {
+  /* 圆角 */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* 过渡 */
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+/* 通用按钮样式改进 */
+button {
+  font-family: inherit;
+}
+
+/* 改善按钮对比度 */
+.action-btn-small,
+.quick-btn,
+.control-btn,
+.convert-btn,
+.swap-btn,
+.now-btn,
+.parse-btn,
+.add-btn,
+.file-action-btn,
+.url-safe-btn {
+  font-weight: 500 !important;
+  border-width: 1px !important;
+}
+
+/* 确保按钮文字在白天模式下可见 */
+:root.light .action-btn-small,
+:root.light .quick-btn,
+:root.light .swap-btn,
+:root.light .now-btn {
+  color: var(--text-primary) !important;
+  border-color: var(--border-hover) !important;
+}
+
+:root.light .action-btn-small:hover,
+:root.light .quick-btn:hover,
+:root.light .swap-btn:hover,
+:root.light .now-btn:hover {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2) !important;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* 选中文本样式 */
+::selection {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  40%,
+  43% {
+    transform: translate3d(0, -8px, 0);
+  }
+
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+/* 工具类 */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.bounce {
+  animation: bounce 1s ease-in-out;
+}
+
+/* 主题切换动画 */
+*,
+*::before,
+*::after {
+  transition: background-color var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    box-shadow var(--transition),
+    opacity var(--transition);
+}
+
+/* 避免某些元素的过渡动画 */
+.no-transition,
+.no-transition * {
+  transition: none !important;
+}
+
+/* 优化主题切换时的视觉效果 */
+html {
+  transition: background-color var(--transition-slow);
+}
+
+body {
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+/* 白天模式特殊样式调整 */
+:root[data-theme="light"] .card-background {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(99, 102, 241, 0.08)) !important;
+}
+
+:root[data-theme="light"] .status-dot.ready {
+  background: #059669;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.3);
+}
+
+:root[data-theme="light"] .status-dot.development {
+  background: #d97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.3);
+}
+
+/* Highlight.js 主题样式 */
+/* 夜间模式 - Atom One Dark 风格 */
+:root,
+:root.dark,
+:root[data-theme="dark"] {
+  --hljs-bg: transparent;
+  --hljs-color: #abb2bf;
+  --hljs-keyword: #c678dd;
+  --hljs-string: #98c379;
+  --hljs-number: #d19a66;
+  --hljs-literal: #56b6c2;
+  --hljs-punctuation: #abb2bf;
+  --hljs-attr: #e06c75;
+}
+
+/* 白天模式 - Atom One Light 风格 */
+:root.light,
+:root[data-theme="light"] {
+  --hljs-bg: transparent;
+  --hljs-color: #383a42;
+  --hljs-keyword: #a626a4;
+  --hljs-string: #50a14f;
+  --hljs-number: #986801;
+  --hljs-literal: #0184bc;
+  --hljs-punctuation: #383a42;
+  --hljs-attr: #e45649;
+}
+
+/* Highlight.js 样式覆盖 */
+.hljs {
+  background: var(--hljs-bg) !important;
+  color: var(--hljs-color) !important;
+}
+
+.hljs-string {
+  color: var(--hljs-string) !important;
+}
+
+.hljs-number {
+  color: var(--hljs-number) !important;
+}
+
+.hljs-literal {
+  color: var(--hljs-literal) !important;
+}
+
+.hljs-keyword {
+  color: var(--hljs-keyword) !important;
+}
+
+.hljs-punctuation {
+  color: var(--hljs-punctuation) !important;
+}
+
+.hljs-attr {
+  color: var(--hljs-attr) !important;
+}
+
+/* JSON特定样式 */
+.hljs-attr,
+.hljs-name {
+  color: var(--hljs-attr) !important;
+  font-weight: 500;
+}
+
+.hljs-string {
+  color: var(--hljs-string) !important;
+}
+
+.hljs-number {
+  color: var(--hljs-number) !important;
+  font-weight: 500;
+}
+
+.hljs-literal {
+  color: var(--hljs-literal) !important;
+  font-weight: 600;
+}
+
+/* 响应式字体大小 */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+}
+
+/* JSONEditor 主题样式 */
+/* 夜间模式 */
+:root,
+:root.dark,
+:root[data-theme="dark"] {
+  /* JSONEditor 变量 */
+  --jsoneditor-bg: #1e293b;
+  --jsoneditor-bg-secondary: #334155;
+  --jsoneditor-text: #f1f5f9;
+  --jsoneditor-text-secondary: #cbd5e1;
+  --jsoneditor-border: #475569;
+  --jsoneditor-hover: #475569;
+  --jsoneditor-selected: #6366f1;
+}
+
+/* 白天模式 */
+:root.light,
+:root[data-theme="light"] {
+  /* JSONEditor 变量 */
+  --jsoneditor-bg: #ffffff;
+  --jsoneditor-bg-secondary: #f8fafc;
+  --jsoneditor-text: #0f172a;
+  --jsoneditor-text-secondary: #64748b;
+  --jsoneditor-border: #e2e8f0;
+  --jsoneditor-hover: #f1f5f9;
+  --jsoneditor-selected: #6366f1;
+}
+
+/* JSONEditor 样式覆盖 */
+.jsoneditor {
+  background: var(--jsoneditor-bg) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+/* 移除网格背景 */
+.jsoneditor-tree {
+  background: var(--jsoneditor-bg) !important;
+  background-image: none !important;
+}
+
+.jsoneditor-outer {
+  background: var(--jsoneditor-bg) !important;
+  background-image: none !important;
+}
+
+/* 移除默认的网格线 */
+.jsoneditor-tree table {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.jsoneditor-tree td {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.jsoneditor-menu {
+  background: var(--jsoneditor-bg-secondary) !important;
+  border-bottom: 1px solid var(--jsoneditor-border) !important;
+}
+
+.jsoneditor-tree {
+  background: var(--jsoneditor-bg) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-field,
+.jsoneditor-value,
+.jsoneditor-readonly {
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-field[contenteditable="true"]:focus,
+.jsoneditor-value[contenteditable="true"]:focus {
+  background: var(--jsoneditor-hover) !important;
+  outline: 1px solid var(--jsoneditor-selected) !important;
+}
+
+.jsoneditor-tree button.jsoneditor-button {
+  background: var(--jsoneditor-bg-secondary) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-tree button.jsoneditor-button:hover {
+  background: var(--jsoneditor-hover) !important;
+}
+
+.jsoneditor-tree .jsoneditor-selected {
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+.jsoneditor-tree .jsoneditor-highlight {
+  background: rgba(99, 102, 241, 0.2) !important;
+}
+
+.jsoneditor-contextmenu {
+  background: var(--jsoneditor-bg) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.jsoneditor-contextmenu .jsoneditor-menu li button {
+  background: transparent !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-contextmenu .jsoneditor-menu li button:hover {
+  background: var(--jsoneditor-hover) !important;
+}
+
+.jsoneditor-search {
+  background: var(--jsoneditor-bg-secondary) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+}
+
+.jsoneditor-search input {
+  background: var(--jsoneditor-bg) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-search input:focus {
+  border-color: var(--jsoneditor-selected) !important;
+  outline: none !important;
+}
+
+.jsoneditor-statusbar {
+  background: var(--jsoneditor-bg-secondary) !important;
+  border-top: 1px solid var(--jsoneditor-border) !important;
+  color: var(--jsoneditor-text-secondary) !important;
+}
+
+/* Code mode 样式 */
+.jsoneditor-code .ace_editor {
+  background: var(--jsoneditor-bg) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-code .ace_gutter {
+  background: var(--jsoneditor-bg-secondary) !important;
+  color: var(--jsoneditor-text-secondary) !important;
+}
+
+.jsoneditor-code .ace_gutter-active-line {
+  background: var(--jsoneditor-hover) !important;
+}
+
+.jsoneditor-code .ace_cursor {
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-code .ace_selection {
+  background: rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Form mode 样式 */
+.jsoneditor-form {
+  background: var(--jsoneditor-bg) !important;
+}
+
+.jsoneditor-form .jsoneditor-field,
+.jsoneditor-form .jsoneditor-value {
+  background: var(--jsoneditor-bg) !important;
+  border: 1px solid var(--jsoneditor-border) !important;
+  color: var(--jsoneditor-text) !important;
+}
+
+.jsoneditor-form .jsoneditor-field:focus,
+.jsoneditor-form .jsoneditor-value:focus {
+  border-color: var(--jsoneditor-selected) !important;
+  outline: none !important;
+}
+
+/* 滚动条样式 */
+.jsoneditor ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.jsoneditor ::-webkit-scrollbar-track {
+  background: var(--jsoneditor-bg-secondary);
+}
+
+.jsoneditor ::-webkit-scrollbar-thumb {
+  background: var(--jsoneditor-border);
+  border-radius: 4px;
+}
+
+.jsoneditor ::-webkit-scrollbar-thumb:hover {
+  background: var(--jsoneditor-hover);
+}
+
+/* 修复一些图标颜色 */
+.jsoneditor-tree .jsoneditor-button.jsoneditor-collapsed::before,
+.jsoneditor-tree .jsoneditor-button.jsoneditor-expanded::before {
+  color: var(--jsoneditor-text-secondary) !important;
+}
+
+.jsoneditor-tree .jsoneditor-separator {
+  color: var(--jsoneditor-text-secondary) !important;
+}
+
+/* 错误提示样式 */
+.jsoneditor-validation-errors {
+  background: var(--jsoneditor-bg) !important;
+  border: 1px solid #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.jsoneditor-validation-error {
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* 进一步优化背景 */
+.jsoneditor-tree-inner {
+  background: var(--jsoneditor-bg) !important;
+  background-image: none !important;
+}
+
+.jsoneditor-tree .jsoneditor-tree-inner {
+  background: var(--jsoneditor-bg) !important;
+}
+
+/* 确保所有表格元素都没有背景图 */
+.jsoneditor table,
+.jsoneditor tbody,
+.jsoneditor tr,
+.jsoneditor td {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* 优化行间距和边距 */
+.jsoneditor-tree .jsoneditor-tree-inner {
+  padding: 8px !important;
+}
+
+/* 移除可能的网格线 */
+.jsoneditor-tree .jsoneditor-tree-inner table {
+  border-collapse: collapse !important;
+}
+
+.jsoneditor-tree .jsoneditor-tree-inner td {
+  border: none !important;
+  padding: 2px 4px !important;
+}
+
+/* 强制移除所有JSONEditor的背景图案 */
+.json-editor *,
+.jsoneditor *,
+.jsoneditor-tree *,
+.jsoneditor-outer *,
+.jsoneditor-tree-inner * {
+  background-image: none !important;
+}
+
+/* 特别针对可能的网格背景 */
+.jsoneditor-tree {
+  background: var(--jsoneditor-bg) !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  background-size: auto !important;
+  background-position: 0 0 !important;
+}
+
+/* 确保编辑器容器干净 */
+.json-editor-container .jsoneditor {
+  background: var(--jsoneditor-bg) !important;
+  background-image: none !important;
+}
+
+/* 移除任何可能的点状或线状背景 */
+.jsoneditor-tree table,
+.jsoneditor-tree tbody,
+.jsoneditor-tree tr,
+.jsoneditor-tree td,
+.jsoneditor-tree th {
+  background: transparent !important;
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* 强制JSONEditor占满容器 */
+.json-editor-element .jsoneditor {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.json-editor-element .jsoneditor-outer {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.json-editor-element .jsoneditor-tree {
+  width: 100% !important;
+  height: calc(100% - 40px) !important;
+}
+
+/* 简单的JSONEditor样式修复 */
+.json-editor-element .jsoneditor {
+  width: 100% !important;
+  height: 500px !important;
+  border: 1px solid var(--border-color) !important;
+}

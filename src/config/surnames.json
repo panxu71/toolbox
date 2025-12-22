@@ -1,0 +1,342 @@
+{
+    "surnames": [
+        {
+            "surname": "王",
+            "rank": 1,
+            "population": 10152,
+            "pinyin": "Wáng",
+            "origin": "姬姓",
+            "junwang": "太原郡",
+            "distribution": "山东、河南、河北",
+            "description": "王姓是中国第一大姓，主要源于姬姓，部分源于子姓、妫姓和少数民族改姓。王姓在春秋战国时期就已经是大姓，历史上王姓名人辈出。",
+            "celebrities": [
+                "王羲之",
+                "王安石",
+                "王阳明",
+                "王昭君"
+            ]
+        },
+        {
+            "surname": "李",
+            "rank": 2,
+            "population": 9530,
+            "pinyin": "Lǐ",
+            "origin": "嬴姓",
+            "junwang": "陇西郡",
+            "distribution": "河南、山东、四川",
+            "description": "李姓是中国第二大姓，主要源于嬴姓及少数民族改姓。李姓在唐朝时期达到鼎盛，唐朝皇室姓李，李姓因此成为国姓。",
+            "celebrities": [
+                "李白",
+                "李世民",
+                "李清照",
+                "李时珍"
+            ]
+        },
+        {
+            "surname": "张",
+            "rank": 3,
+            "population": 8750,
+            "pinyin": "Zhāng",
+            "origin": "姬姓",
+            "junwang": "清河郡",
+            "distribution": "河北、河南、山东",
+            "description": "张姓是中国第三大姓，主要源于姬姓及少数民族改姓。张姓始祖为张挥，相传为黄帝之孙，因制弓矢有功，被赐姓张。",
+            "celebrities": [
+                "张仲景",
+                "张衡",
+                "张飞",
+                "张居正"
+            ]
+        },
+        {
+            "surname": "刘",
+            "rank": 4,
+            "population": 7210,
+            "pinyin": "Liú",
+            "origin": "祁姓",
+            "junwang": "彭城郡",
+            "distribution": "山东、江苏、河南",
+            "description": "刘姓是中国第四大姓，主要源于祁姓及少数民族改姓。刘姓在汉朝时期成为皇姓，刘邦建立汉朝后，刘姓地位显赫。",
+            "celebrities": [
+                "刘邦",
+                "刘备",
+                "刘禹锡",
+                "刘墉"
+            ]
+        },
+        {
+            "surname": "陈",
+            "rank": 5,
+            "population": 6370,
+            "pinyin": "Chén",
+            "origin": "妫姓",
+            "junwang": "颍川郡",
+            "distribution": "广东、福建、浙江",
+            "description": "陈姓是中国第五大姓，主要源于妫姓。陈姓始祖为陈胡公，是舜帝的后裔。陈姓在南方分布较多，尤其在广东、福建等地。",
+            "celebrities": [
+                "陈胜",
+                "陈寿",
+                "陈独秀",
+                "陈毅"
+            ]
+        },
+        {
+            "surname": "杨",
+            "rank": 6,
+            "population": 4270,
+            "pinyin": "Yáng",
+            "origin": "姬姓",
+            "junwang": "弘农郡",
+            "distribution": "四川、河南、云南",
+            "description": "杨姓是中国第六大姓，主要源于姬姓。杨姓始祖为杨伯侨，是晋武公的儿子。杨姓在隋朝时期成为皇姓。",
+            "celebrities": [
+                "杨坚",
+                "杨广",
+                "杨贵妃",
+                "杨靖宇"
+            ]
+        },
+        {
+            "surname": "赵",
+            "rank": 7,
+            "population": 2750,
+            "pinyin": "Zhào",
+            "origin": "嬴姓",
+            "junwang": "天水郡",
+            "distribution": "河北、河南、山西",
+            "description": "赵姓是中国第七大姓，主要源于嬴姓。赵姓在宋朝时期成为皇姓，宋朝皇室姓赵，因此赵姓地位显赫。",
+            "celebrities": [
+                "赵匡胤",
+                "赵云",
+                "赵孟頫",
+                "赵州"
+            ]
+        },
+        {
+            "surname": "黄",
+            "rank": 8,
+            "population": 2680,
+            "pinyin": "Huáng",
+            "origin": "嬴姓",
+            "junwang": "江夏郡",
+            "distribution": "广东、四川、湖南",
+            "description": "黄姓是中国第八大姓，主要源于嬴姓。黄姓始祖为黄帝后裔，在南方分布较多。",
+            "celebrities": [
+                "黄帝",
+                "黄忠",
+                "黄庭坚",
+                "黄宗羲"
+            ]
+        },
+        {
+            "surname": "周",
+            "rank": 9,
+            "population": 2540,
+            "pinyin": "Zhōu",
+            "origin": "姬姓",
+            "junwang": "汝南郡",
+            "distribution": "湖南、四川、江苏",
+            "description": "周姓是中国第九大姓，主要源于姬姓。周姓与周朝王室同源，是古老的姓氏之一。",
+            "celebrities": [
+                "周公",
+                "周瑜",
+                "周敦颐",
+                "周恩来"
+            ]
+        },
+        {
+            "surname": "吴",
+            "rank": 10,
+            "population": 2460,
+            "pinyin": "Wú",
+            "origin": "姬姓",
+            "junwang": "延陵郡",
+            "distribution": "江苏、广东、浙江",
+            "description": "吴姓是中国第十大姓，主要源于姬姓。吴姓与古代吴国有关，在江南地区分布较多。",
+            "celebrities": [
+                "吴王夫差",
+                "吴承恩",
+                "吴敬梓",
+                "吴昌硕"
+            ]
+        },
+        {
+            "surname": "徐",
+            "rank": 11,
+            "population": 2000,
+            "pinyin": "Xú",
+            "origin": "嬴姓",
+            "junwang": "东海郡",
+            "distribution": "江苏、浙江、山东",
+            "description": "徐姓是中国第十一大姓，主要源于嬴姓。徐姓始祖为徐偃王，在江南地区分布较多。",
+            "celebrities": [
+                "徐霞客",
+                "徐悲鸿",
+                "徐志摩",
+                "徐达"
+            ]
+        },
+        {
+            "surname": "孙",
+            "rank": 12,
+            "population": 1848,
+            "pinyin": "Sūn",
+            "origin": "姬姓",
+            "junwang": "太原郡",
+            "distribution": "山东、江苏、河北",
+            "description": "孙姓是中国第十二大姓，主要源于姬姓。孙姓有多个起源，其中以卫国公孙氏最为著名。",
+            "celebrities": [
+                "孙武",
+                "孙权",
+                "孙中山",
+                "孙思邈"
+            ]
+        },
+        {
+            "surname": "胡",
+            "rank": 13,
+            "population": 1572,
+            "pinyin": "Hú",
+            "origin": "妫姓",
+            "junwang": "安定郡",
+            "distribution": "湖北、安徽、四川",
+            "description": "胡姓是中国第十三大姓，主要源于妫姓。胡姓始祖为胡公满，是舜帝的后裔。",
+            "celebrities": [
+                "胡适",
+                "胡雪岩",
+                "胡锦涛",
+                "胡歌"
+            ]
+        },
+        {
+            "surname": "朱",
+            "rank": 14,
+            "population": 1512,
+            "pinyin": "Zhū",
+            "origin": "曹姓",
+            "junwang": "沛郡",
+            "distribution": "江苏、浙江、安徽",
+            "description": "朱姓是中国第十四大姓，主要源于曹姓。朱姓在明朝时期成为皇姓，朱元璋建立明朝。",
+            "celebrities": [
+                "朱元璋",
+                "朱熹",
+                "朱自清",
+                "朱德"
+            ]
+        },
+        {
+            "surname": "高",
+            "rank": 15,
+            "population": 1450,
+            "pinyin": "Gāo",
+            "origin": "姜姓",
+            "junwang": "渤海郡",
+            "distribution": "山东、河南、辽宁",
+            "description": "高姓是中国第十五大姓，主要源于姜姓。高姓始祖为高傒，是齐国的重要姓氏。",
+            "celebrities": [
+                "高适",
+                "高启",
+                "高尔基",
+                "高俅"
+            ]
+        },
+        {
+            "surname": "林",
+            "rank": 16,
+            "population": 1416,
+            "pinyin": "Lín",
+            "origin": "子姓",
+            "junwang": "西河郡",
+            "distribution": "福建、广东、台湾",
+            "description": "林姓是中国第十六大姓，主要源于子姓。林姓在南方分布较多，尤其在福建、台湾等地。",
+            "celebrities": [
+                "林则徐",
+                "林黛玉",
+                "林语堂",
+                "林徽因"
+            ]
+        },
+        {
+            "surname": "何",
+            "rank": 17,
+            "population": 1404,
+            "pinyin": "Hé",
+            "origin": "姬姓",
+            "junwang": "庐江郡",
+            "distribution": "广东、四川、湖南",
+            "description": "何姓是中国第十七大姓，主要源于姬姓。何姓有多个起源，在南方分布较多。",
+            "celebrities": [
+                "何晏",
+                "何景明",
+                "何香凝",
+                "何炅"
+            ]
+        },
+        {
+            "surname": "郭",
+            "rank": 18,
+            "population": 1382,
+            "pinyin": "Guō",
+            "origin": "姬姓",
+            "junwang": "太原郡",
+            "distribution": "河南、山西、河北",
+            "description": "郭姓是中国第十八大姓，主要源于姬姓。郭姓始祖为郭叔，是周朝的重要姓氏。",
+            "celebrities": [
+                "郭守敬",
+                "郭沫若",
+                "郭嘉",
+                "郭靖"
+            ]
+        },
+        {
+            "surname": "马",
+            "rank": 19,
+            "population": 1260,
+            "pinyin": "Mǎ",
+            "origin": "嬴姓",
+            "junwang": "扶风郡",
+            "distribution": "河南、河北、山东",
+            "description": "马姓是中国第十九大姓，主要源于嬴姓。马姓有多个起源，在北方分布较多。",
+            "celebrities": [
+                "马援",
+                "马超",
+                "马致远",
+                "马云"
+            ]
+        },
+        {
+            "surname": "罗",
+            "rank": 20,
+            "population": 1032,
+            "pinyin": "Luó",
+            "origin": "妫姓",
+            "junwang": "豫章郡",
+            "distribution": "四川、广东、湖南",
+            "description": "罗姓是中国第二十大姓，主要源于妫姓。罗姓在南方分布较多，尤其在四川、湖南等地。",
+            "celebrities": [
+                "罗贯中",
+                "罗隐",
+                "罗振玉",
+                "罗大佑"
+            ]
+        }
+    ],
+    "popularSurnames": [
+        "王",
+        "李",
+        "张",
+        "刘",
+        "陈",
+        "杨",
+        "赵",
+        "黄",
+        "周",
+        "吴"
+    ],
+    "metadata": {
+        "totalCount": 20,
+        "lastUpdated": "2024-12-22",
+        "version": "1.0",
+        "description": "中国百家姓数据库，包含姓氏排名、人口、起源、分布等信息"
+    }
+}
