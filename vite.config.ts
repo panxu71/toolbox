@@ -12,11 +12,11 @@ const isStandaloneBuild = buildTarget === 'standalone'
 const getOutDir = () => {
   switch (buildTarget) {
     case 'extension':
-      return 'dist/chrome'
+      return 'dist'
     case 'standalone':
       return 'dist/standalone'
     case 'web':
-      return 'dist/web'
+      return 'docs'
     default:
       return 'dist'
   }
@@ -111,7 +111,7 @@ export default defineConfig({
       }
     },
     outDir: getOutDir(),
-    emptyOutDir: true,
+    emptyOutDir: buildTarget !== 'extension', // 扩展构建时不清空目录，避免冲突
     minify: 'terser',
     sourcemap: false,
     target: 'es2020',

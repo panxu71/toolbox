@@ -77,7 +77,7 @@ chmod +x scripts/serve-web.sh
 npm run web
 
 # 2. 直接在浏览器中打开
-# 双击 dist/web/index.html
+# 双击 docs/index.html
 # 或拖拽到浏览器窗口
 ```
 
@@ -106,7 +106,7 @@ npm run ext
 # 打开 chrome://extensions/
 # 开启开发者模式
 # 点击"加载已解压的扩展程序"
-# 选择 dist/chrome 目录
+# 选择 dist 目录
 ```
 
 #### 方式二：从发布包安装
@@ -124,8 +124,8 @@ npm run pack:ext
 npm run dev              # 启动开发服务器
 
 # 构建命令
-npm run web              # 构建 Web 版本 (dist/web/)
-npm run ext              # 构建 Chrome 扩展 (dist/chrome/)
+npm run web              # 构建 Web 版本 (docs/)
+npm run ext              # 构建 Chrome 扩展 (dist/)
 npm run build:all        # 同时构建两个版本
 
 # 快速启动
@@ -191,9 +191,8 @@ toolbox/
 │   └── style.css            # 全局样式
 ├── public/                  # 公共资源
 ├── scripts/                 # 构建脚本
-├── dist/                    # 构建输出
-│   ├── web/                 # Web 版本
-│   └── chrome/              # Chrome 扩展
+├── docs/                    # Web 版本构建输出 (GitHub Pages)
+├── dist/                    # Chrome 扩展构建输出
 ├── manifest.json            # 扩展清单
 ├── vite.config.ts           # Vite 配置
 └── package.json             # 项目配置

@@ -18,14 +18,14 @@
     "dev": "vite",
     "build": "npm run web",
     "web": "set BUILD_TARGET=web&& vite build",
-    "web:serve": "npm run web && vite preview --outDir dist/web",
+    "web:serve": "npm run web && vite preview --outDir docs",
     "standalone": "set BUILD_TARGET=standalone&& vite build --config vite.standalone.config.ts",
     "ext": "set BUILD_TARGET=extension&& vite build",
     "build:all": "npm run web && npm run ext",
-    "serve": "npm run web && cd dist/web && npx serve -s . -p 8080",
+    "serve": "npm run web && cd docs && npx serve -s . -p 8080",
     "preview": "vite preview",
-    "pack:ext": "npm run ext && cd dist/chrome && powershell Compress-Archive -Path * -DestinationPath ../toolbox-extension-v1.0.0.zip -Force && cd ../..",
-    "pack:web": "npm run web && cd dist/web && powershell Compress-Archive -Path * -DestinationPath ../toolbox-web-v1.0.0.zip -Force && cd ../..",
+    "pack:ext": "npm run ext && cd dist && powershell Compress-Archive -Path * -DestinationPath ./toolbox-extension-v1.0.0.zip -Force && cd ..",
+    "pack:web": "npm run web && cd docs && powershell Compress-Archive -Path * -DestinationPath ../dist/toolbox-web-v1.0.0.zip -Force && cd ..",
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
