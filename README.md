@@ -2,11 +2,23 @@
 
 > 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 30+ 实用功能
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-username/toolbox)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/panxu71/toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Vue](https://img.shields.io/badge/vue-3.5-brightgreen.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Chrome Extension](https://img.shields.io/badge/chrome-extension-orange.svg)](https://chrome.google.com/webstore)
+
+## 🌐 在线使用
+
+**官方网站**: [http://toolbox.panxu.net](http://toolbox.panxu.net)
+
+无需安装，打开即用！支持所有现代浏览器。
+
+## 📱 Chrome扩展下载
+
+**扩展下载**: [toolbox-extension-v1.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v1.0.0.zip)
+
+下载后解压，在Chrome扩展管理页面加载即可离线使用。
 
 ## ✨ 功能特色
 
@@ -53,6 +65,12 @@
 
 ## 🚀 快速开始
 
+### 🌐 在线使用（最简单）
+直接访问官网：**[https://toolbox.panxu.net](https://toolbox.panxu.net)**
+
+### 📱 Chrome扩展（离线使用）
+下载安装包：**[toolbox-extension-v1.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v1.0.0.zip)**
+
 ## 🌐 Web 版本使用
 
 ### 方式一：一键启动（最方便）
@@ -90,10 +108,18 @@ npm run preview
 
 ### 🔧 Chrome 扩展安装
 
-#### 方式一：从源码构建
+#### 方式一：下载安装包（推荐）
+1. 下载最新版本：[toolbox-extension-v1.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v1.0.0.zip)
+2. 解压下载的zip文件
+3. 打开Chrome浏览器，访问 `chrome://extensions/`
+4. 开启右上角的"开发者模式"
+5. 点击"加载已解压的扩展程序"
+6. 选择解压后的文件夹
+
+#### 方式二：从源码构建
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/toolbox.git
+git clone https://github.com/panxu71/toolbox.git
 cd toolbox
 
 # 2. 安装依赖
@@ -107,14 +133,6 @@ npm run ext
 # 开启开发者模式
 # 点击"加载已解压的扩展程序"
 # 选择 dist 目录
-```
-
-#### 方式二：从发布包安装
-```bash
-# 1. 下载并解压扩展包
-npm run pack:ext
-
-# 2. 在 Chrome 中加载 dist/toolbox-extension-v1.0.0.zip
 ```
 
 ## 📦 构建命令
@@ -207,7 +225,7 @@ toolbox/
 ### 本地开发
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/toolbox.git
+git clone https://github.com/panxu71/toolbox.git
 cd toolbox
 
 # 2. 安装依赖
@@ -252,9 +270,9 @@ npm run type-check
 5. 开启 Pull Request
 
 ### 问题反馈
-- 🐛 [报告 Bug](https://github.com/your-username/toolbox/issues/new?template=bug_report.md)
-- 💡 [功能建议](https://github.com/your-username/toolbox/issues/new?template=feature_request.md)
-- 💬 [讨论交流](https://github.com/your-username/toolbox/discussions)
+- 🐛 [报告 Bug](https://github.com/panxu71/toolbox/issues/new?template=bug_report.md)
+- 💡 [功能建议](https://github.com/panxu71/toolbox/issues/new?template=feature_request.md)
+- 💬 [讨论交流](https://github.com/panxu71/toolbox/discussions)
 
 ## 📊 项目统计
 
@@ -283,9 +301,9 @@ npm run type-check
 ## 📞 联系方式
 
 - 📧 **邮箱**: panxu71@163.com
-- 🐛 **问题反馈**: [GitHub Issues](https://github.com/your-username/toolbox/issues)
-- 💬 **讨论交流**: [GitHub Discussions](https://github.com/your-username/toolbox/discussions)
-- 🌟 **项目主页**: [GitHub Repository](https://github.com/your-username/toolbox)
+- 🐛 **问题反馈**: [GitHub Issues](https://github.com/panxu71/toolbox/issues)
+- 💬 **讨论交流**: [GitHub Discussions](https://github.com/panxu71/toolbox/discussions)
+- 🌟 **项目主页**: [GitHub Repository](https://github.com/panxu71/toolbox)
 
 ---
 
@@ -293,6 +311,6 @@ npm run type-check
 
 **⭐ 如果这个项目对你有帮助，请给它一个星标！**
 
-[🚀 立即使用](https://your-domain.com) | [📦 下载扩展](https://github.com/your-username/toolbox/releases) | [📖 查看文档](https://github.com/your-username/toolbox/wiki)
+[🚀 立即使用](http://toolbox.panxu.net) | [📦 下载扩展](https://github.com/panxu71/toolbox/releases) | [📖 查看文档](https://github.com/panxu71/toolbox/wiki)
 
 </div>

@@ -1,16 +1,8 @@
 <template>
     <div class="theme-toggle-wrapper">
         <button class="theme-toggle" @click="toggleTheme" @contextmenu="handleContextMenu" :title="getTooltip()">
-            <!-- 自动模式图标 -->
-            <svg v-if="isAuto()" class="icon auto-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="m12 2 3 10h-6l3-10z"></path>
-                <path d="m12 22-3-10h6l-3 10z"></path>
-                <path d="m17 16 10-3v6l-10-3z"></path>
-                <path d="m7 8-10 3v-6l10 3z"></path>
-            </svg>
             <!-- 夜间模式图标 -->
-            <svg v-else-if="isDark()" class="icon moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg v-if="isDark()" class="icon moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
             <!-- 白天模式图标 -->
@@ -65,11 +57,11 @@ const showMenu = ref(false)
 
 const getTooltip = () => {
     if (isAuto()) {
-        return '智能切换模式 (右键查看选项)'
+        return `智能切换模式 (当前: ${isDark() ? '夜间' : '白天'}) - 右键查看选项`
     } else if (isDark()) {
-        return '夜间模式 (右键查看选项)'
+        return '夜间模式 - 右键查看选项'
     } else {
-        return '白天模式 (右键查看选项)'
+        return '白天模式 - 右键查看选项'
     }
 }
 
@@ -126,15 +118,16 @@ onUnmounted(() => {
     color: var(--text-primary);
 }
 
-.auto-icon {
-    color: #f59e0b;
-}
-
 .sun-icon {
     color: #f59e0b;
 }
 
 .moon-icon {
+    color: #64748b;
+}
+
+/* 在夜间模式下，月亮图标使用更亮的颜色 */
+[data-theme="dark"] .moon-icon {
     color: #e2e8f0;
 }
 

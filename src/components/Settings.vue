@@ -130,7 +130,7 @@
                     </div>
                     <div class="about-item">
                         <span class="about-label">开源地址</span>
-                        <a href="https://github.com/your-username/toolbox" target="_blank" class="about-link">
+                        <a href="https://github.com/panxu71/toolbox" target="_blank" class="about-link">
                             GitHub
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
