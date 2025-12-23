@@ -218,6 +218,18 @@
         ],
         "create": [
             {
+                "id": "api-tester",
+                "title": "API接口测试",
+                "description": "在线POST/GET接口测试工具",
+                "icon": "🌐",
+                "action": "testApi",
+                "color": "#10b981",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
                 "id": "password-generator",
                 "title": "密码生成器",
                 "description": "生成安全随机密码",

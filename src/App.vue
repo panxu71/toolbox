@@ -32,6 +32,7 @@ import ColorReference from './components/ColorReference.vue'
 import JwtGenerator from './components/JwtGenerator.vue'
 import ImageBase64Converter from './components/ImageBase64Converter.vue'
 import SurnameLookup from './components/SurnameLookup.vue'
+import ApiTester from './components/ApiTester.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
@@ -93,6 +94,7 @@ const handleToolSelection = (toolId: string, action: string) => {
         'number-base': 'convert',
 
         // 创建工具
+        'api-tester': 'create',
         'password-generator': 'create',
         'qr-generator': 'create',
         'crontab-generator': 'create',
@@ -246,6 +248,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
 
             // 创建工具
+            case 'testApi':
+                openPage('api-tester')
+                return // 不需要loading状态
             case 'generateQR':
                 openPage('qr-generator')
                 return // 不需要loading状态
@@ -674,6 +679,7 @@ onMounted(() => {
                 <DateCalculator v-if="currentPage === 'date-calculator'" @back="closePage" />
                 <CountdownTimer v-if="currentPage === 'countdown-timer'" @back="closePage" />
                 <TimezoneConverter v-if="currentPage === 'timezone-converter'" @back="closePage" />
+                <ApiTester v-if="currentPage === 'api-tester'" @back="closePage" />
                 <Base64Converter v-if="currentPage === 'base64-converter'" @back="closePage" />
                 <UrlConverter v-if="currentPage === 'url-converter'" @back="closePage" />
                 <HashGenerator v-if="currentPage === 'hash-generator'" @back="closePage" />

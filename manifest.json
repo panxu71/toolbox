@@ -7,17 +7,20 @@
         "activeTab",
         "storage"
     ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.shields.io;"
+    },
     "icons": {
-        "16": "icons/icon16.png",
-        "32": "icons/icon32.png",
-        "48": "icons/icon48.png"
+        "16": "icon16.png",
+        "32": "icon32.png",
+        "48": "icon48.png"
     },
     "action": {
         "default_title": "Toolbox 工具箱",
         "default_icon": {
-            "16": "icons/icon16.png",
-            "32": "icons/icon32.png",
-            "48": "icons/icon48.png"
+            "16": "icon16.png",
+            "32": "icon32.png",
+            "48": "icon48.png"
         }
     },
     "content_scripts": [
@@ -37,13 +40,15 @@
         {
             "resources": [
                 "assets/*",
-                "icons/*"
+                "icons/*",
+                "*.css",
+                "*.js"
             ],
             "matches": [
                 "<all_urls>"
             ]
         }
     ],
-    "homepage_url": "https://github.com/your-username/toolbox",
+    "homepage_url": "https://github.com/panxu71/toolbox",
     "author": "Toolbox Team"
 }

@@ -35,15 +35,15 @@ export default defineConfig({
         if (!existsSync(iconsDir)) {
           mkdirSync(iconsDir, { recursive: true })
         }
-        
-        // 复制图标文件
+
+        // 复制图标文件到根目录
         const iconFiles = ['icon16.png', 'icon32.png', 'icon48.png']
         iconFiles.forEach(file => {
           const src = resolve(__dirname, `src/assets/icons/${file}`)
-          const dest = resolve(__dirname, `${outDir}/icons/${file}`)
+          const dest = resolve(__dirname, `${outDir}/${file}`)
           if (existsSync(src)) {
             copyFileSync(src, dest)
-            console.log(`✅ 复制图标: ${file}`)
+            console.log(`✅ 复制图标到根目录: ${file}`)
           }
         })
 
@@ -59,7 +59,7 @@ export default defineConfig({
       }
     }
   ],
-  base: './', // 统一使用相对路径，支持本地文件访问
+  base: isExtensionBuild ? '/' : './', // 扩展模式使用绝对路径，其他模式使用相对路径
   build: {
     rollupOptions: {
       input: isExtensionBuild ? {
@@ -73,7 +73,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html')
       },
       output: isExtensionBuild ? {
-        // 扩展模式：固定文件名
+        // 扩展模式：固定文件名，CSS放在根目录
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
         assetFileNames: (assetInfo) => {
@@ -81,6 +81,9 @@ export default defineConfig({
           const ext = info[info.length - 1]
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
             return `icons/[name].[ext]`
+          }
+          if (ext === 'css') {
+            return `[name].[ext]` // CSS文件放在根目录
           }
           return `assets/[name].[ext]`
         }
