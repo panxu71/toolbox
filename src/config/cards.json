@@ -280,6 +280,18 @@
                 "color": "#8b5cf6"
             },
             {
+                "id": "regex-tester",
+                "title": "正则表达式测试",
+                "description": "测试正则表达式匹配结果和语法验证",
+                "icon": "🔍",
+                "action": "testRegex",
+                "color": "#10b981",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
                 "id": "color-reference",
                 "title": "颜色对照表",
                 "description": "常用颜色的HEX、RGB、HSL格式对照",

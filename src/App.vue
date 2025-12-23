@@ -32,6 +32,7 @@ import ColorReference from './components/ColorReference.vue'
 import JwtGenerator from './components/JwtGenerator.vue'
 import ImageBase64Converter from './components/ImageBase64Converter.vue'
 import SurnameLookup from './components/SurnameLookup.vue'
+import RegexTester from './components/RegexTester.vue'
 import ApiTester from './components/ApiTester.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
@@ -287,8 +288,8 @@ const executeFunction = async (action: string) => {
                 await httpStatus()
                 break
             case 'testRegex':
-                await testRegex()
-                break
+                openPage('regex-tester')
+                return // 不需要loading状态
 
             // 导航工具
             case 'manageBookmarks':
@@ -448,10 +449,6 @@ const httpStatus = async () => {
     }
     console.log('常见HTTP状态码:', codes)
     showMessage('HTTP状态码信息已显示在控制台')
-}
-
-const testRegex = async () => {
-    showMessage('正则测试功能开发中...')
 }
 
 // 导航工具函数
@@ -701,6 +698,7 @@ onMounted(() => {
                 <NumberConverter v-if="currentPage === 'number-converter'" @back="closePage" />
                 <ColorReference v-if="currentPage === 'color-reference'" @back="closePage" />
                 <JwtGenerator v-if="currentPage === 'jwt-generator'" @back="closePage" />
+                <RegexTester v-if="currentPage === 'regex-tester'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
             </template>
         </div>

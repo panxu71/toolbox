@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@types/xlsx": "^0.0.35",
+    "crypto-js": "^4.2.0",
     "highlight.js": "^11.11.1",
     "js-beautify": "^1.15.4",
     "opencc-js": "^1.0.5",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.1.32",
+    "@types/crypto-js": "^4.2.2",
     "@types/js-beautify": "^1.14.3",
     "@types/node": "^24.10.1",
     "@types/qrcode": "^1.5.6",

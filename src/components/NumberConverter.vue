@@ -11,139 +11,142 @@
         </div>
 
         <div class="converter-content">
-            <!-- 输入区域 -->
-            <div class="input-section">
-                <h3 class="section-title">数字输入</h3>
+            <!-- 主要内容区域：左右布局 -->
+            <div class="main-content">
+                <!-- 左侧：输入区域 -->
+                <div class="input-section">
+                    <h3 class="section-title">数字输入</h3>
 
-                <!-- 输入类型选择 -->
-                <div class="input-type-selector">
-                    <button :class="['type-btn', { active: inputType === 'number' }]" @click="setInputType('number')">
-                        阿拉伯数字
-                    </button>
-                    <button :class="['type-btn', { active: inputType === 'chinese' }]" @click="setInputType('chinese')">
-                        中文数字
-                    </button>
-                    <button :class="['type-btn', { active: inputType === 'roman' }]" @click="setInputType('roman')">
-                        罗马数字
-                    </button>
-                </div>
-
-                <div class="input-wrapper">
-                    <div class="input-container">
-                        <input v-model="inputNumber" :type="inputType === 'number' ? 'number' : 'text'"
-                            :step="inputType === 'number' ? '0.01' : undefined" class="number-input"
-                            :placeholder="getPlaceholder()" @input="convertNumber" />
-                        <button v-if="inputNumber" class="clear-btn" @click="clearInput" title="清空">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
+                    <!-- 输入类型选择 -->
+                    <div class="input-type-selector">
+                        <button :class="['type-btn', { active: inputType === 'number' }]" @click="setInputType('number')">
+                            阿拉伯数字
+                        </button>
+                        <button :class="['type-btn', { active: inputType === 'chinese' }]" @click="setInputType('chinese')">
+                            中文数字
+                        </button>
+                        <button :class="['type-btn', { active: inputType === 'roman' }]" @click="setInputType('roman')">
+                            罗马数字
                         </button>
                     </div>
-                    <div class="input-hint">{{ getInputHint() }}</div>
-                </div>
 
-                <!-- 快速示例 -->
-                <div class="examples-section">
-                    <h4 class="examples-title">快速示例</h4>
-                    <div class="examples-grid">
-                        <button class="example-btn" @click="setExample(1)">
-                            <div class="example-number">1</div>
-                            <div class="example-roman">I</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(10)">
-                            <div class="example-number">10</div>
-                            <div class="example-roman">X</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(100)">
-                            <div class="example-number">100</div>
-                            <div class="example-roman">C</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(500)">
-                            <div class="example-number">500</div>
-                            <div class="example-roman">D</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(1000)">
-                            <div class="example-number">1000</div>
-                            <div class="example-roman">M</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(2024)">
-                            <div class="example-number">2024</div>
-                            <div class="example-roman">MMXXIV</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(11111)">
-                            <div class="example-number">11111</div>
-                            <div class="example-roman">大数字</div>
-                        </button>
-                        <button class="example-btn" @click="setExample(99999)">
-                            <div class="example-number">99999</div>
-                            <div class="example-roman">大数字</div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 转换结果 -->
-            <div class="results-section">
-                <h3 class="section-title">转换结果</h3>
-                <div class="results-grid">
-                    <!-- 第一个结果卡片 -->
-                    <div class="result-card primary">
-                        <div class="result-header">
-                            <span class="result-icon">{{ getFirstResultIcon() }}</span>
-                            <span class="result-name">{{ getFirstResultName() }}</span>
-                            <button class="copy-btn" @click="copyResult(getFirstResultValue())" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <div class="input-wrapper">
+                        <div class="input-container">
+                            <input v-model="inputNumber" :type="inputType === 'number' ? 'number' : 'text'"
+                                :step="inputType === 'number' ? '0.01' : undefined" class="number-input"
+                                :placeholder="getPlaceholder()" @input="convertNumber" />
+                            <button v-if="inputNumber" class="clear-btn" @click="clearInput" title="清空">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
                                 </svg>
                             </button>
                         </div>
-                        <div class="result-body">
-                            <div :class="['result-value', getFirstResultClass()]">{{ getFirstResultValue() || '-' }}
+                        <div class="input-hint">{{ getInputHint() }}</div>
+                    </div>
+
+                    <!-- 快速示例 -->
+                    <div class="examples-section">
+                        <h4 class="examples-title">快速示例</h4>
+                        <div class="examples-grid">
+                            <button class="example-btn" @click="setExample(1)">
+                                <div class="example-number">1</div>
+                                <div class="example-roman">I</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(10)">
+                                <div class="example-number">10</div>
+                                <div class="example-roman">X</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(100)">
+                                <div class="example-number">100</div>
+                                <div class="example-roman">C</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(500)">
+                                <div class="example-number">500</div>
+                                <div class="example-roman">D</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(1000)">
+                                <div class="example-number">1000</div>
+                                <div class="example-roman">M</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(2024)">
+                                <div class="example-number">2024</div>
+                                <div class="example-roman">MMXXIV</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(11111)">
+                                <div class="example-number">11111</div>
+                                <div class="example-roman">大数字</div>
+                            </button>
+                            <button class="example-btn" @click="setExample(99999)">
+                                <div class="example-number">99999</div>
+                                <div class="example-roman">大数字</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：转换结果 -->
+                <div class="results-section">
+                    <h3 class="section-title">转换结果</h3>
+                    <div class="results-grid">
+                        <!-- 第一个结果卡片 -->
+                        <div class="result-card primary">
+                            <div class="result-header">
+                                <span class="result-icon">{{ getFirstResultIcon() }}</span>
+                                <span class="result-name">{{ getFirstResultName() }}</span>
+                                <button class="copy-btn" @click="copyResult(getFirstResultValue())" title="复制">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="result-desc">{{ getFirstResultDesc() }}</div>
-                        </div>
-                    </div>
-
-                    <!-- 第二个结果卡片 -->
-                    <div class="result-card">
-                        <div class="result-header">
-                            <span class="result-icon">{{ getSecondResultIcon() }}</span>
-                            <span class="result-name">{{ getSecondResultName() }}</span>
-                            <button class="copy-btn" @click="copyResult(getSecondResultValue())" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="result-body">
-                            <div :class="['result-value', getSecondResultClass()]">{{ getSecondResultValue() || '-' }}
+                            <div class="result-body">
+                                <div :class="['result-value', getFirstResultClass()]">{{ getFirstResultValue() || '-' }}
+                                </div>
+                                <div class="result-desc">{{ getFirstResultDesc() }}</div>
                             </div>
-                            <div class="result-desc">{{ getSecondResultDesc() }}</div>
                         </div>
-                    </div>
 
-                    <!-- 第三个结果卡片 -->
-                    <div class="result-card">
-                        <div class="result-header">
-                            <span class="result-icon">{{ getThirdResultIcon() }}</span>
-                            <span class="result-name">{{ getThirdResultName() }}</span>
-                            <button class="copy-btn" @click="copyResult(getThirdResultValue())" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
+                        <!-- 第二个结果卡片 -->
+                        <div class="result-card">
+                            <div class="result-header">
+                                <span class="result-icon">{{ getSecondResultIcon() }}</span>
+                                <span class="result-name">{{ getSecondResultName() }}</span>
+                                <button class="copy-btn" @click="copyResult(getSecondResultValue())" title="复制">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="result-body">
+                                <div :class="['result-value', getSecondResultClass()]">{{ getSecondResultValue() || '-' }}
+                                </div>
+                                <div class="result-desc">{{ getSecondResultDesc() }}</div>
+                            </div>
                         </div>
-                        <div class="result-body">
-                            <div class="result-value">{{ getThirdResultValue() || '-' }}</div>
-                            <div class="result-desc">{{ getThirdResultDesc() }}</div>
+
+                        <!-- 第三个结果卡片 -->
+                        <div class="result-card">
+                            <div class="result-header">
+                                <span class="result-icon">{{ getThirdResultIcon() }}</span>
+                                <span class="result-name">{{ getThirdResultName() }}</span>
+                                <button class="copy-btn" @click="copyResult(getThirdResultValue())" title="复制">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="result-body">
+                                <div class="result-value">{{ getThirdResultValue() || '-' }}</div>
+                                <div class="result-desc">{{ getThirdResultDesc() }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -421,7 +424,12 @@ const toChineseUpper = (num: number): string => {
 
     // 处理整数部分
     if (integerPart === 0) {
-        result = '零元'
+        // 如果整数部分为0，且有小数部分，则不显示"零元"
+        if (jiao > 0 || fen > 0) {
+            result = ''
+        } else {
+            result = '零元'
+        }
     } else if (integerPart < 10000) {
         result = convertSection(integerPart) + '元'
     } else if (integerPart < 100000000) {
@@ -452,7 +460,10 @@ const toChineseUpper = (num: number): string => {
 
     // 处理小数部分
     if (jiao === 0 && fen === 0) {
-        result += '整'
+        // 如果没有小数部分且整数部分不为0，加"整"
+        if (integerPart > 0) {
+            result += '整'
+        }
     } else {
         if (jiao > 0) {
             result += digits[jiao] + '角'
@@ -861,6 +872,13 @@ watch(inputNumber, convertNumber)
     min-height: calc(100vh - 120px);
 }
 
+/* 主要内容区域：左右布局 */
+.main-content {
+    display: flex;
+    gap: 2rem;
+    flex: 1;
+}
+
 /* 输入区域 */
 .input-section {
     background: white;
@@ -868,6 +886,8 @@ watch(inputNumber, convertNumber)
     border-radius: 1rem;
     padding: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-width: 400px;
 }
 
 .section-title {
@@ -987,28 +1007,31 @@ watch(inputNumber, convertNumber)
 }
 
 .examples-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-start;
 }
 
 .example-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
+    min-width: 80px;
+    flex-shrink: 0;
 }
 
 .example-btn:hover {
     border-color: #3b82f6;
     background: #f8fafc;
-    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .example-number {
@@ -1030,11 +1053,13 @@ watch(inputNumber, convertNumber)
     border-radius: 1rem;
     padding: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-width: 400px;
 }
 
 .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
 }
 
@@ -1232,10 +1257,15 @@ watch(inputNumber, convertNumber)
         gap: 1.5rem;
     }
 
+    .main-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
     .input-section,
-    .results-section,
-    .rules-section {
+    .results-section {
         padding: 1.5rem;
+        min-width: unset;
     }
 
     .rules-section {
@@ -1243,11 +1273,16 @@ watch(inputNumber, convertNumber)
     }
 
     .examples-grid {
-        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .example-btn {
+        min-width: 70px;
+        padding: 0.5rem 0.25rem;
     }
 
     .results-grid {
-        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .rules-content {
