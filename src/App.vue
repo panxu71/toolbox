@@ -143,6 +143,10 @@ const closeSettings = () => {
     showSettings.value = false
 }
 
+const openFeedback = () => {
+    window.open('https://github.com/panxu71/toolbox/issues', '_blank')
+}
+
 // 执行功能
 const executeFunction = async (action: string) => {
     console.log('执行功能:', action)
@@ -650,7 +654,8 @@ onMounted(() => {
             <!-- 主页面 -->
             <template v-if="!currentPage">
                 <!-- 左侧导航 -->
-                <Navigation :navigationItems="navigationItems" :activeNav="activeNav" @navigate="handleNavigate" @openSettings="openSettings" />
+                <Navigation :navigationItems="navigationItems" :activeNav="activeNav" @navigate="handleNavigate"
+                    @openSettings="openSettings" @openFeedback="openFeedback" />
 
                 <!-- 右侧功能区 -->
                 <div class="content-area">
@@ -700,7 +705,8 @@ onMounted(() => {
                 <div class="settings-header">
                     <h2>设置</h2>
                     <button class="close-btn" @click="closeSettings">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>

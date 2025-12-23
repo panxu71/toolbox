@@ -2,11 +2,12 @@
     <div class="theme-toggle-wrapper">
         <button class="theme-toggle" @click="toggleTheme" @contextmenu="handleContextMenu" :title="getTooltip()">
             <!-- 夜间模式图标 -->
-            <svg v-if="isDark()" class="icon moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg v-if="isDark()" class="icon moon-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
             <!-- 白天模式图标 -->
-            <svg v-else class="icon sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg v-else class="icon sun-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
                 <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -18,7 +19,7 @@
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
         </button>
-        
+
         <!-- 右键菜单 -->
         <div v-if="showMenu" class="theme-menu" @click.stop>
             <div class="menu-item" @click="setTheme('auto')" :class="{ active: isAuto() }">
@@ -91,8 +92,8 @@ onUnmounted(() => {
 }
 
 .theme-toggle {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);

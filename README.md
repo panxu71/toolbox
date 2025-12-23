@@ -66,7 +66,7 @@
 ## 🚀 快速开始
 
 ### 🌐 在线使用（最简单）
-直接访问官网：**[https://toolbox.panxu.net](https://toolbox.panxu.net)**
+直接访问官网：**[http://toolbox.panxu.net](http://toolbox.panxu.net)**
 
 ### 📱 Chrome扩展（离线使用）
 下载安装包：**[toolbox-extension-v1.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v1.0.0.zip)**
