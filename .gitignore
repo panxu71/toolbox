@@ -12,6 +12,7 @@ dist
 !docs
 dist-ssr
 *.local
+RELEASE_NOTES_v1.1.0.md
 
 # Editor directories and files
 .vscode/*
