@@ -230,6 +230,18 @@
                 }
             },
             {
+                "id": "uuid-generator",
+                "title": "UUID生成器",
+                "description": "生成各种版本的UUID（通用唯一标识符）",
+                "icon": "🆔",
+                "action": "generateUuid",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
                 "id": "password-generator",
                 "title": "密码生成器",
                 "description": "生成安全随机密码",
@@ -263,6 +275,18 @@
             }
         ],
         "query": [
+            {
+                "id": "text-compare",
+                "title": "文本比对",
+                "description": "比较两个文本的差异，支持文件上传",
+                "icon": "📄",
+                "action": "compareText",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
             {
                 "id": "string-counter",
                 "title": "字符串长度统计",
@@ -310,6 +334,18 @@
                 "icon": "👨‍👩‍👧‍👦",
                 "action": "lookupSurname",
                 "color": "#f59e0b",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
+                "id": "mime-type-reference",
+                "title": "MIME-Type速查表",
+                "description": "常用文件类型的MIME-Type快速查询",
+                "icon": "📋",
+                "action": "mimeTypeReference",
+                "color": "#8b5cf6",
                 "badge": {
                     "text": "新功能",
                     "color": "#10b981"

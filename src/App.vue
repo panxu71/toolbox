@@ -34,6 +34,9 @@ import ImageBase64Converter from './components/ImageBase64Converter.vue'
 import SurnameLookup from './components/SurnameLookup.vue'
 import RegexTester from './components/RegexTester.vue'
 import ApiTester from './components/ApiTester.vue'
+import TextCompare from './components/TextCompare.vue'
+import MimeTypeReference from './components/MimeTypeReference.vue'
+import UuidGenerator from './components/UuidGenerator.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
@@ -258,9 +261,9 @@ const executeFunction = async (action: string) => {
             case 'generateCrontab':
                 openPage('crontab-generator')
                 return // 不需要loading状态
-            case 'generateUUID':
-                await generateUUID()
-                break
+            case 'generateUuid':
+                openPage('uuid-generator')
+                return // 不需要loading状态
             case 'generateLorem':
                 await generateLorem()
                 break
@@ -287,8 +290,11 @@ const executeFunction = async (action: string) => {
             case 'httpStatus':
                 await httpStatus()
                 break
-            case 'testRegex':
-                openPage('regex-tester')
+            case 'compareText':
+                openPage('text-compare')
+                return // 不需要loading状态
+            case 'mimeTypeReference':
+                openPage('mime-type-reference')
                 return // 不需要loading状态
 
             // 导航工具
@@ -699,6 +705,9 @@ onMounted(() => {
                 <ColorReference v-if="currentPage === 'color-reference'" @back="closePage" />
                 <JwtGenerator v-if="currentPage === 'jwt-generator'" @back="closePage" />
                 <RegexTester v-if="currentPage === 'regex-tester'" @back="closePage" />
+                <TextCompare v-if="currentPage === 'text-compare'" @back="closePage" />
+                <MimeTypeReference v-if="currentPage === 'mime-type-reference'" @back="closePage" />
+                <UuidGenerator v-if="currentPage === 'uuid-generator'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
             </template>
         </div>
