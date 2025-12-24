@@ -455,6 +455,16 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
 
                     <!-- 响应体 -->
                     <div v-if="activeTab === 'body'" class="response-body">
+                        <!-- 复制按钮 -->
+                        <button v-if="response.status && (response.data || response.error)" @click="copyResponse"
+                            class="copy-response-btn-floating" title="复制响应结果">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                        </button>
+
                         <div v-if="response.error" class="error-message">
                             <div class="error-title">请求失败</div>
                             <div class="error-detail">{{ response.error }}</div>
@@ -486,6 +496,11 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                 </div>
             </div>
         </div>
+
+        <!-- 消息提示 -->
+        <div v-if="message" class="message-toast" :class="messageType">
+            {{ message }}
+        </div>
     </div>
 </template>
 
@@ -515,6 +530,10 @@ const loading = ref(false)
 const activeTab = ref('body')
 const formUrlEncodedMode = ref('form') // 'form' 或 'bulk'
 const formUrlEncodedBulkText = ref('')
+
+// 消息提示
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
 
 const request = reactive({
     method: 'GET',
@@ -981,6 +1000,35 @@ const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+// 显示消息提示
+const showMessage = (text: string, type: 'success' | 'error' = 'success') => {
+    message.value = text
+    messageType.value = type
+    setTimeout(() => {
+        message.value = ''
+    }, 3000)
+}
+
+// 复制响应结果
+const copyResponse = async () => {
+    try {
+        let responseText = ''
+
+        if (response.error) {
+            responseText = response.error
+        } else if (response.data) {
+            responseText = formatResponse(response.data)
+        } else {
+            responseText = '无响应数据'
+        }
+
+        await navigator.clipboard.writeText(responseText)
+        showMessage('响应结果已复制到剪贴板', 'success')
+    } catch (error) {
+        showMessage('复制失败，请手动选择复制', 'error')
+    }
 }
 </script>
 
@@ -2167,6 +2215,48 @@ const formatSize = (bytes: number) => {
     overflow: hidden;
 }
 
+.response-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    position: relative;
+}
+
+.copy-response-btn-floating {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(-4px);
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.response-body:hover .copy-response-btn-floating {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.copy-response-btn-floating:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--primary-color-alpha);
+}
+
 .response-tab-header {
     display: flex;
     background: var(--bg-secondary);
@@ -2325,6 +2415,41 @@ const formatSize = (bytes: number) => {
 
     .example-btn {
         width: 100%;
+    }
+}
+
+/* 消息提示样式 */
+.message-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.message-toast.success {
+    background: var(--success-color);
+}
+
+.message-toast.error {
+    background: var(--error-color);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
 }
 </style>
