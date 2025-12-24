@@ -139,85 +139,87 @@
                     </div>
                 </div>
                 <div class="key-results">
-                    <!-- 公钥 -->
-                    <div class="key-result-item">
-                        <div class="key-header">
-                            <div class="key-info">
-                                <span class="key-type">公钥 (Public Key)</span>
-                                <span class="key-description">用于加密数据和验证签名</span>
-                            </div>
-                            <div class="key-actions">
-                                <button class="copy-key-btn" @click="copyKey('public')" title="复制公钥">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
-                                <button class="download-key-btn" @click="downloadKey('public')" title="下载公钥">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="7,10 12,15 17,10" />
-                                        <line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="key-value">{{ keyPair.publicKey }}</div>
-                        <div class="key-meta">
-                            <span class="key-length">长度: {{ keyPair.publicKey.length }} 字符</span>
-                            <span class="key-format">格式: {{ outputFormat.toUpperCase() }}</span>
-                        </div>
-                    </div>
-
-                    <!-- 私钥 -->
-                    <div class="key-result-item">
-                        <div class="key-header">
-                            <div class="key-info">
-                                <div class="key-type-container">
-                                    <span class="key-type">私钥 (Private Key)</span>
-                                    <span v-if="keyPair.keyInfo.passwordProtected" class="password-protected-badge">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                            <circle cx="12" cy="7" r="4" />
+                    <div class="key-result-container">
+                        <!-- 公钥 -->
+                        <div class="key-result-item">
+                            <div class="key-header">
+                                <div class="key-info">
+                                    <span class="key-type">公钥 (Public Key)</span>
+                                    <span class="key-description">用于加密数据和验证签名</span>
+                                </div>
+                                <div class="key-actions">
+                                    <button class="copy-key-btn" @click="copyKey('public')" title="复制公钥">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
-                                        密码保护
+                                    </button>
+                                    <button class="download-key-btn" @click="downloadKey('public')" title="下载公钥">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="7,10 12,15 17,10" />
+                                            <line x1="12" y1="15" x2="12" y2="3" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="key-value">{{ keyPair.publicKey }}</div>
+                            <div class="key-meta">
+                                <span class="key-length">长度: {{ keyPair.publicKey.length }} 字符</span>
+                                <span class="key-format">格式: {{ outputFormat.toUpperCase() }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 私钥 -->
+                        <div class="key-result-item">
+                            <div class="key-header">
+                                <div class="key-info">
+                                    <div class="key-type-container">
+                                        <span class="key-type">私钥 (Private Key)</span>
+                                        <span v-if="keyPair.keyInfo.passwordProtected" class="password-protected-badge">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                            密码保护
+                                        </span>
+                                    </div>
+                                    <span class="key-description">
+                                        {{ keyPair.keyInfo.passwordProtected 
+                                            ? '已使用密码加密保护，请妥善保管密码和私钥' 
+                                            : '用于解密数据和生成签名，请妥善保管' }}
                                     </span>
                                 </div>
-                                <span class="key-description">
-                                    {{ keyPair.keyInfo.passwordProtected 
-                                        ? '已使用密码加密保护，请妥善保管密码和私钥' 
-                                        : '用于解密数据和生成签名，请妥善保管' }}
-                                </span>
+                                <div class="key-actions">
+                                    <button class="copy-key-btn" @click="copyKey('private')" title="复制私钥">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                        </svg>
+                                    </button>
+                                    <button class="download-key-btn" @click="downloadKey('private')" title="下载私钥">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="7,10 12,15 17,10" />
+                                            <line x1="12" y1="15" x2="12" y2="3" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="key-actions">
-                                <button class="copy-key-btn" @click="copyKey('private')" title="复制私钥">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            <div class="key-value private-key" :class="{ 'blurred': !showPrivateKey }">
+                                {{ keyPair.privateKey }}
+                                <div v-if="!showPrivateKey" class="privacy-overlay" @click="showPrivateKey = true">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
                                     </svg>
-                                </button>
-                                <button class="download-key-btn" @click="downloadKey('private')" title="下载私钥">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="7,10 12,15 17,10" />
-                                        <line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                </button>
+                                    <span>点击显示私钥</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="key-value private-key" :class="{ 'blurred': !showPrivateKey }">
-                            {{ keyPair.privateKey }}
-                            <div v-if="!showPrivateKey" class="privacy-overlay" @click="showPrivateKey = true">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                                <span>点击显示私钥</span>
+                            <div class="key-meta">
+                                <span class="key-length">长度: {{ keyPair.privateKey.length }} 字符</span>
+                                <span class="key-format">格式: {{ outputFormat.toUpperCase() }}</span>
                             </div>
-                        </div>
-                        <div class="key-meta">
-                            <span class="key-length">长度: {{ keyPair.privateKey.length }} 字符</span>
-                            <span class="key-format">格式: {{ outputFormat.toUpperCase() }}</span>
                         </div>
                     </div>
                 </div>
@@ -1088,6 +1090,13 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     gap: 1.5rem;
 }
 
+.key-result-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+}
+
 .key-result-item {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -1480,6 +1489,10 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }
     
     .algorithm-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .key-result-container {
         grid-template-columns: 1fr;
     }
 }
