@@ -350,6 +350,18 @@
                     "text": "新功能",
                     "color": "#10b981"
                 }
+            },
+            {
+                "id": "dynasty-query",
+                "title": "历史朝代查询",
+                "description": "中国历史朝代信息查询和时间轴浏览",
+                "icon": "🏛️",
+                "action": "dynastyQuery",
+                "color": "#dc2626",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "navigation": [],

@@ -36,6 +36,7 @@ import RegexTester from './components/RegexTester.vue'
 import ApiTester from './components/ApiTester.vue'
 import TextCompare from './components/TextCompare.vue'
 import MimeTypeReference from './components/MimeTypeReference.vue'
+import DynastyQuery from './components/DynastyQuery.vue'
 import UuidGenerator from './components/UuidGenerator.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
@@ -295,6 +296,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'mimeTypeReference':
                 openPage('mime-type-reference')
+                return // 不需要loading状态
+            case 'dynastyQuery':
+                openPage('dynasty-query')
                 return // 不需要loading状态
 
             // 导航工具
@@ -707,6 +711,7 @@ onMounted(() => {
                 <RegexTester v-if="currentPage === 'regex-tester'" @back="closePage" />
                 <TextCompare v-if="currentPage === 'text-compare'" @back="closePage" />
                 <MimeTypeReference v-if="currentPage === 'mime-type-reference'" @back="closePage" />
+                <DynastyQuery v-if="currentPage === 'dynasty-query'" @back="closePage" />
                 <UuidGenerator v-if="currentPage === 'uuid-generator'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
             </template>
