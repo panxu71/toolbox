@@ -203,6 +203,15 @@ const closePage = () => {
     updateUrl(activeNav.value) // 清除工具参数，只保留分类
 }
 
+const goHome = () => {
+    currentPage.value = null
+    activeNav.value = 'json' // 使用正确的id，对应JSON工具
+    // 清空地址栏参数，但保持页面状态
+    const url = new URL(window.location.href)
+    url.search = ''
+    window.history.replaceState({}, '', url.toString())
+}
+
 const openSettings = () => {
     showSettings.value = true
 }
@@ -849,7 +858,7 @@ const updateUrl = (category?: string, tool?: string) => {
 <template>
     <div class="app-container">
         <!-- 顶部导航栏 -->
-        <Header :currentTab="currentTab" :pageInfo="pageInfo" @refresh="getCurrentTab" />
+        <Header :currentTab="currentTab" :pageInfo="pageInfo" @refresh="getCurrentTab" @goHome="goHome" />
 
         <!-- 主内容区域 -->
         <div class="main-content">

@@ -1,7 +1,7 @@
 <template>
     <header class="header">
         <div class="header-left">
-            <div class="logo">
+            <div class="logo" @click="$emit('goHome')" role="button" tabindex="0">
                 <div class="logo-icon">
                     <img src="/src/assets/icons/icon48.png" alt="Toolbox" />
                 </div>
@@ -58,6 +58,7 @@ defineProps<{
 
 defineEmits<{
     refresh: []
+    goHome: []
 }>()
 </script>
 
@@ -84,75 +85,33 @@ defineEmits<{
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
 }
 
 .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    border-radius: var(--radius-lg);
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow:
-        0 4px 12px rgba(99, 102, 241, 0.2),
-        0 2px 4px rgba(99, 102, 241, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    padding: 8px;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-}
-
-.logo-icon::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.25) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0.05) 100%);
-    border-radius: var(--radius-lg);
-    pointer-events: none;
-}
-
-.logo-icon:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow:
-        0 8px 20px rgba(99, 102, 241, 0.3),
-        0 4px 8px rgba(99, 102, 241, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    padding: 4px;
 }
 
 .logo-icon img {
     width: 20px;
     height: 20px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
-    z-index: 1;
-    position: relative;
 }
 
 .logo-text {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--text-primary);
     margin: 0;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-    transition: var(--transition);
-}
-
-.logo:hover .logo-text {
-    text-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
 }
 
 .breadcrumb {

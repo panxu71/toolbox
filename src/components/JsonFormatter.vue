@@ -7,7 +7,7 @@
                 </svg>
                 返回
             </button>
-            <h2 class="formatter-title">JSON编辑器</h2>
+            <h2 class="formatter-title">JSON格式化</h2>
             <div class="formatter-actions">
                 <button class="action-btn" @click="clearAll" title="清空">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -49,23 +49,6 @@
                         </span>
                     </div>
                     <div class="section-actions">
-                        <div class="input-actions">
-                            <button class="action-btn-small" @click="pasteFromClipboard" title="粘贴">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                    <path
-                                        d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearInput" title="清空输入">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
                         <div class="button-group">
                             <button class="group-btn example-btn" @click="loadExample(1)">示例1</button>
                             <button class="group-btn example-btn" @click="loadExample(2)">示例2</button>
@@ -240,7 +223,7 @@ const onPaste = (event: ClipboardEvent) => {
 }
 
 // 自动格式化定时器
-const autoFormatTimer = ref<number | undefined>(undefined)
+const autoFormatTimer = ref<ReturnType<typeof setTimeout> | undefined>(undefined)
 
 // 尝试自动格式化
 const tryAutoFormat = () => {
@@ -377,30 +360,6 @@ const unescapeJson = () => {
         formattedJson.value = ''
         showMessage('去转义失败', 'error')
     }
-}
-
-// 从剪贴板粘贴
-const pasteFromClipboard = async () => {
-    try {
-        const text = await navigator.clipboard.readText()
-        if (text.trim()) {
-            inputJson.value = text
-            tryAutoFormat()
-            showMessage('已从剪贴板粘贴并自动格式化', 'success')
-        } else {
-            showMessage('剪贴板内容为空', 'error')
-        }
-    } catch (error) {
-        showMessage('无法访问剪贴板', 'error')
-    }
-}
-
-// 清空输入
-const clearInput = () => {
-    inputJson.value = ''
-    formattedJson.value = ''
-    inputError.value = ''
-    showMessage('已清空输入', 'success')
 }
 
 // 清空所有内容
@@ -668,31 +627,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.input-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.action-btn-small {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.action-btn-small:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--primary-color);
 }
 
 .divider {

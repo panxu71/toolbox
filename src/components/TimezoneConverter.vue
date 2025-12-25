@@ -20,92 +20,96 @@
         </div>
 
         <div class="converter-content">
-            <!-- 当前时间显示 -->
-            <div class="converter-section">
+            <!-- 世界时钟 -->
+            <div class="world-clock-section">
                 <div class="section-header">
-                    <h3>当前时间</h3>
-                    <div class="section-info">
-                        <span class="info-text">实时显示各时区当前时间</span>
+                    <div class="section-title">
+                        <h3>🌍 世界时钟</h3>
+                        <span class="section-subtitle">实时显示全球主要城市时间，点击卡片可复制时间信息</span>
                     </div>
                 </div>
-                <div class="current-time-grid">
-                    <div v-for="timezone in mainTimezones" :key="timezone.zone" class="time-card">
-                        <div class="time-card-header">
-                            <span class="timezone-name">{{ timezone.name }}</span>
-                            <span class="timezone-code">{{ timezone.code }}</span>
+                <div class="world-clock-grid">
+                    <div v-for="timezone in mainTimezones" :key="timezone.zone" class="clock-card" @click="copyTimeInfo(timezone)">
+                        <div class="clock-header">
+                            <span class="city-name">{{ timezone.name }}</span>
+                            <span class="timezone-code">{{ getCurrentUTCOffset(timezone.zone) }}</span>
                         </div>
                         <div class="time-display">
-                            <span class="time-value">{{ getCurrentTime(timezone.zone) }}</span>
-                        </div>
-                        <div class="time-info">
-                            <span class="date-value">{{ getCurrentDate(timezone.zone) }}</span>
+                            <div class="time-value">{{ getCurrentTime(timezone.zone) }}</div>
+                            <div class="date-value">{{ getCurrentDate(timezone.zone) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 时区转换器 -->
-            <div class="converter-section">
+            <!-- 快速转换 -->
+            <div class="quick-convert-section">
                 <div class="section-header">
-                    <h3>时区转换</h3>
-                    <div class="section-info">
-                        <span class="info-text">在不同时区之间转换时间</span>
+                    <div class="section-title">
+                        <h3>⚡ 快速转换</h3>
+                        <span class="section-subtitle">在不同时区之间快速转换时间</span>
                     </div>
                 </div>
-                <div class="timezone-converter-container">
-                    <div class="converter-form">
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>源时区</label>
-                                <select v-model="sourceTimezone" class="timezone-select">
-                                    <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
-                                        {{ tz.name }} ({{ tz.code }})
-                                    </option>
-                                </select>
+                <div class="quick-convert-container">
+                    <div class="convert-card">
+                        <div class="convert-inputs">
+                            <div class="timezone-selector">
+                                <label>从</label>
+                                <div class="timezone-input-group">
+                                    <select v-model="sourceTimezone" class="timezone-select">
+                                        <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
+                                            {{ tz.name }} ({{ tz.code }})
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label>目标时区</label>
-                                <select v-model="targetTimezone" class="timezone-select">
-                                    <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
-                                        {{ tz.name }} ({{ tz.code }})
-                                    </option>
-                                </select>
+                            
+                            <div class="convert-arrow">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14" />
+                                    <path d="m12 5 7 7-7 7" />
+                                </svg>
+                            </div>
+                            
+                            <div class="timezone-selector">
+                                <label>到</label>
+                                <div class="timezone-input-group">
+                                    <select v-model="targetTimezone" class="timezone-select">
+                                        <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
+                                            {{ tz.name }} ({{ tz.code }})
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>日期</label>
-                                <input 
-                                    v-model="convertDate" 
-                                    type="date" 
-                                    class="date-input"
-                                />
+                        
+                        <div class="datetime-inputs">
+                            <div class="datetime-group">
+                                <div class="input-wrapper">
+                                    <label>日期</label>
+                                    <input v-model="convertDate" type="date" class="date-input" />
+                                </div>
+                                <div class="input-wrapper">
+                                    <label>时间</label>
+                                    <input v-model="convertTime" type="time" step="1" class="time-input" />
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label>时间</label>
-                                <input 
-                                    v-model="convertTime" 
-                                    type="time" 
-                                    step="1"
-                                    class="time-input"
-                                />
+                            <div class="convert-actions">
+                                <button class="now-btn" @click="setCurrentTime">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <polyline points="12,6 12,12 16,14" />
+                                    </svg>
+                                    现在
+                                </button>
+                                <button class="convert-btn" @click="convertTimezone">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M7 16.5L12 12l5 4.5" />
+                                        <path d="M7 7.5L12 12l5-4.5" />
+                                    </svg>
+                                    转换
+                                </button>
                             </div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="convert-btn" @click="convertTimezone">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M7 16.5L12 12l5 4.5" />
-                                    <path d="M7 7.5L12 12l5-4.5" />
-                                </svg>
-                                转换
-                            </button>
-                            <button class="now-btn" @click="setCurrentTime">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12,6 12,12 16,14" />
-                                </svg>
-                                当前时间
-                            </button>
                         </div>
                     </div>
                     
@@ -119,61 +123,61 @@
                                 </svg>
                             </button>
                         </div>
-                        <div class="result-content">
-                            <div class="result-item">
-                                <span class="result-label">源时间:</span>
-                                <span class="result-value">{{ conversionResult.source }}</span>
+                        <div class="result-items">
+                            <div class="result-item source">
+                                <div class="result-label">源时间</div>
+                                <div class="result-value">{{ conversionResult.source }}</div>
                             </div>
-                            <div class="result-item">
-                                <span class="result-label">目标时间:</span>
-                                <span class="result-value">{{ conversionResult.target }}</span>
+                            <div class="result-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14" />
+                                    <path d="m12 5 7 7-7 7" />
+                                </svg>
                             </div>
-                            <div class="result-item">
-                                <span class="result-label">时差:</span>
-                                <span class="result-value">{{ conversionResult.difference }}</span>
+                            <div class="result-item target">
+                                <div class="result-label">目标时间</div>
+                                <div class="result-value">{{ conversionResult.target }}</div>
                             </div>
+                        </div>
+                        <div class="time-difference">
+                            <span class="diff-label">时差:</span>
+                            <span class="diff-value">{{ conversionResult.difference }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- 会议时间规划 -->
-            <div class="converter-section">
+            <div class="meeting-planner-section">
                 <div class="section-header">
-                    <h3>会议时间规划</h3>
-                    <div class="section-info">
-                        <span class="info-text">为跨时区会议找到合适的时间</span>
+                    <div class="section-title">
+                        <h3>📅 会议时间规划</h3>
+                        <span class="section-subtitle">为跨时区会议找到最佳时间</span>
                     </div>
                 </div>
                 <div class="meeting-planner-container">
-                    <div class="meeting-form">
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label>会议日期</label>
-                                <input 
-                                    v-model="meetingDate" 
-                                    type="date" 
-                                    class="date-input"
-                                />
-                            </div>
-                            <div class="input-group">
-                                <label>会议时间</label>
-                                <input 
-                                    v-model="meetingTime" 
-                                    type="time" 
-                                    step="1"
-                                    class="time-input"
-                                />
-                            </div>
-                            <div class="input-group">
-                                <label>主办方时区</label>
-                                <select v-model="hostTimezone" class="timezone-select">
-                                    <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
-                                        {{ tz.name }} ({{ tz.code }})
-                                    </option>
-                                </select>
+                    <div class="meeting-setup">
+                        <div class="meeting-basic-info">
+                            <div class="meeting-datetime">
+                                <div class="input-wrapper">
+                                    <label>会议日期</label>
+                                    <input v-model="meetingDate" type="date" class="date-input" />
+                                </div>
+                                <div class="input-wrapper">
+                                    <label>会议时间</label>
+                                    <input v-model="meetingTime" type="time" step="1" class="time-input" />
+                                </div>
+                                <div class="input-wrapper">
+                                    <label>主办方时区</label>
+                                    <select v-model="hostTimezone" class="timezone-select">
+                                        <option v-for="tz in allTimezones" :key="tz.zone" :value="tz.zone">
+                                            {{ tz.name }} ({{ tz.code }})
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
+                        
                         <div class="participants-section">
                             <div class="participants-header">
                                 <label>参会者时区</label>
@@ -207,6 +211,7 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <button class="plan-meeting-btn" @click="planMeeting">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -224,19 +229,23 @@
                             <button class="copy-plan-btn" @click="copyMeetingPlan" title="复制会议安排">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
                             </button>
                         </div>
                         <div class="plan-content">
-                            <div v-for="item in meetingPlan" :key="item.name" class="plan-item">
+                            <div v-for="item in meetingPlan" :key="item.name" class="plan-item" :class="item.status">
                                 <div class="plan-participant">
-                                    <span class="participant-name">{{ item.name }}</span>
-                                    <span class="participant-timezone">{{ item.timezoneName }}</span>
+                                    <div class="participant-info">
+                                        <span class="participant-name">{{ item.name }}</span>
+                                        <span class="participant-timezone">{{ item.timezoneName }}</span>
+                                    </div>
+                                    <div class="participant-status">
+                                        <span class="status-badge" :class="item.status">{{ item.statusText }}</span>
+                                    </div>
                                 </div>
                                 <div class="plan-time">
-                                    <span class="plan-datetime">{{ item.localTime }}</span>
-                                    <span class="plan-status" :class="item.status">{{ item.statusText }}</span>
+                                    <div class="plan-datetime">{{ item.localTime }}</div>
                                 </div>
                             </div>
                         </div>
@@ -258,14 +267,21 @@ defineEmits<{
     back: []
 }>()
 
-// 时区数据
+// 时区数据 - 按时间早晚固定排序（UTC偏移从大到小）
 const mainTimezones = [
-    { name: '北京', code: 'CST', zone: 'Asia/Shanghai' },
-    { name: '纽约', code: 'EST/EDT', zone: 'America/New_York' },
-    { name: '伦敦', code: 'GMT/BST', zone: 'Europe/London' },
-    { name: '东京', code: 'JST', zone: 'Asia/Tokyo' },
-    { name: '悉尼', code: 'AEST/AEDT', zone: 'Australia/Sydney' },
-    { name: '洛杉矶', code: 'PST/PDT', zone: 'America/Los_Angeles' }
+    { name: '奥克兰', code: 'UTC+12', zone: 'Pacific/Auckland' },
+    { name: '悉尼', code: 'UTC+10', zone: 'Australia/Sydney' },
+    { name: '东京', code: 'UTC+9', zone: 'Asia/Tokyo' },
+    { name: '北京', code: 'UTC+8', zone: 'Asia/Shanghai' },
+    { name: '孟买', code: 'UTC+5:30', zone: 'Asia/Kolkata' },
+    { name: '迪拜', code: 'UTC+4', zone: 'Asia/Dubai' },
+    { name: '莫斯科', code: 'UTC+3', zone: 'Europe/Moscow' },
+    { name: '巴黎', code: 'UTC+1', zone: 'Europe/Paris' },
+    { name: '伦敦', code: 'UTC+0', zone: 'Europe/London' },
+    { name: '圣保罗', code: 'UTC-3', zone: 'America/Sao_Paulo' },
+    { name: '纽约', code: 'UTC-5', zone: 'America/New_York' },
+    { name: '芝加哥', code: 'UTC-6', zone: 'America/Chicago' },
+    { name: '洛杉矶', code: 'UTC-8', zone: 'America/Los_Angeles' }
 ]
 
 const allTimezones = [
@@ -343,6 +359,9 @@ const messageType = ref<'success' | 'error'>('success')
 // 当前时间更新定时器
 let timeUpdateInterval: number | null = null
 
+// 强制更新时间显示的响应式变量
+const timeUpdateTrigger = ref(0)
+
 // 组件挂载时初始化
 onMounted(() => {
     const now = new Date()
@@ -373,13 +392,41 @@ const startTimeUpdate = () => {
     if (timeUpdateInterval) {
         clearInterval(timeUpdateInterval)
     }
+    
+    // 每秒更新时间显示
     timeUpdateInterval = setInterval(() => {
-        // 触发重新渲染以更新时间显示
+        timeUpdateTrigger.value++
     }, 1000)
+}
+
+// 获取指定时区的当前UTC偏移
+const getCurrentUTCOffset = (timezone: string): string => {
+    try {
+        const now = new Date()
+        const utc = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }))
+        const target = new Date(now.toLocaleString('en-US', { timeZone: timezone }))
+        const offsetMinutes = (target.getTime() - utc.getTime()) / (1000 * 60)
+        const offsetHours = offsetMinutes / 60
+        
+        if (offsetMinutes === 0) return 'UTC+0'
+        
+        const sign = offsetHours >= 0 ? '+' : ''
+        if (offsetMinutes % 60 === 0) {
+            return `UTC${sign}${Math.floor(offsetHours)}`
+        } else {
+            const hours = Math.floor(Math.abs(offsetHours))
+            const minutes = Math.abs(offsetMinutes) % 60
+            return `UTC${sign}${offsetHours < 0 ? '-' : ''}${hours}:${minutes.toString().padStart(2, '0')}`
+        }
+    } catch (error) {
+        return 'UTC'
+    }
 }
 
 // 获取指定时区的当前时间
 const getCurrentTime = (timezone: string): string => {
+    // 使用timeUpdateTrigger来触发重新计算
+    timeUpdateTrigger.value
     try {
         const now = new Date()
         return now.toLocaleTimeString('zh-CN', {
@@ -396,6 +443,8 @@ const getCurrentTime = (timezone: string): string => {
 
 // 获取指定时区的当前日期
 const getCurrentDate = (timezone: string): string => {
+    // 使用timeUpdateTrigger来触发重新计算
+    timeUpdateTrigger.value
     try {
         const now = new Date()
         return now.toLocaleDateString('zh-CN', {
@@ -477,9 +526,6 @@ const convertTimezone = () => {
 // 获取时区偏移量（分钟）
 const getTimezoneOffset = (timezone: string): number => {
     try {
-        // const now = new Date()
-        // const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
-        // const targetTime = new Date(utc + (getTimezoneOffsetMinutes(timezone) * 60000))
         return getTimezoneOffsetMinutes(timezone)
     } catch (error) {
         return 0
@@ -494,7 +540,19 @@ const getTimezoneOffsetMinutes = (timezone: string): number => {
     return (target.getTime() - utc.getTime()) / (1000 * 60)
 }
 
-// 复制转换结果
+// 复制时间信息
+const copyTimeInfo = async (timezone: any) => {
+    const time = getCurrentTime(timezone.zone)
+    const date = getCurrentDate(timezone.zone)
+    const text = `${timezone.name} (${timezone.code}): ${date} ${time}`
+    
+    try {
+        await navigator.clipboard.writeText(text)
+        showMessage(`已复制 ${timezone.name} 时间`, 'success')
+    } catch (error) {
+        showMessage('复制失败', 'error')
+    }
+}
 const copyResult = async () => {
     if (!conversionResult.value) return
     
@@ -634,11 +692,11 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 </script>
-
 <style scoped>
 .timezone-converter {
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
@@ -664,15 +722,16 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .back-btn:hover {
     background: var(--bg-hover);
-    color: var(--text-primary);
+    transform: translateY(-1px);
 }
 
 .converter-title {
@@ -696,170 +755,226 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .action-btn:hover {
     background: var(--bg-hover);
-    color: var(--text-primary);
+    transform: translateY(-1px);
 }
 
 .converter-content {
     flex: 1;
     padding: 1.5rem;
+    padding-bottom: 3rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
+    min-height: 0;
 }
 
-.converter-section {
+/* 通用区域样式 */
+.world-clock-section,
+.quick-convert-section,
+.meeting-planner-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 1.5rem;
 }
 
-.section-header h3 {
-    font-size: 1.125rem;
+.section-title h3 {
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0;
-}
-
-.section-info {
+    margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.info-text {
+.section-subtitle {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    margin: 0;
 }
 
-/* 当前时间网格 */
-.current-time-grid {
+/* 世界时钟样式 */
+.world-clock-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
 }
 
-.time-card {
+.clock-card {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    text-align: center;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
-.time-card:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px var(--primary-color-alpha);
+.clock-card:hover {
+    border-color: var(--text-secondary);
 }
 
-.time-card-header {
+.clock-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.timezone-name {
-    font-size: 1rem;
-    font-weight: 600;
+.city-name {
+    font-size: 0.8125rem;
+    font-weight: 500;
     color: var(--text-primary);
 }
 
 .timezone-code {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--text-secondary);
-    background: var(--bg-secondary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .time-display {
-    margin-bottom: 0.75rem;
+    text-align: center;
 }
 
 .time-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    font-family: 'Courier New', monospace;
-}
-
-.time-info {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    margin-bottom: 0.125rem;
+    display: block;
 }
 
 .date-value {
-    font-family: 'Courier New', monospace;
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
-/* 时区转换器样式 */
-.timezone-converter-container {
+/* 快速转换样式 */
+.quick-convert-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
-.converter-form {
+.convert-card {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.form-row {
+.convert-inputs {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.timezone-selector {
+    flex: 1;
+    max-width: 300px;
+}
+
+.timezone-selector label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.timezone-input-group {
+    position: relative;
+}
+
+.timezone-select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.timezone-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+.convert-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.datetime-inputs {
+    display: flex;
+    align-items: end;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.datetime-group {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1rem;
 }
 
-.form-row:last-child {
-    margin-bottom: 0;
-}
-
-.input-group {
-    flex: 1;
+.input-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.input-group label {
+.input-wrapper label {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
 }
 
-.timezone-select,
 .date-input,
 .time-input {
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
     color: var(--text-primary);
     font-size: 0.875rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    transition: all 0.2s ease;
+    min-width: 140px;
 }
 
-.timezone-select:focus,
 .date-input:focus,
 .time-input:focus {
     outline: none;
@@ -867,25 +982,35 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
-.form-actions {
+.convert-actions {
     display: flex;
     gap: 0.75rem;
-    justify-content: center;
-    margin-top: 1rem;
 }
 
-.convert-btn,
-.now-btn {
+.now-btn,
+.convert-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.875rem;
     font-weight: 500;
+    border: 2px solid transparent;
+}
+
+.now-btn {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.now-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .convert-btn {
@@ -896,39 +1021,27 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 .convert-btn:hover {
     background: var(--primary-color-dark);
-    border-color: var(--primary-color-dark);
-}
-
-.now-btn {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.now-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px var(--primary-color-alpha);
 }
 
 /* 转换结果样式 */
 .conversion-result {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--success-color-alpha) 0%, var(--primary-color-alpha) 100%);
+    border: 1px solid var(--success-color);
+    border-radius: 1rem;
+    padding: 2rem;
 }
 
 .result-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .result-header h4 {
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -938,11 +1051,11 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-secondary);
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -952,33 +1065,75 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
-.result-content {
+.result-items {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .result-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border-radius: 0.5rem;
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.result-item.source {
+    border-left: 4px solid var(--warning-color);
+}
+
+.result-item.target {
+    border-left: 4px solid var(--success-color);
 }
 
 .result-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .result-value {
     font-size: 0.875rem;
     color: var(--text-primary);
-    font-family: 'Courier New', monospace;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-weight: 500;
+}
+
+.result-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.time-difference {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.diff-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+}
+
+.diff-value {
+    font-size: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 /* 会议规划样式 */
@@ -988,15 +1143,29 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     gap: 1.5rem;
 }
 
-.meeting-form {
+.meeting-setup {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.meeting-basic-info {
+    margin-bottom: 1rem;
+}
+
+.meeting-datetime {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .participants-section {
-    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
 }
 
 .participants-header {
@@ -1029,6 +1198,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 .add-participant-btn:hover {
     background: var(--success-color-dark);
+    transform: translateY(-1px);
 }
 
 .participants-list {
@@ -1041,6 +1211,10 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
 }
 
 .participant-name {
@@ -1075,46 +1249,48 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 .remove-participant-btn:hover {
     background: var(--error-color-dark);
+    transform: translateY(-1px);
 }
 
 .plan-meeting-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 1rem 2rem;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.875rem;
     font-weight: 500;
-    margin-top: 1rem;
     align-self: center;
 }
 
 .plan-meeting-btn:hover {
     background: var(--primary-color-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--primary-color-alpha);
 }
 
 /* 会议计划结果 */
 .meeting-plan {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
 }
 
 .plan-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .plan-header h4 {
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -1124,11 +1300,11 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-secondary);
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1138,35 +1314,57 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .plan-content {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .plan-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: 0.5rem;
+    padding: 1.25rem;
+    background: var(--bg-primary);
+    border-radius: 0.75rem;
     border-left: 4px solid var(--border-color);
+    transition: all 0.2s ease;
 }
 
 .plan-item.host {
     border-left-color: var(--primary-color);
+    background: var(--primary-color-alpha);
+}
+
+.plan-item.good {
+    border-left-color: var(--success-color);
+}
+
+.plan-item.warning {
+    border-left-color: var(--warning-color);
+}
+
+.plan-item.bad {
+    border-left-color: var(--error-color);
 }
 
 .plan-participant {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.participant-info {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.plan-participant .participant-name {
+.participant-info .participant-name {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -1175,9 +1373,40 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     padding: 0;
 }
 
-.plan-participant .participant-timezone {
+.participant-timezone {
     font-size: 0.75rem;
     color: var(--text-secondary);
+}
+
+.participant-status {
+    margin-left: auto;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 1rem;
+}
+
+.status-badge.good {
+    background: var(--success-color-alpha);
+    color: var(--success-color);
+}
+
+.status-badge.warning {
+    background: var(--warning-color-alpha);
+    color: var(--warning-color);
+}
+
+.status-badge.bad {
+    background: var(--error-color-alpha);
+    color: var(--error-color);
+}
+
+.status-badge.host {
+    background: var(--primary-color-alpha);
+    color: var(--primary-color);
 }
 
 .plan-time {
@@ -1190,34 +1419,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .plan-datetime {
     font-size: 0.875rem;
     color: var(--text-primary);
-    font-family: 'Courier New', monospace;
-}
-
-.plan-status {
-    font-size: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-}
-
-.plan-status.good {
-    background: var(--success-color-alpha);
-    color: var(--success-color);
-}
-
-.plan-status.warning {
-    background: var(--warning-color-alpha);
-    color: var(--warning-color);
-}
-
-.plan-status.bad {
-    background: var(--error-color-alpha);
-    color: var(--error-color);
-}
-
-.plan-status.host {
-    background: var(--primary-color-alpha);
-    color: var(--primary-color);
 }
 
 /* 消息提示样式 */
@@ -1226,12 +1429,13 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     bottom: 2rem;
     right: 2rem;
     padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     color: white;
     font-size: 0.875rem;
     font-weight: 500;
     z-index: 1000;
     animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .message-toast.success {
@@ -1254,37 +1458,74 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1024px) {
+    .convert-inputs {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .convert-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .datetime-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .datetime-group {
+        justify-content: center;
+    }
+    
+    .result-items {
+        flex-direction: column;
+    }
+    
+    .result-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .meeting-datetime {
+        flex-direction: column;
+    }
+}
+
 @media (max-width: 768px) {
     .converter-content {
         padding: 1rem;
+        padding-bottom: 4rem;
         gap: 1.5rem;
     }
     
-    .converter-section {
-        padding: 1rem;
+    .world-clock-section,
+    .quick-convert-section,
+    .meeting-planner-section {
+        padding: 1.5rem;
     }
     
-    .current-time-grid {
+    .world-clock-grid {
         grid-template-columns: 1fr;
     }
     
-    .form-row {
-        flex-direction: column;
-    }
-    
-    .form-actions {
-        flex-direction: column;
+    .convert-card,
+    .meeting-setup {
+        padding: 1.5rem;
     }
     
     .participant-item {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
     }
     
     .plan-item {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
+        gap: 1rem;
+    }
+    
+    .plan-participant {
+        justify-content: space-between;
     }
     
     .plan-time {
@@ -1292,7 +1533,48 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }
     
     .time-value {
+        font-size: 1.75rem;
+    }
+    
+    .datetime-group {
+        flex-direction: column;
+    }
+    
+    .convert-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .converter-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .converter-content {
+        padding: 1rem;
+        padding-bottom: 5rem;
+    }
+    
+    .converter-title {
+        font-size: 1.125rem;
+    }
+    
+    .section-title h3 {
+        font-size: 1.125rem;
+    }
+    
+    .clock-card {
+        padding: 1.25rem;
+    }
+    
+    .time-value {
         font-size: 1.5rem;
+    }
+    
+    .message-toast {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
     }
 }
 </style>
