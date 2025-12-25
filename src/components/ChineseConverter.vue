@@ -75,15 +75,13 @@
             <div class="convert-section">
                 <div class="input-panel">
                     <div class="panel-header">
-                        <h3>{{ getInputTitle() }}</h3>
-                        <div class="panel-info">
-                            <span class="char-count" v-if="inputText">{{ inputText.length }} 字符</span>
-                            <span class="chinese-count" v-if="chineseCharCount > 0">{{ chineseCharCount }} 个中文字符</span>
+                        <div class="panel-title-info">
+                            <h3>{{ getInputTitle() }}</h3>
+                            <div class="panel-info">
+                                <span class="char-count" v-if="inputText">{{ inputText.length }} 字符</span>
+                                <span class="chinese-count" v-if="chineseCharCount > 0">{{ chineseCharCount }} 个中文字符</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="inputText" class="text-input" :placeholder="getInputPlaceholder()"
-                            @input="handleConvert"></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="pasteText" title="粘贴">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -109,23 +107,25 @@
                             </button>
                         </div>
                     </div>
+                    <div class="panel-content">
+                        <textarea v-model="inputText" class="text-input" :placeholder="getInputPlaceholder()"
+                            @input="handleConvert"></textarea>
+                    </div>
                 </div>
 
                 <div class="output-panel">
                     <div class="panel-header">
-                        <h3>{{ getOutputTitle() }}</h3>
-                        <div class="panel-info">
-                            <span class="conversion-count" v-if="conversionCount > 0">
-                                转换了 {{ conversionCount }} 个字符
-                            </span>
-                            <span class="no-conversion" v-else-if="inputText && outputText">
-                                无需转换
-                            </span>
+                        <div class="panel-title-info">
+                            <h3>{{ getOutputTitle() }}</h3>
+                            <div class="panel-info">
+                                <span class="conversion-count" v-if="conversionCount > 0">
+                                    转换了 {{ conversionCount }} 个字符
+                                </span>
+                                <span class="no-conversion" v-else-if="inputText && outputText">
+                                    无需转换
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="outputText" class="text-output" placeholder="转换结果将显示在这里..."
-                            readonly></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="copyOutput" title="复制">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -152,6 +152,10 @@
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                    <div class="panel-content">
+                        <textarea v-model="outputText" class="text-output" placeholder="转换结果将显示在这里..."
+                            readonly></textarea>
                     </div>
                 </div>
             </div>
@@ -843,6 +847,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     padding: 1rem 1.5rem;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.panel-title-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
 }
 
 .panel-header h3 {
@@ -850,12 +862,19 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+    white-space: nowrap;
 }
 
 .panel-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.375rem;
+    flex-shrink: 0;
 }
 
 .char-count,
@@ -921,23 +940,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     color: var(--text-secondary);
 }
 
-.panel-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
-}
-
 .action-btn-small {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -947,6 +958,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--bg-hover);
     color: var(--text-primary);
     border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .action-btn-small.primary {
@@ -958,6 +970,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .action-btn-small.primary:hover {
     background: var(--primary-hover);
     border-color: var(--primary-hover);
+    transform: translateY(-1px);
 }
 
 /* 转换详情 */
@@ -1255,13 +1268,19 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }
 
     .panel-header {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .panel-title-info {
+        flex-wrap: wrap;
         gap: 0.75rem;
     }
 
     .panel-actions {
         justify-content: center;
+        order: 3;
+        width: 100%;
     }
 
     .details-list {

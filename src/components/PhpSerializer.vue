@@ -48,25 +48,23 @@
             <div v-if="activeMode === 'serialize'" class="convert-section">
                 <div class="input-panel">
                     <div class="panel-header">
-                        <h3>输入数据</h3>
-                        <div class="input-format-tabs">
-                            <button class="format-tab" :class="{ active: inputFormat === 'array' }"
-                                @click="setInputFormat('array')">
-                                PHP数组
-                            </button>
-                            <button class="format-tab" :class="{ active: inputFormat === 'json' }"
-                                @click="setInputFormat('json')">
-                                JSON
-                            </button>
-                            <button class="format-tab" :class="{ active: inputFormat === 'xml' }"
-                                @click="setInputFormat('xml')">
-                                XML
-                            </button>
+                        <div class="panel-title-info">
+                            <h3>输入数据</h3>
+                            <div class="input-format-tabs">
+                                <button class="format-tab" :class="{ active: inputFormat === 'array' }"
+                                    @click="setInputFormat('array')">
+                                    PHP数组
+                                </button>
+                                <button class="format-tab" :class="{ active: inputFormat === 'json' }"
+                                    @click="setInputFormat('json')">
+                                    JSON
+                                </button>
+                                <button class="format-tab" :class="{ active: inputFormat === 'xml' }"
+                                    @click="setInputFormat('xml')">
+                                    XML
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="inputData" class="data-input" :placeholder="getInputPlaceholder()"
-                            @input="handleSerialize"></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="pasteInput" title="粘贴">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -74,13 +72,6 @@
                                     <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
                                     <path
                                         d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="loadSample" title="示例">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14,2 14,8 20,8" />
                                 </svg>
                             </button>
                             <button class="action-btn-small" @click="clearInput" title="清空">
@@ -92,20 +83,22 @@
                             </button>
                         </div>
                     </div>
+                    <div class="panel-content">
+                        <textarea v-model="inputData" class="data-input" :placeholder="getInputPlaceholder()"
+                            @input="handleSerialize"></textarea>
+                    </div>
                 </div>
 
                 <div class="output-panel">
                     <div class="panel-header">
-                        <h3>PHP序列化结果</h3>
-                        <div class="output-info">
-                            <span class="info-badge" v-if="serializedData">
-                                {{ serializedData.length }} 字符
-                            </span>
+                        <div class="panel-title-info">
+                            <h3>PHP序列化结果</h3>
+                            <div class="output-info">
+                                <span class="info-badge" v-if="serializedData">
+                                    {{ serializedData.length }} 字符
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="serializedData" class="data-output" placeholder="序列化结果将显示在这里..."
-                            readonly></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="copyOutput" title="复制">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -124,6 +117,10 @@
                             </button>
                         </div>
                     </div>
+                    <div class="panel-content">
+                        <textarea v-model="serializedData" class="data-output" placeholder="序列化结果将显示在这里..."
+                            readonly></textarea>
+                    </div>
                 </div>
             </div>
 
@@ -131,15 +128,12 @@
             <div v-if="activeMode === 'unserialize'" class="convert-section">
                 <div class="input-panel">
                     <div class="panel-header">
-                        <h3>PHP序列化数据</h3>
-                        <div class="input-info">
-                            <span class="info-text">输入PHP序列化字符串</span>
+                        <div class="panel-title-info">
+                            <h3>PHP序列化数据</h3>
+                            <div class="input-info">
+                                <span class="info-text">输入PHP序列化字符串</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="serializedInput" class="data-input"
-                            placeholder="输入PHP序列化字符串，如：a:2:{s:4:&quot;name&quot;;s:4:&quot;John&quot;;s:3:&quot;age&quot;;i:30;}"
-                            @input="handleUnserialize"></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="pasteSerializedInput" title="粘贴">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -165,29 +159,32 @@
                             </button>
                         </div>
                     </div>
+                    <div class="panel-content">
+                        <textarea v-model="serializedInput" class="data-input"
+                            placeholder="输入PHP序列化字符串，如：a:2:{s:4:&quot;name&quot;;s:4:&quot;John&quot;;s:3:&quot;age&quot;;i:30;}"
+                            @input="handleUnserialize"></textarea>
+                    </div>
                 </div>
 
                 <div class="output-panel">
                     <div class="panel-header">
-                        <h3>转换结果</h3>
-                        <div class="output-format-tabs">
-                            <button class="format-tab" :class="{ active: outputFormat === 'array' }"
-                                @click="setOutputFormat('array')">
-                                PHP数组
-                            </button>
-                            <button class="format-tab" :class="{ active: outputFormat === 'json' }"
-                                @click="setOutputFormat('json')">
-                                JSON
-                            </button>
-                            <button class="format-tab" :class="{ active: outputFormat === 'xml' }"
-                                @click="setOutputFormat('xml')">
-                                XML
-                            </button>
+                        <div class="panel-title-info">
+                            <h3>转换结果</h3>
+                            <div class="output-format-tabs">
+                                <button class="format-tab" :class="{ active: outputFormat === 'array' }"
+                                    @click="setOutputFormat('array')">
+                                    PHP数组
+                                </button>
+                                <button class="format-tab" :class="{ active: outputFormat === 'json' }"
+                                    @click="setOutputFormat('json')">
+                                    JSON
+                                </button>
+                                <button class="format-tab" :class="{ active: outputFormat === 'xml' }"
+                                    @click="setOutputFormat('xml')">
+                                    XML
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="unserializedData" class="data-output" placeholder="反序列化结果将显示在这里..."
-                            readonly></textarea>
                         <div class="panel-actions">
                             <button class="action-btn-small" @click="copyUnserializedOutput" title="复制">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -205,6 +202,10 @@
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                    <div class="panel-content">
+                        <textarea v-model="unserializedData" class="data-output" placeholder="反序列化结果将显示在这里..."
+                            readonly></textarea>
                     </div>
                 </div>
             </div>
@@ -278,8 +279,8 @@ const setMode = (mode: 'serialize' | 'unserialize') => {
 // 设置输入格式
 const setInputFormat = (format: 'array' | 'json' | 'xml') => {
     inputFormat.value = format
-    inputData.value = ''
-    serializedData.value = ''
+    // 直接加载对应格式的示例数据
+    loadSampleForFormat(format)
 }
 
 // 设置输出格式
@@ -751,9 +752,9 @@ const pasteSerializedInput = async () => {
     }
 }
 
-// 加载示例
-const loadSample = () => {
-    switch (inputFormat.value) {
+// 加载特定格式的示例数据
+const loadSampleForFormat = (format: 'array' | 'json' | 'xml') => {
+    switch (format) {
         case 'json':
             inputData.value = `{
     "name": "John Doe",
@@ -797,7 +798,12 @@ const loadSample = () => {
             break
     }
     handleSerialize()
-    showMessage('已加载示例数据', 'success')
+    showMessage(`已加载${format.toUpperCase()}示例数据`, 'success')
+}
+
+// 加载示例
+const loadSample = () => {
+    loadSampleForFormat(inputFormat.value)
 }
 
 const loadSerializedSample = () => {
@@ -1041,6 +1047,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     padding: 1rem 1.5rem;
     background: var(--bg-tertiary);
     border-bottom: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.panel-title-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
 }
 
 .panel-header h3 {
@@ -1048,6 +1062,13 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+    white-space: nowrap;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.375rem;
+    flex-shrink: 0;
 }
 
 .input-format-tabs,
@@ -1135,23 +1156,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     color: var(--text-secondary);
 }
 
-.panel-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--bg-tertiary);
-    border-top: 1px solid var(--border-color);
-}
-
 .action-btn-small {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1161,6 +1174,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     background: var(--bg-hover);
     color: var(--text-primary);
     border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 /* 帮助区域 */
@@ -1284,14 +1298,19 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }
 
     .panel-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
     }
 
-    .input-format-tabs,
-    .output-format-tabs {
+    .panel-title-info {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .panel-actions {
         justify-content: center;
+        order: 3;
+        width: 100%;
     }
 
     .data-input,
@@ -1324,10 +1343,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     .format-tab {
         padding: 0.25rem 0.5rem;
         font-size: 0.625rem;
-    }
-
-    .panel-actions {
-        justify-content: center;
     }
 }
 </style>
