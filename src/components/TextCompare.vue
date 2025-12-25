@@ -179,18 +179,50 @@
                     <div class="diff-view">
                         <div class="diff-header">
                             <h4>差异详情</h4>
+                            <div class="view-options">
+                                <button class="view-btn" :class="{ active: viewMode === 'unified' }" @click="viewMode = 'unified'">
+                                    统一视图
+                                </button>
+                                <button class="view-btn" :class="{ active: viewMode === 'split' }" @click="viewMode = 'split'">
+                                    并排视图
+                                </button>
+                            </div>
                             <div class="diff-legend">
                                 <span class="legend-item added">+ 新增</span>
                                 <span class="legend-item removed">- 删除</span>
                                 <span class="legend-item modified">~ 修改</span>
                             </div>
                         </div>
-                        <div class="diff-content">
+                        
+                        <!-- 统一视图 -->
+                        <div v-if="viewMode === 'unified'" class="diff-content unified">
                             <div v-for="(diff, index) in compareResult.diffs" :key="index" class="diff-line"
                                 :class="diff.type">
                                 <span class="line-number">{{ diff.lineNumber }}</span>
                                 <span class="line-prefix">{{ diff.prefix }}</span>
-                                <span class="line-content">{{ diff.content }}</span>
+                                <span class="line-content" v-html="highlightDifferences(diff.content, diff.type)"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- 并排视图 -->
+                        <div v-if="viewMode === 'split'" class="diff-content split">
+                            <div class="split-header">
+                                <div class="split-title">文本A</div>
+                                <div class="split-title">文本B</div>
+                            </div>
+                            <div class="split-body">
+                                <div v-for="(pair, index) in splitDiffs" :key="index" class="diff-pair">
+                                    <div class="diff-side left" :class="pair.left?.type || 'empty'">
+                                        <span class="line-number">{{ pair.left?.lineNumber || '' }}</span>
+                                        <span class="line-content" v-if="pair.left" v-html="highlightDifferences(pair.left.content, pair.left.type)"></span>
+                                        <span class="line-content empty" v-else></span>
+                                    </div>
+                                    <div class="diff-side right" :class="pair.right?.type || 'empty'">
+                                        <span class="line-number">{{ pair.right?.lineNumber || '' }}</span>
+                                        <span class="line-content" v-if="pair.right" v-html="highlightDifferences(pair.right.content, pair.right.type)"></span>
+                                        <span class="line-content empty" v-else></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -205,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 defineEmits<{
     back: []
@@ -218,6 +250,9 @@ const fileInputA = ref<HTMLInputElement>()
 const fileInputB = ref<HTMLInputElement>()
 const fileInfoA = ref<{ name: string; size: number } | null>(null)
 const fileInfoB = ref<{ name: string; size: number } | null>(null)
+
+// 视图模式
+const viewMode = ref<'unified' | 'split'>('split')
 
 // 比对选项
 const options = ref({
@@ -516,6 +551,66 @@ const getSimilarityClass = (similarity: number): string => {
     if (similarity >= 70) return 'medium'
     if (similarity >= 50) return 'low'
     return 'very-low'
+}
+
+// 计算并排视图数据
+const splitDiffs = computed(() => {
+    if (!compareResult.value) return []
+    
+    const pairs: Array<{
+        left?: { type: string; lineNumber: number; content: string }
+        right?: { type: string; lineNumber: number; content: string }
+    }> = []
+    
+    const linesA = textA.value.split('\n')
+    const linesB = textB.value.split('\n')
+    const maxLines = Math.max(linesA.length, linesB.length)
+    
+    for (let i = 0; i < maxLines; i++) {
+        const lineA = linesA[i]
+        const lineB = linesB[i]
+        
+        if (lineA === undefined && lineB !== undefined) {
+            pairs.push({
+                left: undefined,
+                right: { type: 'added', lineNumber: i + 1, content: lineB }
+            })
+        } else if (lineB === undefined && lineA !== undefined) {
+            pairs.push({
+                left: { type: 'removed', lineNumber: i + 1, content: lineA },
+                right: undefined
+            })
+        } else if (lineA !== undefined && lineB !== undefined) {
+            if (lineA === lineB) {
+                pairs.push({
+                    left: { type: 'unchanged', lineNumber: i + 1, content: lineA },
+                    right: { type: 'unchanged', lineNumber: i + 1, content: lineB }
+                })
+            } else {
+                pairs.push({
+                    left: { type: 'removed', lineNumber: i + 1, content: lineA },
+                    right: { type: 'added', lineNumber: i + 1, content: lineB }
+                })
+            }
+        }
+    }
+    
+    return pairs
+})
+
+// 高亮差异
+const highlightDifferences = (content: string, type: string): string => {
+    if (type === 'unchanged') return content
+    
+    // 简单的字符级差异高亮
+    return `<span class="highlight-${type}">${escapeHtml(content)}</span>`
+}
+
+// HTML转义
+const escapeHtml = (text: string): string => {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
 }
 
 // 显示消息
@@ -888,6 +983,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     padding: 1rem;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .diff-header h4 {
@@ -897,35 +994,59 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     margin: 0;
 }
 
+.view-options {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-primary);
+    border-radius: 0.375rem;
+    padding: 0.25rem;
+}
+
+.view-btn {
+    padding: 0.375rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.view-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.view-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
 .diff-legend {
     display: flex;
     gap: 1rem;
 }
 
 .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
     font-weight: 500;
-    border-left: 3px solid;
 }
 
 .legend-item.added {
-    background: #e6ffed;
-    color: #28a745;
-    border-left-color: #28a745;
+    color: var(--success-color);
 }
 
 .legend-item.removed {
-    background: #ffeef0;
-    color: #dc3545;
-    border-left-color: #dc3545;
+    color: var(--error-color);
 }
 
 .legend-item.modified {
-    background: #fff3cd;
-    color: #856404;
-    border-left-color: #ffc107;
+    color: var(--warning-color);
 }
 
 /* 深色模式下的图例配色 */
@@ -951,6 +1072,104 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     overflow-y: auto;
 }
 
+/* 统一视图 */
+.diff-content.unified .diff-line {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+/* 并排视图 */
+.diff-content.split {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.split-header {
+    display: flex;
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.split-title {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+}
+
+.split-title:last-child {
+    border-right: none;
+}
+
+.split-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.diff-pair {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.diff-side {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    padding: 0.25rem 0.5rem;
+    min-height: 1.5rem;
+    border-right: 1px solid var(--border-color);
+}
+
+.diff-side:last-child {
+    border-right: none;
+}
+
+.diff-side.added {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid var(--success-color);
+}
+
+.diff-side.removed {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid var(--error-color);
+}
+
+.diff-side.unchanged {
+    background: transparent;
+}
+
+.diff-side.empty {
+    background: var(--bg-secondary);
+}
+
+.diff-side .line-number {
+    width: 2.5rem;
+    margin-right: 0.5rem;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.diff-side .line-content {
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.diff-side .line-content.empty {
+    height: 1.2rem;
+}
+
 .diff-line {
     display: flex;
     align-items: center;
@@ -962,18 +1181,18 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .diff-line.added {
-    background: #e6ffed;
-    border-left: 3px solid #28a745;
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid var(--success-color);
 }
 
 .diff-line.removed {
-    background: #ffeef0;
-    border-left: 3px solid #dc3545;
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid var(--error-color);
 }
 
 .diff-line.modified {
-    background: #fff3cd;
-    border-left: 3px solid #ffc107;
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid var(--warning-color);
 }
 
 /* 深色模式下的配色 */
