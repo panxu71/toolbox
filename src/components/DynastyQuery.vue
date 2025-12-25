@@ -20,8 +20,8 @@
         </div>
 
         <div class="query-content">
-            <!-- 搜索和筛选区域 -->
-            <div class="search-section">
+            <!-- 搜索和筛选区域 - 只在列表页面显示 -->
+            <div v-if="!selectedDynasty" class="search-section">
                 <div class="search-container">
                     <div class="search-input-wrapper">
                         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -29,8 +29,8 @@
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.35-4.35" />
                         </svg>
-                        <input v-model="searchQuery" type="text" class="search-input"
-                            placeholder="搜索朝代名称、皇帝姓名..." @input="filterDynasties" />
+                        <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索朝代名称、皇帝姓名..."
+                            @input="filterDynasties" />
                         <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -59,12 +59,8 @@
                 </div>
                 <div class="timeline-container">
                     <div class="timeline">
-                        <div 
-                            v-for="dynasty in filteredDynasties" 
-                            :key="dynasty.name"
-                            class="timeline-item"
-                            @click="selectDynasty(dynasty)"
-                        >
+                        <div v-for="dynasty in filteredDynasties" :key="dynasty.name" class="timeline-item"
+                            :data-dynasty="dynasty.name" @click="selectDynasty(dynasty)">
                             <div class="timeline-marker">
                                 <div class="timeline-dot" :style="{ backgroundColor: '#dc2626' }"></div>
                                 <div class="timeline-line"></div>
@@ -77,13 +73,14 @@
                                             <span class="dynasty-period">{{ dynasty.period }}</span>
                                         </div>
                                         <div class="dynasty-basic">
-                                            <span class="dynasty-years">{{ dynasty.startYear }} - {{ dynasty.endYear }}</span>
+                                            <span class="dynasty-years">{{ dynasty.startYear }} - {{ dynasty.endYear
+                                            }}</span>
                                             <span class="dynasty-duration">{{ dynasty.duration }}年</span>
                                         </div>
                                     </div>
                                     <div class="dynasty-info">
                                         <span class="dynasty-capital">都城：{{ dynasty.capital }}</span>
-                                        <span class="emperors-count">皇帝：{{ dynasty.emperors.length }}位</span>
+                                        <span class="emperors-count">皇帝：{{ dynasty.emperors?.length || 0 }}位</span>
                                     </div>
                                     <div class="dynasty-founder">
                                         开国：{{ dynasty.founder }} → 末代：{{ dynasty.lastEmperor }}
@@ -101,7 +98,7 @@
             <!-- 朝代详情 -->
             <div v-if="selectedDynasty" class="dynasty-detail">
                 <div class="detail-header">
-                    <button class="back-detail-btn" @click="selectedDynasty = null">
+                    <button class="back-detail-btn" @click="backToList">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="m15 18-6-6 6-6" />
@@ -149,6 +146,20 @@
                             <p class="dynasty-description">{{ selectedDynasty.description }}</p>
                         </div>
 
+                        <div class="detail-card" v-if="selectedDynasty.timeline">
+                            <h4>历史脉络</h4>
+                            <div class="timeline-events">
+                                <div v-for="event in selectedDynasty.timeline" :key="event.event" class="timeline-event"
+                                    :class="event.type">
+                                    <div class="event-marker"></div>
+                                    <div class="event-content">
+                                        <h5 class="event-title">{{ event.event }}</h5>
+                                        <p class="event-description">{{ event.description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="detail-card" v-if="selectedDynasty.achievements">
                             <h4>主要成就</h4>
                             <ul class="achievements-list">
@@ -175,13 +186,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(emperor, index) in selectedDynasty.emperors" :key="emperor.name">
+                                    <tr v-for="(emperor, index) in selectedDynasty.emperors || []" :key="emperor.name">
                                         <td class="emperor-index">{{ index + 1 }}</td>
                                         <td class="emperor-title-table">{{ emperor.title }}</td>
                                         <td class="emperor-era-table">{{ emperor.eraName || '-' }}</td>
                                         <td class="emperor-name-table">{{ emperor.name }}</td>
-                                        <td class="emperor-reign-table">{{ emperor.reignStart }} - {{ emperor.reignEnd }}</td>
-                                        <td class="emperor-years-table">{{ typeof emperor.reignYears === 'number' ? emperor.reignYears + '年' : emperor.reignYears }}</td>
+                                        <td class="emperor-reign-table">{{ emperor.reignStart }} - {{ emperor.reignEnd
+                                        }}</td>
+                                        <td class="emperor-years-table">{{ typeof emperor.reignYears === 'number' ?
+                                            emperor.reignYears + '年' : emperor.reignYears }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -205,7 +218,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 
 defineEmits<{
     back: []
@@ -215,6 +228,7 @@ defineEmits<{
 const searchQuery = ref('')
 const activePeriod = ref('all')
 const selectedDynasty = ref<Dynasty | null>(null)
+const lastViewedDynasty = ref<string | null>(null)
 
 // 消息提示
 const message = ref('')
@@ -237,7 +251,7 @@ interface Emperor {
     title: string
     reignStart: string
     reignEnd: string
-    reignYears: number
+    reignYears: number | string
     eraName?: string
 }
 
@@ -251,8 +265,17 @@ interface Dynasty {
     lastEmperor: string
     period: string
     description: string
-    emperors: Emperor[]
+    timeline?: Array<{
+        event: string
+        description: string
+        type: 'start' | 'major' | 'end'
+    }>
+    emperors?: Emperor[]
     achievements?: string[]
+    famousEmperors?: Array<{
+        name: string
+        description: string
+    }>
 }
 
 // 朝代数据 - 按正确的时间顺序排列
@@ -922,6 +945,34 @@ const getPeriodTitle = () => {
 // 选择朝代查看详情
 const selectDynasty = (dynasty: Dynasty) => {
     selectedDynasty.value = dynasty
+    lastViewedDynasty.value = dynasty.name
+}
+
+// 返回列表并定位到之前查看的朝代
+const backToList = () => {
+    selectedDynasty.value = null
+    // 等待DOM更新后滚动到指定位置
+    nextTick(() => {
+        if (lastViewedDynasty.value) {
+            scrollToDynasty(lastViewedDynasty.value)
+        }
+    })
+}
+
+// 滚动到指定朝代
+const scrollToDynasty = (dynastyName: string) => {
+    const element = document.querySelector(`[data-dynasty="${dynastyName}"]`)
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        })
+        // 添加高亮效果
+        element.classList.add('highlight')
+        setTimeout(() => {
+            element.classList.remove('highlight')
+        }, 2000)
+    }
 }
 
 // 导出数据
@@ -1261,7 +1312,33 @@ onMounted(() => {
 .dynasty-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    border-color: #cbd5e1;
+    border-color: var(--primary-color);
+}
+
+.timeline-item.highlight .dynasty-card {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+    animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 3px var(--primary-color-alpha);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px var(--primary-color-alpha);
+    }
+}
+
+.dynasty-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
 }
 
 .dynasty-header {
@@ -1627,17 +1704,99 @@ onMounted(() => {
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
+/* Timeline事件样式 */
+.timeline-events {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.timeline-events::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.timeline-event {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.timeline-event:last-child {
+    margin-bottom: 0;
+}
+
+.event-marker {
+    position: absolute;
+    left: -1.25rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid var(--bg-secondary);
+    z-index: 1;
+}
+
+.timeline-event.start .event-marker {
+    background: var(--success-color);
+}
+
+.timeline-event.major .event-marker {
+    background: var(--primary-color);
+}
+
+.timeline-event.end .event-marker {
+    background: var(--error-color);
+}
+
+.event-content {
+    background: var(--bg-secondary);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border-left: 3px solid var(--border-color);
+}
+
+.timeline-event.start .event-content {
+    border-left-color: var(--success-color);
+}
+
+.timeline-event.major .event-content {
+    border-left-color: var(--primary-color);
+}
+
+.timeline-event.end .event-content {
+    border-left-color: var(--error-color);
+}
+
+.event-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.event-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
 /* 响应式设计 */
 @media (max-width: 1024px) {
     .timeline {
         max-width: 100%;
         padding: 0;
     }
-    
+
     .search-container {
         max-width: 100%;
     }
-    
+
     .detail-grid {
         grid-template-columns: 1fr;
     }
@@ -1662,19 +1821,19 @@ onMounted(() => {
     .timeline-container {
         padding: 0;
     }
-    
+
     .timeline-marker {
         margin-right: 1rem;
     }
-    
+
     .dynasty-card {
         padding: 1rem;
     }
-    
+
     .dynasty-name {
         font-size: 1.25rem;
     }
-    
+
     .query-content {
         padding: 1rem;
     }
@@ -1723,25 +1882,25 @@ onMounted(() => {
     .timeline-marker {
         margin-right: 0.75rem;
     }
-    
+
     .timeline-dot {
         width: 0.75rem;
         height: 0.75rem;
     }
-    
+
     .dynasty-card {
         padding: 0.75rem;
     }
-    
+
     .dynasty-name {
         font-size: 1.125rem;
     }
-    
+
     .dynasty-info {
         flex-direction: column;
         gap: 0.25rem;
     }
-    
+
     .query-header {
         padding: 0.75rem 1rem;
     }
