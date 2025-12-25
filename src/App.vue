@@ -38,6 +38,7 @@ import TextCompare from './components/TextCompare.vue'
 import MimeTypeReference from './components/MimeTypeReference.vue'
 import DynastyQuery from './components/DynastyQuery.vue'
 import UuidGenerator from './components/UuidGenerator.vue'
+import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
@@ -114,7 +115,16 @@ const handleToolSelection = (toolId: string, action: string) => {
         'domain-whois': 'query',
         'http-status': 'query',
         'regex-tester': 'query',
-        'color-reference': 'query'
+        'color-reference': 'query',
+
+        // 导航工具
+        'programming-languages': 'navigation',
+        'bookmark-manager': 'navigation',
+        'quick-links': 'navigation',
+        'search-engines': 'navigation',
+        'tab-manager': 'navigation',
+        'url-shortener': 'navigation',
+        'website-analyzer': 'navigation'
     }
 
     // 切换到对应的导航分类
@@ -131,15 +141,66 @@ const handleToolSelection = (toolId: string, action: string) => {
 const handleNavigate = (navId: string) => {
     activeNav.value = navId
     currentPage.value = null // 返回主页面
+    updateUrl(navId) // 更新URL
 }
 
 // 页面切换
 const openPage = (pageName: string) => {
     currentPage.value = pageName
+    // 根据页面名称找到对应的工具ID并更新URL
+    const toolId = getToolIdByPageName(pageName)
+    if (toolId) {
+        updateUrl(activeNav.value, toolId)
+    }
+}
+
+// 根据页面名称获取工具ID
+const getToolIdByPageName = (pageName: string): string | null => {
+    const pageToolMap: Record<string, string> = {
+        'json-formatter': 'json-format',
+        'json-to-excel': 'json-to-excel',
+        'json-postman-converter': 'json-postman-converter',
+        'json-to-php': 'json-to-php',
+        'timestamp-converter': 'timestamp-convert',
+        'date-calculator': 'date-calculator',
+        'timezone-converter': 'timezone-convert',
+        'countdown-timer': 'countdown-timer',
+        'base64-converter': 'base64-encode',
+        'url-converter': 'url-encode',
+        'hash-generator': 'md5-hash',
+        'rsa-key-generator': 'rsa-key-generator',
+        'text-encoder': 'text-encoder',
+        'jwt-generator': 'jwt-generator',
+        'chinese-converter': 'chinese-converter',
+        'text-replacer': 'text-replacer',
+        'php-serializer': 'php-serializer',
+        'code-formatter': 'code-formatter',
+        'base-converter': 'number-base',
+        'number-converter': 'number-format',
+        'unit-converter': 'unit-convert',
+        'image-base64-converter': 'image-base64',
+        'api-tester': 'api-tester',
+        'uuid-generator': 'uuid-generator',
+        'password-generator': 'password-generator',
+        'qr-generator': 'qr-generator',
+        'crontab-generator': 'crontab-generator',
+        'text-compare': 'text-compare',
+        'string-counter': 'string-counter',
+        'ascii-lookup': 'ascii-lookup',
+        'regex-tester': 'regex-tester',
+        'color-reference': 'color-reference',
+        'surname-lookup': 'surname-lookup',
+        'mime-type-reference': 'mime-type-reference',
+        'dynasty-query': 'dynasty-query',
+        'programming-languages': 'programming-languages'
+    }
+    
+    return pageToolMap[pageName] || null
 }
 
 const closePage = () => {
     currentPage.value = null
+    updateUrl(activeNav.value) // 清除工具参数，只保留分类
 }
 
 const openSettings = () => {
@@ -302,6 +363,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
 
             // 导航工具
+            case 'programmingLanguages':
+                openPage('programming-languages')
+                return // 不需要loading状态
             case 'manageBookmarks':
                 await manageBookmarks()
                 break
@@ -313,6 +377,12 @@ const executeFunction = async (action: string) => {
                 break
             case 'manageTabs':
                 await manageTabs()
+                break
+            case 'shortenUrl':
+                await shortenUrl()
+                break
+            case 'analyzeWebsite':
+                await analyzeWebsite()
                 break
 
             // 设置
@@ -476,6 +546,14 @@ const searchEngines = async () => {
 
 const manageTabs = async () => {
     showMessage('标签页管理功能开发中...')
+}
+
+const shortenUrl = async () => {
+    showMessage('短链接生成功能开发中...')
+}
+
+const analyzeWebsite = async () => {
+    showMessage('网站分析工具功能开发中...')
 }
 
 // 设置函数
@@ -653,7 +731,119 @@ const showMessage = (message: string) => {
 
 onMounted(() => {
     getCurrentTab()
+    // 处理URL参数，支持直接访问特定功能
+    handleUrlParams()
 })
+
+// 处理URL参数
+const handleUrlParams = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tool = urlParams.get('tool')
+    const category = urlParams.get('category')
+    
+    if (tool) {
+        // 根据工具ID直接打开对应功能
+        const toolAction = getToolAction(tool)
+        if (toolAction) {
+            if (category) {
+                activeNav.value = category
+            }
+            executeFunction(toolAction)
+        }
+    } else if (category) {
+        // 只指定了分类，切换到对应分类
+        if (navigationItems.find(item => item.id === category)) {
+            activeNav.value = category
+        }
+    }
+}
+
+// 根据工具ID获取对应的action
+const getToolAction = (toolId: string): string | null => {
+    const toolActionMap: Record<string, string> = {
+        // JSON工具
+        'json-format': 'formatJson',
+        'json-to-excel': 'jsonToExcel',
+        'json-postman-converter': 'jsonPostmanConverter',
+        'json-to-php': 'jsonToPhp',
+
+        // 时间工具
+        'timestamp-convert': 'convertTimestamp',
+        'date-calculator': 'calculateDate',
+        'timezone-convert': 'convertTimezone',
+        'countdown-timer': 'countdownTimer',
+
+        // 加密工具
+        'base64-encode': 'base64Encode',
+        'url-encode': 'urlEncode',
+        'md5-hash': 'md5Hash',
+        'rsa-key-generator': 'generateRsaKeys',
+        'text-encoder': 'encodeText',
+        'jwt-generator': 'generateJWT',
+
+        // 转换工具
+        'chinese-converter': 'convertChinese',
+        'text-replacer': 'replaceText',
+        'php-serializer': 'phpSerialize',
+        'code-formatter': 'formatCode',
+        'number-base': 'convertBase',
+        'number-format': 'convertNumber',
+        'unit-convert': 'convertUnit',
+        'image-base64': 'convertImageBase64',
+
+        // 生成工具
+        'api-tester': 'testApi',
+        'uuid-generator': 'generateUuid',
+        'password-generator': 'generatePassword',
+        'qr-generator': 'generateQR',
+        'crontab-generator': 'generateCrontab',
+
+        // 查询工具
+        'text-compare': 'compareText',
+        'string-counter': 'countString',
+        'ascii-lookup': 'lookupAscii',
+        'regex-tester': 'testRegex',
+        'color-reference': 'convertColor',
+        'surname-lookup': 'lookupSurname',
+        'mime-type-reference': 'mimeTypeReference',
+        'dynasty-query': 'dynastyQuery',
+
+        // 导航工具
+        'programming-languages': 'programmingLanguages',
+        'bookmark-manager': 'manageBookmarks',
+        'quick-links': 'quickLinks',
+        'search-engines': 'searchEngines',
+        'tab-manager': 'manageTabs',
+        'url-shortener': 'shortenUrl',
+        'website-analyzer': 'analyzeWebsite'
+    }
+    
+    return toolActionMap[toolId] || null
+}
+
+// 更新URL（不刷新页面）
+const updateUrl = (category?: string, tool?: string) => {
+    const url = new URL(window.location.href)
+    
+    if (category) {
+        url.searchParams.set('category', category)
+    } else {
+        url.searchParams.delete('category')
+    }
+    
+    if (tool) {
+        url.searchParams.set('tool', tool)
+    } else {
+        url.searchParams.delete('tool')
+    }
+    
+    // 如果没有参数，清空search
+    if (!url.searchParams.toString()) {
+        url.search = ''
+    }
+    
+    window.history.replaceState({}, '', url.toString())
+}
 </script>
 
 <template>
@@ -713,6 +903,7 @@ onMounted(() => {
                 <MimeTypeReference v-if="currentPage === 'mime-type-reference'" @back="closePage" />
                 <DynastyQuery v-if="currentPage === 'dynasty-query'" @back="closePage" />
                 <UuidGenerator v-if="currentPage === 'uuid-generator'" @back="closePage" />
+                <ProgrammingLanguages v-if="currentPage === 'programming-languages'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
             </template>
         </div>

@@ -35,6 +35,12 @@
             "name": "查询类工具",
             "icon": "🔍",
             "active": false
+        },
+        {
+            "id": "navigation",
+            "name": "导航类工具",
+            "icon": "🧭",
+            "active": false
         }
     ]
 }

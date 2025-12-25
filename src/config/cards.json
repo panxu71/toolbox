@@ -364,7 +364,84 @@
                 }
             }
         ],
-        "navigation": [],
+        "navigation": [
+            {
+                "id": "programming-languages",
+                "title": "编程语言大全",
+                "description": "查看各种编程语言的特点、用途和学习资源",
+                "icon": "💻",
+                "action": "programmingLanguages",
+                "color": "#6366f1",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
+                "id": "bookmark-manager",
+                "title": "书签管理器",
+                "description": "管理和整理浏览器书签，支持导入导出",
+                "icon": "🔖",
+                "action": "manageBookmarks",
+                "color": "#10b981",
+                "badge": {
+                    "text": "实用",
+                    "color": "#06b6d4"
+                }
+            },
+            {
+                "id": "quick-links",
+                "title": "快速链接",
+                "description": "自定义常用网站快速访问面板",
+                "icon": "⚡",
+                "action": "quickLinks",
+                "color": "#f59e0b",
+                "badge": {
+                    "text": "热门",
+                    "color": "#ef4444"
+                }
+            },
+            {
+                "id": "search-engines",
+                "title": "搜索引擎集合",
+                "description": "集成多个搜索引擎，一键切换搜索",
+                "icon": "🔍",
+                "action": "searchEngines",
+                "color": "#06b6d4"
+            },
+            {
+                "id": "tab-manager",
+                "title": "标签页管理",
+                "description": "批量管理浏览器标签页，支持分组和保存",
+                "icon": "📑",
+                "action": "manageTabs",
+                "color": "#8b5cf6",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
+            },
+            {
+                "id": "url-shortener",
+                "title": "短链接生成",
+                "description": "生成短链接，支持自定义域名和统计",
+                "icon": "🔗",
+                "action": "shortenUrl",
+                "color": "#ec4899"
+            },
+            {
+                "id": "website-analyzer",
+                "title": "网站分析工具",
+                "description": "分析网站SEO、性能、安全等信息",
+                "icon": "📊",
+                "action": "analyzeWebsite",
+                "color": "#f97316",
+                "badge": {
+                    "text": "专业",
+                    "color": "#8b5cf6"
+                }
+            }
+        ],
         "settings": []
     }
 }
