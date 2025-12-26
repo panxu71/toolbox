@@ -263,6 +263,19 @@
                                 </svg>
                             </button>
                         </div>
+                        <div class="pane-actions">
+                            <button class="sample-btn" @click="insertSampleData()" title="插入示例数据">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14,2 14,8 20,8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10,9 9,9 8,9" />
+                                </svg>
+                                示例数据
+                            </button>
+                        </div>
                     </div>
                     <div class="editor-content">
                         <div class="line-numbers" ref="lineNumbersRef"></div>
@@ -305,7 +318,8 @@ const emit = defineEmits<{ back: [] }>()
 const editorRef = ref<HTMLTextAreaElement>()
 const imageInput = ref<HTMLInputElement>()
 const lineNumbersRef = ref<HTMLDivElement>()
-const content = ref(`# 欢迎使用 Markdown 编辑器 📝
+const content = ref('')
+const example = ref(`# 欢迎使用 Markdown 编辑器 📝
 
 ## 功能特色 ✨
 
@@ -1186,11 +1200,14 @@ onMounted(() => {
     updateLineNumbers()
 })
 
+function insertSampleData() {
+    content.value = example.value
+    showMessage('示例数据已插入')
+}
+
 function clearContent() {
-    if (confirm('确定要清空所有内容吗？')) {
-        content.value = ''
-        showMessage('内容已清空')
-    }
+    content.value = ''
+    showMessage('内容已清空')
 }
 
 function exportMarkdown() {
@@ -1465,6 +1482,35 @@ function handlePaste(event: ClipboardEvent) {
     text-transform: uppercase;
 }
 
+.pane-actions {
+    margin-left: auto;
+}
+
+.sample-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.sample-btn:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+.sample-btn:hover svg {
+    color: #2563eb;
+}
+
 .editor-toolbar {
     display: flex;
     align-items: center;
@@ -1539,6 +1585,20 @@ function handlePaste(event: ClipboardEvent) {
 .toolbar-btn.preview-toggle:hover {
     background: #f3f4f6;
     color: #2563eb;
+}
+
+.toolbar-btn.sample-data-btn {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0369a1;
+}
+
+.toolbar-btn.sample-data-btn:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+    color: #0c4a6e;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(3, 105, 161, 0.2);
 }
 
 .emoji-menu {
