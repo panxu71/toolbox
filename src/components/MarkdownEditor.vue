@@ -264,10 +264,13 @@
                             </button>
                         </div>
                     </div>
-                    <textarea ref="editorRef" v-model="content" class="editor-textarea"
-                        placeholder="在这里输入 Markdown 内容..." @input="updatePreview" @keydown="handleKeydown"
-                        @paste="handlePaste">
-                    </textarea>
+                    <div class="editor-content">
+                        <div class="line-numbers" ref="lineNumbersRef"></div>
+                        <textarea ref="editorRef" v-model="content" class="editor-textarea"
+                            placeholder="在这里输入 Markdown 内容..." @input="updatePreview" @keydown="handleKeydown"
+                            @paste="handlePaste" @scroll="syncScroll">
+                        </textarea>
+                    </div>
                 </div>
 
                 <!-- 预览区域 -->
@@ -294,13 +297,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { marked } from 'marked'
 
 const emit = defineEmits<{ back: [] }>()
 
 const editorRef = ref<HTMLTextAreaElement>()
 const imageInput = ref<HTMLInputElement>()
+const lineNumbersRef = ref<HTMLDivElement>()
 const content = ref(`# 欢迎使用 Markdown 编辑器 📝
 
 ## 功能特色 ✨
@@ -446,7 +450,7 @@ print(f"📊 销售统计: {stats}")
 ## 图片示例 🖼️
 
 ### 在线图片
-![🌅 美丽风景](https://via.placeholder.com/400x200/4285f4/ffffff?text=Beautiful+Landscape)
+![🌅 美丽风景](https://picsum.photos/400/300?random=3)
 
 ### 本地图片（Base64）
 > 💡 提示：你可以通过工具栏的图片按钮上传本地图片，系统会自动转换为 Base64 格式
@@ -863,6 +867,24 @@ function showMessage(text: string, type: 'success' | 'error' = 'success') {
 
 function updatePreview() {
     // 预览会自动更新，因为使用了 computed
+    updateLineNumbers()
+}
+
+function updateLineNumbers() {
+    if (!lineNumbersRef.value || !editorRef.value) return
+
+    const lines = content.value.split('\n').length
+    const lineNumbersHtml = Array.from({ length: lines }, (_, i) =>
+        `<div class="line-number">${i + 1}</div>`
+    ).join('')
+
+    lineNumbersRef.value.innerHTML = lineNumbersHtml
+}
+
+function syncScroll() {
+    if (!lineNumbersRef.value || !editorRef.value) return
+
+    lineNumbersRef.value.scrollTop = editorRef.value.scrollTop
 }
 
 function togglePreview() {
@@ -1159,6 +1181,11 @@ function handleClickOutside(event: Event) {
 // 添加全局点击监听
 document.addEventListener('click', handleClickOutside)
 
+// 组件挂载时初始化行号
+onMounted(() => {
+    updateLineNumbers()
+})
+
 function clearContent() {
     if (confirm('确定要清空所有内容吗？')) {
         content.value = ''
@@ -1384,6 +1411,37 @@ function handlePaste(event: ClipboardEvent) {
     display: flex;
     flex-direction: column;
     min-height: 0;
+}
+
+.editor-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    min-height: 0;
+}
+
+.line-numbers {
+    width: 50px;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    color: #9ca3af;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px 8px 16px 0;
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.line-number {
+    height: 22.4px;
+    /* 匹配 textarea 行高 */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
 }
 
 .preview-pane {
@@ -1663,13 +1721,14 @@ function handlePaste(event: ClipboardEvent) {
     flex: 1;
     border: none;
     outline: none;
-    padding: 16px;
+    padding: 16px 16px 16px 12px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 14px;
     line-height: 1.6;
     color: #374151;
     background: #ffffff;
     resize: none;
+    margin: 0;
 }
 
 .editor-textarea::placeholder {

@@ -63,7 +63,7 @@
 - **密码生成器** - 生成安全随机密码，支持自定义规则
 - **二维码生成** - 生成自定义二维码，支持 Logo 和容错率设置
 - **Crontab 表达式** - 生成和解析 Cron 定时任务表达式
-- **Markdown 编辑器** - 在线 Markdown 编辑器，支持图片拖拽转 Base64，实时预览
+- **Markdown 编辑器** - 自研在线 Markdown 编辑器，支持图片拖拽转 Base64，实时预览
 
 ### 🔍 查询工具
 - **文本比对** - 比较两个文本的差异，支持文件上传
@@ -187,7 +187,7 @@ npm run type-check       # TypeScript 类型检查
 | Vue.js | 3.5+ | 前端框架 |
 | TypeScript | 5.9+ | 类型安全 |
 | Vite | 7.0+ | 构建工具 |
-| mavon-editor | 2.10+ | Markdown 编辑器 |
+| marked | 13.0+ | Markdown 解析器 |
 | Prettier | 3.7+ | 代码格式化 |
 | js-beautify | 1.15+ | 代码美化 |
 | highlight.js | 11.11+ | 语法高亮 |
@@ -304,6 +304,7 @@ npm run type-check
 
 - [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
 - [Vite](https://vitejs.dev/) - 下一代前端构建工具  
+- [marked](https://github.com/markedjs/marked) - 快速轻量的 Markdown 解析器
 - [Prettier](https://prettier.io/) - 代码格式化工具
 - [OpenCC](https://github.com/BYVoid/OpenCC) - 中文简繁转换
 - [highlight.js](https://highlightjs.org/) - 语法高亮库
