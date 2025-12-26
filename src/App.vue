@@ -39,6 +39,7 @@ import MimeTypeReference from './components/MimeTypeReference.vue'
 import DynastyQuery from './components/DynastyQuery.vue'
 import UuidGenerator from './components/UuidGenerator.vue'
 import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
+import MarkdownEditor from './components/MarkdownEditor.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
@@ -184,6 +185,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'password-generator': 'password-generator',
         'qr-generator': 'qr-generator',
         'crontab-generator': 'crontab-generator',
+        'markdown-editor': 'markdown-editor',
         'text-compare': 'text-compare',
         'string-counter': 'string-counter',
         'ascii-lookup': 'ascii-lookup',
@@ -331,6 +333,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'generateCrontab':
                 openPage('crontab-generator')
+                return // 不需要loading状态
+            case 'markdownEditor':
+                openPage('markdown-editor')
                 return // 不需要loading状态
             case 'generateUuid':
                 openPage('uuid-generator')
@@ -806,6 +811,7 @@ const getToolAction = (toolId: string): string | null => {
         'password-generator': 'generatePassword',
         'qr-generator': 'generateQR',
         'crontab-generator': 'generateCrontab',
+        'markdown-editor': 'markdownEditor',
 
         // 查询工具
         'text-compare': 'compareText',
@@ -894,6 +900,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <CodeFormatter v-if="currentPage === 'code-formatter'" @back="closePage" />
                 <QrGenerator v-if="currentPage === 'qr-generator'" @back="closePage" />
                 <CrontabGenerator v-if="currentPage === 'crontab-generator'" @back="closePage" />
+                <MarkdownEditor v-if="currentPage === 'markdown-editor'" @back="closePage" />
                 <BaseConverter v-if="currentPage === 'base-converter'" @back="closePage" />
                 <TextEncoder v-if="currentPage === 'text-encoder'" @back="closePage" />
                 <StringCounter v-if="currentPage === 'string-counter'" @back="closePage" />

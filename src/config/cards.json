@@ -272,6 +272,18 @@
                     "text": "专业",
                     "color": "#8b5cf6"
                 }
+            },
+            {
+                "id": "markdown-editor",
+                "title": "Markdown编辑器",
+                "description": "在线Markdown编辑器，支持图片拖拽转Base64",
+                "icon": "📝",
+                "action": "markdownEditor",
+                "color": "#6366f1",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "query": [
@@ -385,8 +397,8 @@
                 "action": "manageBookmarks",
                 "color": "#10b981",
                 "badge": {
-                    "text": "实用",
-                    "color": "#06b6d4"
+                    "text": "开发中",
+                    "color": "#f59e0b"
                 }
             },
             {
@@ -397,8 +409,8 @@
                 "action": "quickLinks",
                 "color": "#f59e0b",
                 "badge": {
-                    "text": "热门",
-                    "color": "#ef4444"
+                    "text": "开发中",
+                    "color": "#f59e0b"
                 }
             },
             {
@@ -407,7 +419,11 @@
                 "description": "集成多个搜索引擎，一键切换搜索",
                 "icon": "🔍",
                 "action": "searchEngines",
-                "color": "#06b6d4"
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "开发中",
+                    "color": "#f59e0b"
+                }
             },
             {
                 "id": "tab-manager",
@@ -417,8 +433,8 @@
                 "action": "manageTabs",
                 "color": "#8b5cf6",
                 "badge": {
-                    "text": "新功能",
-                    "color": "#10b981"
+                    "text": "开发中",
+                    "color": "#f59e0b"
                 }
             },
             {
@@ -427,7 +443,11 @@
                 "description": "生成短链接，支持自定义域名和统计",
                 "icon": "🔗",
                 "action": "shortenUrl",
-                "color": "#ec4899"
+                "color": "#ec4899",
+                "badge": {
+                    "text": "开发中",
+                    "color": "#f59e0b"
+                }
             },
             {
                 "id": "website-analyzer",
@@ -437,8 +457,8 @@
                 "action": "analyzeWebsite",
                 "color": "#f97316",
                 "badge": {
-                    "text": "专业",
-                    "color": "#8b5cf6"
+                    "text": "开发中",
+                    "color": "#f59e0b"
                 }
             }
         ],

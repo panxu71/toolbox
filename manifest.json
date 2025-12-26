@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Toolbox 工具箱",
-    "version": "1.0.0",
+    "version": "2.1.0",
     "description": "专业的开发者工具箱，提供JSON格式化、代码美化、进制转换、密码生成、简繁体转换等实用功能",
     "permissions": [
         "activeTab",
