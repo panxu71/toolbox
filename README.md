@@ -119,7 +119,7 @@ npm run preview
 ### 🔧 Chrome 扩展安装
 
 #### 方式一：下载安装包（推荐）
-1. 下载最新版本：[toolbox-extension-v2.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v2.0.0.zip)
+1. 下载最新版本：[toolbox-extension](https://github.com/panxu71/toolbox/releases)
 2. 解压下载的zip文件
 3. 打开Chrome浏览器，访问 `chrome://extensions/`
 4. 开启右上角的"开发者模式"
@@ -138,11 +138,12 @@ npm install
 # 3. 构建扩展
 npm run ext
 
-# 4. 在 Chrome 中加载
-# 打开 chrome://extensions/
-# 开启开发者模式
-# 点击"加载已解压的扩展程序"
-# 选择 dist 目录
+4. 在 Chrome 中加载
+打开 chrome://extensions/
+开启开发者模式
+点击"加载已解压的扩展程序"
+选择 dist 目录
+
 ```
 
 ## 📦 构建命令
