@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { copyFileSync, mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync, rmSync, statSync } from 'fs'
 
 // 检查构建目标
 const buildTarget = process.env.BUILD_TARGET || 'web'
 const isExtensionBuild = buildTarget === 'extension'
 const isStandaloneBuild = buildTarget === 'standalone'
+const isWebBuild = buildTarget === 'web'
 
 // 根据构建目标设置输出目录
 const getOutDir = () => {
@@ -22,13 +23,48 @@ const getOutDir = () => {
   }
 }
 
+// 自定义清空目录函数，保留指定文件
+const emptyDirExcept = (dir: string, keepFiles: string[] = []) => {
+  if (!existsSync(dir)) return
+  
+  const files = readdirSync(dir)
+  for (const file of files) {
+    if (keepFiles.includes(file)) {
+      console.log(`🔒 保留文件: ${file}`)
+      continue
+    }
+    
+    const filePath = resolve(dir, file)
+    const stat = statSync(filePath)
+    
+    if (stat.isDirectory()) {
+      rmSync(filePath, { recursive: true, force: true })
+      console.log(`🗑️ 删除目录: ${file}`)
+    } else {
+      unlinkSync(filePath)
+      console.log(`🗑️ 删除文件: ${file}`)
+    }
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    // 自定义插件来复制图标文件和manifest
+    // 自定义插件来处理文件复制和目录清理
     {
       name: 'copy-extension-files',
+      buildStart() {
+        // Web构建时自定义清空目录，保留CNAME文件
+        if (isWebBuild) {
+          const outDir = getOutDir()
+          const outDirPath = resolve(__dirname, outDir)
+          if (existsSync(outDirPath)) {
+            console.log('🧹 清空输出目录，保留 CNAME 文件...')
+            emptyDirExcept(outDirPath, ['CNAME'])
+          }
+        }
+      },
       writeBundle() {
         const outDir = getOutDir()
         const iconsDir = resolve(__dirname, `${outDir}/icons`)
@@ -114,7 +150,7 @@ export default defineConfig({
       }
     },
     outDir: getOutDir(),
-    emptyOutDir: buildTarget !== 'extension', // 扩展构建时不清空目录，避免冲突
+    emptyOutDir: false, // 禁用vite的自动清空，使用自定义清空逻辑
     minify: 'terser',
     sourcemap: false,
     target: 'es2020',
