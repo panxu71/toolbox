@@ -8,17 +8,22 @@
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Chrome Extension](https://img.shields.io/badge/chrome-extension-orange.svg)](https://chrome.google.com/webstore)
 
-## 🌐 在线使用
+## 🚀 快速开始
 
-**官方网站**: [https://toolbox.panxu.net](https://toolbox.panxu.net)
+### 🌐 在线使用（最简单）
+直接访问官网：**[https://toolbox.panxu.net](https://toolbox.panxu.net)**
 
-无需安装，打开即用！支持所有现代浏览器。
+### 📱 Chrome扩展（离线使用）
+下载安装包：**[toolbox-extension-v2.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v2.0.0.zip)
 
-## 📱 Chrome扩展下载
+# Chrome 安装 ZIP 格式扩展步骤
 
-**扩展下载**: [toolbox-extension-v2.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v2.0.0.zip)
+**打开扩展管理页面**  
 
-下载后解压，在Chrome扩展管理页面加载即可离线使用。
+在 Chrome 地址栏输入 `chrome://extensions/` 并回车。
+
+**安装扩展程序**
+把 zip 压缩包拖进去就安装完成了。
 
 ## ✨ 功能特色
 
@@ -78,13 +83,6 @@
 - **短链接生成** - 生成短链接，支持自定义域名和统计
 - **网站分析工具** - 分析网站 SEO、性能、安全等信息
 
-## 🚀 快速开始
-
-### 🌐 在线使用（最简单）
-直接访问官网：**[https://toolbox.panxu.net](https://toolbox.panxu.net)**
-
-### 📱 Chrome扩展（离线使用）
-下载安装包：**[toolbox-extension-v2.0.0.zip](https://github.com/panxu71/toolbox/releases/latest/download/toolbox-extension-v2.0.0.zip)**
 
 ## 🌐 Web 版本使用
 
@@ -120,11 +118,7 @@ npm run preview
 
 #### 方式一：下载安装包（推荐）
 1. 下载最新版本：[toolbox-extension](https://github.com/panxu71/toolbox/releases)
-2. 解压下载的zip文件
-3. 打开Chrome浏览器，访问 `chrome://extensions/`
-4. 开启右上角的"开发者模式"
-5. 点击"加载已解压的扩展程序"
-6. 选择解压后的文件夹
+2. 打开管理扩展程序，拖入zip压缩包就安装完成了。
 
 #### 方式二：从源码构建
 ```bash
