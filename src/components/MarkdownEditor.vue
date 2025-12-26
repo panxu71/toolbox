@@ -310,7 +310,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 
 const emit = defineEmits<{ back: [] }>()
@@ -1199,6 +1199,11 @@ document.addEventListener('click', handleClickOutside)
 onMounted(() => {
     updateLineNumbers()
 })
+
+// 监听内容变化，更新行号
+watch(content, () => {
+    updateLineNumbers()
+}, { immediate: true })
 
 function insertSampleData() {
     content.value = example.value
