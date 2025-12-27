@@ -26,17 +26,17 @@ const getOutDir = () => {
 // 自定义清空目录函数，保留指定文件
 const emptyDirExcept = (dir: string, keepFiles: string[] = []) => {
   if (!existsSync(dir)) return
-  
+
   const files = readdirSync(dir)
   for (const file of files) {
     if (keepFiles.includes(file)) {
       console.log(`🔒 保留文件: ${file}`)
       continue
     }
-    
+
     const filePath = resolve(dir, file)
     const stat = statSync(filePath)
-    
+
     if (stat.isDirectory()) {
       rmSync(filePath, { recursive: true, force: true })
       console.log(`🗑️ 删除目录: ${file}`)
@@ -67,24 +67,45 @@ export default defineConfig({
       },
       writeBundle() {
         const outDir = getOutDir()
-        const iconsDir = resolve(__dirname, `${outDir}/icons`)
-        if (!existsSync(iconsDir)) {
-          mkdirSync(iconsDir, { recursive: true })
-        }
 
-        // 复制图标文件到根目录
-        const iconFiles = ['icon16.png', 'icon32.png', 'icon48.png']
-        iconFiles.forEach(file => {
-          const src = resolve(__dirname, `src/assets/icons/${file}`)
-          const dest = resolve(__dirname, `${outDir}/${file}`)
+        // Web构建时只复制favicon图标
+        if (isWebBuild) {
+          const src = resolve(__dirname, 'src/assets/icons/icon16.png')
+          const dest = resolve(__dirname, `${outDir}/icon16.png`)
           if (existsSync(src)) {
             copyFileSync(src, dest)
-            console.log(`✅ 复制图标到根目录: ${file}`)
+            console.log(`✅ 复制favicon图标: icon16.png`)
           }
-        })
+        }
 
-        // 只在扩展构建模式下复制manifest.json
+        // 只在扩展构建模式下处理图标文件
         if (isExtensionBuild) {
+          const iconsDir = resolve(__dirname, `${outDir}/icons`)
+          if (!existsSync(iconsDir)) {
+            mkdirSync(iconsDir, { recursive: true })
+          }
+
+          // 复制图标文件到根目录和icons目录
+          const iconFiles = ['icon16.png', 'icon32.png', 'icon48.png']
+          iconFiles.forEach(file => {
+            const src = resolve(__dirname, `src/assets/icons/${file}`)
+
+            // 复制到根目录（保持兼容性）
+            const destRoot = resolve(__dirname, `${outDir}/${file}`)
+            if (existsSync(src)) {
+              copyFileSync(src, destRoot)
+              console.log(`✅ 复制图标到根目录: ${file}`)
+            }
+
+            // 复制到icons目录
+            const destIcons = resolve(__dirname, `${outDir}/icons/${file}`)
+            if (existsSync(src)) {
+              copyFileSync(src, destIcons)
+              console.log(`✅ 复制图标到icons目录: ${file}`)
+            }
+          })
+
+          // 复制manifest.json
           const manifestSrc = resolve(__dirname, 'manifest.json')
           const manifestDest = resolve(__dirname, `${outDir}/manifest.json`)
           if (existsSync(manifestSrc)) {
