@@ -351,13 +351,33 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 全屏功能
-const toggleFullscreen = () => {
-    isFullscreen.value = !isFullscreen.value
-    if (isFullscreen.value) {
-        showMessage('已进入全屏模式，按ESC键退出', 'success')
-    } else {
-        showMessage('已退出全屏模式', 'success')
+const toggleFullscreen = async () => {
+    try {
+        if (!document.fullscreenElement) {
+            // 进入全屏
+            await document.documentElement.requestFullscreen()
+            isFullscreen.value = true
+            showMessage('已进入全屏模式，按F11或ESC键退出', 'success')
+        } else {
+            // 退出全屏
+            await document.exitFullscreen()
+            isFullscreen.value = false
+            showMessage('已退出全屏模式', 'success')
+        }
+    } catch (error) {
+        // 如果浏览器不支持全屏API，回退到CSS全屏
+        isFullscreen.value = !isFullscreen.value
+        if (isFullscreen.value) {
+            showMessage('已进入全屏模式（CSS模式），按ESC键退出', 'success')
+        } else {
+            showMessage('已退出全屏模式', 'success')
+        }
     }
+}
+
+// 监听全屏状态变化
+const handleFullscreenChange = () => {
+    isFullscreen.value = !!document.fullscreenElement
 }
 
 // 键盘快捷键
@@ -377,11 +397,17 @@ const handleKeyPress = (event: KeyboardEvent) => {
     } else if (event.code === 'KeyR' && !isRunning.value) {
         event.preventDefault()
         reset()
-    } else if (event.code === 'Escape' && isFullscreen.value) {
+    } else if (event.code === 'Escape') {
         event.preventDefault()
-        isFullscreen.value = false
-        showMessage('已退出全屏模式', 'success')
-    } else if (event.code === 'KeyF') {
+        if (document.fullscreenElement) {
+            // 如果是浏览器全屏，退出浏览器全屏
+            document.exitFullscreen()
+        } else if (isFullscreen.value) {
+            // 如果是CSS全屏，退出CSS全屏
+            isFullscreen.value = false
+            showMessage('已退出全屏模式', 'success')
+        }
+    } else if (event.code === 'KeyF' || event.code === 'F11') {
         event.preventDefault()
         toggleFullscreen()
     }
@@ -390,11 +416,13 @@ const handleKeyPress = (event: KeyboardEvent) => {
 // 生命周期
 onMounted(() => {
     document.addEventListener('keydown', handleKeyPress)
-    showMessage('快捷键：空格键 开始/暂停，L键 计次，R键 重置，F键 全屏', 'success')
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    showMessage('快捷键：空格键 开始/暂停，L键 计次，R键 重置，F键/F11键 全屏', 'success')
 })
 
 onUnmounted(() => {
     document.removeEventListener('keydown', handleKeyPress)
+    document.removeEventListener('fullscreenchange', handleFullscreenChange)
     if (intervalId.value) {
         clearInterval(intervalId.value)
     }
@@ -412,7 +440,8 @@ onUnmounted(() => {
 }
 
 /* 全屏模式样式 */
-.stopwatch.fullscreen {
+.stopwatch.fullscreen,
+.stopwatch:fullscreen {
     position: fixed;
     top: 0;
     left: 0;
@@ -422,52 +451,63 @@ onUnmounted(() => {
     background: #2d3748;
 }
 
-.stopwatch.fullscreen .converter-header {
+.stopwatch.fullscreen .converter-header,
+.stopwatch:fullscreen .converter-header {
     display: none;
 }
 
-.stopwatch.fullscreen .converter-content {
+.stopwatch.fullscreen .converter-content,
+.stopwatch:fullscreen .converter-content {
     padding: 0;
     justify-content: center;
     align-items: center;
 }
 
-.stopwatch.fullscreen .main-stopwatch-area {
+.stopwatch.fullscreen .main-stopwatch-area,
+.stopwatch:fullscreen .main-stopwatch-area {
     min-height: 100vh;
     justify-content: center;
 }
 
-.stopwatch.fullscreen .time-display {
+.stopwatch.fullscreen .time-display,
+.stopwatch:fullscreen .time-display {
     background: transparent;
     box-shadow: none;
     padding: 4rem 2rem;
     border-radius: 0;
 }
 
-.stopwatch.fullscreen .main-time {
+.stopwatch.fullscreen .main-time,
+.stopwatch:fullscreen .main-time {
     font-size: 12rem;
     color: #ffffff;
 }
 
-.stopwatch.fullscreen .milliseconds {
+.stopwatch.fullscreen .milliseconds,
+.stopwatch:fullscreen .milliseconds {
     font-size: 6rem;
     color: #a0aec0;
 }
 
-.stopwatch.fullscreen .control-buttons button {
+.stopwatch.fullscreen .control-buttons button,
+.stopwatch:fullscreen .control-buttons button {
     background: #4a5568;
     color: white;
     border: none;
 }
 
-.stopwatch.fullscreen .control-buttons button:hover {
+.stopwatch.fullscreen .control-buttons button:hover,
+.stopwatch:fullscreen .control-buttons button:hover {
     background: #718096;
     transform: translateY(-2px);
 }
 
 .stopwatch.fullscreen .laps-section,
 .stopwatch.fullscreen .stats-section,
-.stopwatch.fullscreen .action-buttons {
+.stopwatch.fullscreen .action-buttons,
+.stopwatch:fullscreen .laps-section,
+.stopwatch:fullscreen .stats-section,
+.stopwatch:fullscreen .action-buttons {
     display: none;
 }
 
