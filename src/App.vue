@@ -10,6 +10,7 @@ import JsonToPhp from './components/JsonToPhp.vue'
 import TimestampConverter from './components/TimestampConverter.vue'
 import DateCalculator from './components/DateCalculator.vue'
 import CountdownTimer from './components/CountdownTimer.vue'
+import Stopwatch from './components/Stopwatch.vue'
 import TimezoneConverter from './components/TimezoneConverter.vue'
 import Base64Converter from './components/Base64Converter.vue'
 import UrlConverter from './components/UrlConverter.vue'
@@ -166,6 +167,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'date-calculator': 'date-calculator',
         'timezone-converter': 'timezone-convert',
         'countdown-timer': 'countdown-timer',
+        'stopwatch': 'stopwatch',
         'base64-converter': 'base64-encode',
         'url-converter': 'url-encode',
         'hash-generator': 'md5-hash',
@@ -268,6 +270,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'countdownTimer':
                 openPage('countdown-timer')
+                return // 不需要loading状态
+            case 'stopwatch':
+                openPage('stopwatch')
                 return // 不需要loading状态
 
             // 加密工具
@@ -789,6 +794,7 @@ const getToolAction = (toolId: string): string | null => {
         'date-calculator': 'calculateDate',
         'timezone-convert': 'convertTimezone',
         'countdown-timer': 'countdownTimer',
+        'stopwatch': 'stopwatch',
 
         // 加密工具
         'base64-encode': 'base64Encode',
@@ -893,6 +899,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <TimestampConverter v-if="currentPage === 'timestamp-converter'" @back="closePage" />
                 <DateCalculator v-if="currentPage === 'date-calculator'" @back="closePage" />
                 <CountdownTimer v-if="currentPage === 'countdown-timer'" @back="closePage" />
+                <Stopwatch v-if="currentPage === 'stopwatch'" @back="closePage" />
                 <TimezoneConverter v-if="currentPage === 'timezone-converter'" @back="closePage" />
                 <ApiTester v-if="currentPage === 'api-tester'" @back="closePage" />
                 <Base64Converter v-if="currentPage === 'base64-converter'" @back="closePage" />

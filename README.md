@@ -38,6 +38,7 @@
 - **日期计算器** - 计算日期间隔和加减运算
 - **时区转换** - 全球时区时间转换
 - **倒计时器** - 创建倒计时和定时器功能
+- **在线秒表** - 全新的专业级在线秒表工具，为运动训练、时间管理和精确计时提供完整解决方案
 
 ### 🔐 加密解密
 - **Base64 编码** - Base64 编码和解码处理
@@ -93,26 +94,16 @@ npm run serve
 # 自动构建并启动服务器，访问 http://localhost:8080
 ```
 
-### 方式二：使用启动脚本
-```bash
-# Windows: 双击运行
-scripts/serve-web.bat
-
-# Linux/Mac: 
-chmod +x scripts/serve-web.sh
-./scripts/serve-web.sh
-```
-
-### 方式三：直接打开 HTML 文件（最简单）
+### 方式二：直接打开 HTML 文件（最简单）
 ```bash
 # 1. 构建 Web 版本
 npm run web
+```
 
-### 方式四：使用 npm 预览
+### 方式三：使用 npm 预览
 ```bash
 npm run web
 npm run preview
-# 访问 http://localhost:4173
 ```
 
 ### 🔧 Chrome 扩展安装

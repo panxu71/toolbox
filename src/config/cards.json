@@ -78,6 +78,18 @@
                 "icon": "⏱️",
                 "action": "countdownTimer",
                 "color": "#ef4444"
+            },
+            {
+                "id": "stopwatch",
+                "title": "在线秒表",
+                "description": "精确计时和计次功能的在线秒表",
+                "icon": "⏰",
+                "action": "stopwatch",
+                "color": "#8b5cf6",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "crypto": [
