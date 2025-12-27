@@ -196,7 +196,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'dynasty-query': 'dynasty-query',
         'programming-languages': 'programming-languages'
     }
-    
+
     return pageToolMap[pageName] || null
 }
 
@@ -374,6 +374,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'dynastyQuery':
                 openPage('dynasty-query')
+                return // 不需要loading状态
+            case 'testRegex':
+                openPage('regex-tester')
                 return // 不需要loading状态
 
             // 导航工具
@@ -754,7 +757,7 @@ const handleUrlParams = () => {
     const urlParams = new URLSearchParams(window.location.search)
     const tool = urlParams.get('tool')
     const category = urlParams.get('category')
-    
+
     if (tool) {
         // 根据工具ID直接打开对应功能
         const toolAction = getToolAction(tool)
@@ -832,31 +835,31 @@ const getToolAction = (toolId: string): string | null => {
         'url-shortener': 'shortenUrl',
         'website-analyzer': 'analyzeWebsite'
     }
-    
+
     return toolActionMap[toolId] || null
 }
 
 // 更新URL（不刷新页面）
 const updateUrl = (category?: string, tool?: string) => {
     const url = new URL(window.location.href)
-    
+
     if (category) {
         url.searchParams.set('category', category)
     } else {
         url.searchParams.delete('category')
     }
-    
+
     if (tool) {
         url.searchParams.set('tool', tool)
     } else {
         url.searchParams.delete('tool')
     }
-    
+
     // 如果没有参数，清空search
     if (!url.searchParams.toString()) {
         url.search = ''
     }
-    
+
     window.history.replaceState({}, '', url.toString())
 }
 </script>
