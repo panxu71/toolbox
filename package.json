@@ -36,6 +36,7 @@
     "crypto-js": "^4.2.0",
     "highlight.js": "^11.11.1",
     "js-beautify": "^1.15.4",
+    "lunar-javascript": "^1.7.7",
     "marked": "^17.0.1",
     "opencc-js": "^1.0.5",
     "prettier": "^3.7.4",
