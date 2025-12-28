@@ -22,6 +22,13 @@
                         <text x="12" y="18" text-anchor="middle" font-size="6" fill="currentColor">{{ is24Hour ? '24' : '12' }}</text>
                     </svg>
                 </button>
+                <button @click="toggleMilliseconds" class="control-btn" :title="showMilliseconds ? '隐藏毫秒' : '显示毫秒'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 7v5l3 3"/>
+                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                    </svg>
+                </button>
                 <button @click="toggleLunar" class="control-btn" :title="showLunar ? '隐藏农历' : '显示农历'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -45,8 +52,8 @@
                         <span class="digit-group">{{ timeMinutes }}</span>
                         <span v-if="showSeconds" class="separator">:</span>
                         <span v-if="showSeconds" class="digit-group seconds">{{ timeSeconds }}</span>
-                        <span v-if="showSeconds" class="separator milliseconds">.</span>
-                        <span v-if="showSeconds" class="digit-group milliseconds">{{ timeMilliseconds }}</span>
+                        <span v-if="showSeconds && showMilliseconds" class="separator milliseconds">.</span>
+                        <span v-if="showSeconds && showMilliseconds" class="digit-group milliseconds">{{ timeMilliseconds }}</span>
                     </div>
                     <div class="ampm" v-if="!is24Hour">{{ ampm }}</div>
                 </div>
@@ -120,6 +127,7 @@ defineEmits<{
 // 状态管理
 const isFullscreen = ref(false)
 const showSeconds = ref(true)
+const showMilliseconds = ref(true)
 const showLunar = ref(true)
 const showWeekday = ref(true)
 const is24Hour = ref(true)
@@ -328,6 +336,11 @@ const toggle24Hour = () => {
 const toggleLunar = () => {
     showLunar.value = !showLunar.value
     showMessage(`${showLunar.value ? '显示' : '隐藏'}农历`, 'success')
+}
+
+const toggleMilliseconds = () => {
+    showMilliseconds.value = !showMilliseconds.value
+    showMessage(`${showMilliseconds.value ? '显示' : '隐藏'}毫秒`, 'success')
 }
 const toggleFullscreen = async () => {
     try {
