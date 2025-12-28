@@ -308,6 +308,18 @@
                     "text": "新功能",
                     "color": "#10b981"
                 }
+            },
+            {
+                "id": "teleprompter",
+                "title": "在线提词器",
+                "description": "专业提词器工具，支持全屏显示和镜像模式",
+                "icon": "📺",
+                "action": "teleprompter",
+                "color": "#ec4899",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "query": [

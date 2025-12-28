@@ -119,6 +119,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Solar } from 'lunar-javascript'
+import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
     back: []
@@ -132,6 +133,9 @@ const showLunar = ref(true)
 const showWeekday = ref(true)
 const is24Hour = ref(true)
 const clockStyle = ref<'minimal' | 'digital' | 'analog' | 'card' | 'immersive'>('digital')
+
+// 防止息屏
+const { requestWakeLock, releaseWakeLock } = useWakeLock()
 
 // 时间状态
 const currentDateTime = ref(new Date())
@@ -342,27 +346,44 @@ const toggleMilliseconds = () => {
     showMilliseconds.value = !showMilliseconds.value
     showMessage(`${showMilliseconds.value ? '显示' : '隐藏'}毫秒`, 'success')
 }
+
+// 防止息屏功能
 const toggleFullscreen = async () => {
     try {
         if (!document.fullscreenElement) {
             await document.documentElement.requestFullscreen()
             isFullscreen.value = true
+            // 全屏时启用防息屏
+            requestWakeLock(showMessage)
             showMessage('双击时钟可退出全屏', 'success')
         } else {
             await document.exitFullscreen()
             isFullscreen.value = false
+            // 退出全屏时释放防息屏
+            releaseWakeLock(showMessage)
         }
     } catch (error) {
         isFullscreen.value = !isFullscreen.value
         if (isFullscreen.value) {
+            // 组件全屏时也启用防息屏
+            requestWakeLock(showMessage)
             showMessage('双击时钟可退出全屏', 'success')
+        } else {
+            // 退出组件全屏时释放防息屏
+            releaseWakeLock(showMessage)
         }
     }
 }
 
 // 监听全屏状态变化
 const handleFullscreenChange = () => {
+    const wasFullscreen = isFullscreen.value
     isFullscreen.value = !!document.fullscreenElement
+    
+    // 如果从全屏退出，释放防息屏
+    if (wasFullscreen && !isFullscreen.value) {
+        releaseWakeLock(showMessage)
+    }
 }
 
 // 键盘快捷键
@@ -406,6 +427,8 @@ onUnmounted(() => {
     if (intervalId.value) {
         clearInterval(intervalId.value)
     }
+    // 组件卸载时释放防息屏
+    releaseWakeLock()
     document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })

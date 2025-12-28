@@ -166,6 +166,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
     back: []
@@ -178,6 +179,9 @@ const startTime = ref(0)
 const pausedTime = ref(0)
 const intervalId = ref<number | null>(null)
 const isFullscreen = ref(false)
+
+// 防止息屏
+const { requestWakeLock, releaseWakeLock } = useWakeLock()
 
 // 计次记录
 interface Lap {
@@ -357,19 +361,27 @@ const toggleFullscreen = async () => {
             // 进入全屏
             await document.documentElement.requestFullscreen()
             isFullscreen.value = true
+            // 全屏时启用防息屏
+            requestWakeLock(showMessage)
             showMessage('已进入全屏模式，按F11或ESC键退出', 'success')
         } else {
             // 退出全屏
             await document.exitFullscreen()
             isFullscreen.value = false
+            // 退出全屏时释放防息屏
+            releaseWakeLock(showMessage)
             showMessage('已退出全屏模式', 'success')
         }
     } catch (error) {
         // 如果浏览器不支持全屏API，回退到CSS全屏
         isFullscreen.value = !isFullscreen.value
         if (isFullscreen.value) {
+            // 组件全屏时也启用防息屏
+            requestWakeLock(showMessage)
             showMessage('已进入全屏模式（CSS模式），按ESC键退出', 'success')
         } else {
+            // 退出组件全屏时释放防息屏
+            releaseWakeLock(showMessage)
             showMessage('已退出全屏模式', 'success')
         }
     }
@@ -377,7 +389,13 @@ const toggleFullscreen = async () => {
 
 // 监听全屏状态变化
 const handleFullscreenChange = () => {
+    const wasFullscreen = isFullscreen.value
     isFullscreen.value = !!document.fullscreenElement
+    
+    // 如果从全屏退出，释放防息屏
+    if (wasFullscreen && !isFullscreen.value) {
+        releaseWakeLock(showMessage)
+    }
 }
 
 // 键盘快捷键
@@ -426,6 +444,8 @@ onUnmounted(() => {
     if (intervalId.value) {
         clearInterval(intervalId.value)
     }
+    // 组件卸载时释放防息屏
+    releaseWakeLock()
 })
 </script>
 
