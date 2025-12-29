@@ -10,20 +10,27 @@
 
 ## 🚀 快速开始
 
-### 🌐 在线使用（最简单）
+### 🌐 在线使用（推荐）
 直接访问官网：**[https://toolbox.panxu.net](https://toolbox.panxu.net)**
 
 ### 📱 Chrome扩展（离线使用）
-下载安装包：**[浏览器扩展](https://github.com/panxu71/toolbox/releases)**
+1. 下载最新版本：**[浏览器扩展](https://github.com/panxu71/toolbox/releases)**
+2. 打开 Chrome 扩展管理页面：`chrome://extensions/`
+3. 直接拖拽zip压缩包到页面中即可完成安装
 
-# Chrome 安装 ZIP 格式扩展步骤
+### 🛠️ 本地部署（开发者）
+```bash
+# 1. 克隆项目
+git clone https://github.com/panxu71/toolbox.git
+cd toolbox
 
-**打开扩展管理页面**  
+# 2. 安装依赖
+npm install
 
-在 Chrome 地址栏输入 `chrome://extensions/` 并回车。
-
-**安装扩展程序**
-把 zip 压缩包拖进去就安装完成了。
+# 3. 启动本地服务器
+npx serve -s docs -p 8080
+# 访问 http://localhost:8080
+```
 
 ## ✨ 功能特色
 
@@ -42,7 +49,6 @@
 ### 🕐 时间工具
 - **在线时钟** - 全新专业级在线时钟，支持5种风格切换：简约白色、LED数码屏、模拟表盘、现代卡片、全屏沉浸式。精确到毫秒显示，支持12/24小时制、农历显示、全屏模式（含防息屏功能），模拟时钟配备真实表盘设计和日期窗口
 - **在线秒表** - 专业级在线秒表工具，毫秒级精度计时，支持计次记录、统计分析、CSV导出、全屏模式（含防息屏功能），适用于运动训练和时间管理
-- **在线提词器** - 专业级提词器工具，支持自动滚动、全屏显示、镜像模式、聚焦区域、防息屏功能，适用于演讲、直播、视频录制等场景
 - **时间戳转换** - 时间戳与日期格式互转，支持多种格式
 - **日期计算器** - 计算日期间隔和加减运算
 - **时区转换** - 全球时区时间转换
@@ -73,6 +79,7 @@
 - **二维码生成** - 生成自定义二维码，支持 Logo 和容错率设置
 - **Crontab 表达式** - 生成和解析 Cron 定时任务表达式
 - **Markdown 编辑器** - 自研在线 Markdown 编辑器，支持图片拖拽转 Base64，实时预览
+- **在线提词器** - 专业级提词器工具，支持自动滚动、全屏显示、镜像模式、聚焦区域、防息屏功能，适用于演讲、直播、视频录制等场景
 
 ### 🔍 查询工具
 - **文本比对** - 比较两个文本的差异，支持文件上传
@@ -94,50 +101,6 @@
 - **网站分析工具** - 分析网站 SEO、性能、安全等信息
 
 
-## 🌐 Web 版本使用
-
-### 方式一：一键启动（最方便）
-```bash
-npm run serve
-# 自动构建并启动服务器，访问 http://localhost:8080
-```
-
-### 方式二：直接打开 HTML 文件（最简单）
-```bash
-# 1. 构建 Web 版本
-npm run web
-```
-
-### 方式三：使用 npm 预览
-```bash
-npm run web
-npm run preview
-```
-
-### 🔧 Chrome 扩展安装
-
-#### 方式一：下载安装包（推荐）
-1. 下载最新版本：[toolbox-extension](https://github.com/panxu71/toolbox/releases)
-2. 打开 Chrome 扩展管理页面：`chrome://extensions/`
-3. 直接拖拽zip压缩包到页面中即可完成安装
-
-#### 方式二：从源码构建（开发者）
-```bash
-# 1. 克隆项目
-git clone https://github.com/panxu71/toolbox.git
-cd toolbox
-
-# 2. 安装依赖
-npm install
-
-# 3. 构建并打包扩展
-npm run pack:ext
-
-# 4. 安装扩展
-# 打包完成后会在 dist 目录生成 toolbox-extension-v*.zip
-# 直接拖拽该zip文件到 chrome://extensions/ 页面即可安装
-```
-
 ## 📦 构建命令
 
 ```bash
@@ -147,17 +110,11 @@ npm run dev              # 启动开发服务器
 # 构建命令
 npm run web              # 构建 Web 版本 (docs/)
 npm run pack:ext         # 构建并打包 Chrome 扩展为 zip
-npm run build:all        # 构建 Web 版本和扩展版本
 
-# 快速启动
-npm run serve            # 构建并启动 Web 服务器 (http://localhost:8080)
-
-# 打包命令
-npm run pack:web         # 打包 Web 版本为 zip
-npm run pack:ext         # 打包 Chrome 扩展为 zip（推荐）
+# 本地预览
+npx serve -s docs -p 8080  # 预览已构建的Web版本
 
 # 其他命令
-npm run preview          # 预览构建结果
 npm run type-check       # TypeScript 类型检查
 ```
 
@@ -244,12 +201,11 @@ cd toolbox
 # 2. 安装依赖
 npm install
 
-# 3. 启动开发服务器（Web版本）
+# 3. 启动开发服务器
 npm run dev
+# 访问 http://localhost:5173
 
-# 4. 访问 http://localhost:5173
-
-# 5. 构建扩展版本（如需要）
+# 4. 构建扩展版本（如需要）
 npm run pack:ext
 # 生成的zip文件可直接拖拽到chrome://extensions/安装
 ```
