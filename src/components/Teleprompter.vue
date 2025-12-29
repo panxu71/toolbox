@@ -338,13 +338,17 @@ const startScrolling = () => {
     scrollInterval.value = window.setInterval(() => {
         scrollPosition.value -= scrollSpeed.value  // 向上滚动
         
-        // 检查是否滚动完成（最后一行文字完全通过聚焦区域上方）
+        // 检查是否滚动完成（最后一行文字完全通过聚焦区域）
         if (displayArea.value) {
             const viewportHeight = displayArea.value.clientHeight
             const focusZoneTop = (viewportHeight - focusZoneHeight.value) / 2
-            const contentHeight = displayArea.value.scrollHeight
+            
+            // 获取实际的滚动文本内容高度
+            const scrollingTextElement = displayArea.value.querySelector('.scrolling-text')
+            const contentHeight = scrollingTextElement ? scrollingTextElement.scrollHeight : 0
             
             // 当内容的底部位置移动到聚焦区域顶部以上时，滚动完成
+            // 这样确保最后一行完全通过聚焦区域并消失在上方
             const currentContentBottom = initialPosition.value + scrollPosition.value + contentHeight
             
             if (currentContentBottom < focusZoneTop) {
