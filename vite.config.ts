@@ -55,6 +55,11 @@ export default defineConfig({
     {
       name: 'copy-extension-files',
       buildStart() {
+        // 只在构建时执行，不在开发时执行
+        if (process.env.NODE_ENV === 'development') {
+          return
+        }
+
         // Web构建时自定义清空目录，保留CNAME文件
         if (isWebBuild) {
           const outDir = getOutDir()
@@ -66,6 +71,11 @@ export default defineConfig({
         }
       },
       writeBundle() {
+        // 只在构建时执行，不在开发时执行
+        if (process.env.NODE_ENV === 'development') {
+          return
+        }
+
         const outDir = getOutDir()
 
         // Web构建时只复制favicon图标
@@ -116,21 +126,18 @@ export default defineConfig({
       }
     }
   ],
-  base: isExtensionBuild ? '/' : './', // 扩展模式使用绝对路径，其他模式使用相对路径
+  base: isExtensionBuild ? '/' : './',
   build: {
     rollupOptions: {
       input: isExtensionBuild ? {
-        // 扩展模式：包含所有扩展相关文件
         main: resolve(__dirname, 'index.html'),
         popup: resolve(__dirname, 'popup.html'),
         background: resolve(__dirname, 'src/background.ts'),
         content: resolve(__dirname, 'src/content.ts')
       } : {
-        // Web模式：只包含主应用
         main: resolve(__dirname, 'index.html')
       },
       output: isExtensionBuild ? {
-        // 扩展模式：固定文件名，CSS放在根目录
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
         assetFileNames: (assetInfo) => {
@@ -140,24 +147,11 @@ export default defineConfig({
             return `icons/[name].[ext]`
           }
           if (ext === 'css') {
-            return `[name].[ext]` // CSS文件放在根目录
+            return `[name].[ext]`
           }
-          return `assets/[name].[ext]`
-        }
-      } : isStandaloneBuild ? {
-        // 单文件模式：内联所有资源
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name?.split('.') || []
-          const ext = info[info.length - 1]
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return `icons/[name].[ext]`
-          }
-          return `assets/[name].[ext]`
+          return `[name].[ext]`
         }
       } : {
-        // Web模式：带hash的文件名
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
@@ -171,11 +165,12 @@ export default defineConfig({
       }
     },
     outDir: getOutDir(),
-    emptyOutDir: false, // 禁用vite的自动清空，使用自定义清空逻辑
+    emptyOutDir: false,
     minify: 'terser',
     sourcemap: false,
     target: 'es2020',
-    cssCodeSplit: false
+    cssCodeSplit: false,
+    chunkSizeWarningLimit: 3000
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')

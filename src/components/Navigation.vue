@@ -2,9 +2,8 @@
     <nav class="navigation">
         <div class="nav-content">
             <ul class="nav-list">
-                <li v-for="(item, index) in navigationItems" :key="item.id"
-                    :class="['nav-item', { active: item.id === activeNav }]"
-                    :style="{ animationDelay: `${index * 0.1}s` }" @click="$emit('navigate', item.id)">
+                <li v-for="item in navigationItems" :key="item.id"
+                    :class="['nav-item', { active: item.id === activeNav }]" @click="$emit('navigate', item.id)">
                     <div class="nav-item-content">
                         <span class="nav-icon">{{ item.icon }}</span>
                         <span class="nav-name">{{ item.name }}</span>
@@ -22,7 +21,7 @@
                     <span class="footer-icon">💬</span>
                     <span class="footer-text">反馈</span>
                 </button>
-                
+
                 <!-- 设置按钮 -->
                 <button class="footer-btn" @click="$emit('openSettings')" title="设置">
                     <span class="footer-icon">⚙️</span>
@@ -80,8 +79,7 @@ defineEmits<{
 }
 
 .nav-item {
-    opacity: 0;
-    animation: slideIn 0.3s ease-out forwards;
+    /* 移除动画 */
 }
 
 .nav-item-content {
@@ -89,7 +87,6 @@ defineEmits<{
     align-items: center;
     padding: 16px 20px;
     cursor: pointer;
-    transition: var(--transition);
     border-radius: var(--radius-lg);
     position: relative;
     background: transparent;
@@ -99,7 +96,6 @@ defineEmits<{
 .nav-item:hover .nav-item-content {
     background: var(--bg-tertiary);
     border-color: var(--border-color);
-    transform: translateX(4px);
 }
 
 .nav-item.active .nav-item-content {
@@ -116,18 +112,16 @@ defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
 }
 
 .nav-item.active .nav-icon {
-    transform: scale(1.1);
+    /* 移除缩放动画 */
 }
 
 .nav-name {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-secondary);
-    transition: var(--transition);
     flex: 1;
 }
 
@@ -148,7 +142,6 @@ defineEmits<{
     background: white;
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-    animation: pulse 2s infinite;
 }
 
 .nav-footer {
@@ -174,7 +167,6 @@ defineEmits<{
     border-radius: var(--radius-md);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: var(--transition);
     font-size: 13px;
     min-height: 36px;
 }
@@ -182,7 +174,6 @@ defineEmits<{
 .footer-btn:hover {
     background: var(--bg-tertiary);
     color: var(--text-primary);
-    transform: translateY(-1px);
 }
 
 .footer-icon {
@@ -206,13 +197,13 @@ defineEmits<{
     .nav-name {
         font-size: 14px;
     }
-    
+
     .footer-btn {
         padding: 6px 8px;
         font-size: 12px;
         min-height: 32px;
     }
-    
+
     .footer-icon {
         font-size: 13px;
     }
@@ -235,16 +226,16 @@ defineEmits<{
     .nav-icon {
         margin-right: 0;
     }
-    
+
     .footer-buttons {
         flex-direction: column;
         gap: 4px;
     }
-    
+
     .footer-text {
         display: none;
     }
-    
+
     .footer-btn {
         justify-content: center;
         padding: 6px;

@@ -54,10 +54,8 @@ defineEmits<{
     border: 1px solid var(--border-color);
     border-radius: 16px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     overflow: hidden;
-    opacity: 0;
-    animation: fadeIn 0.5s ease-out forwards;
     height: 100px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }

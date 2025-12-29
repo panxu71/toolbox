@@ -1,53 +1,54 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
 import Navigation from './components/Navigation.vue'
 import CardGrid from './components/CardGrid.vue'
 import Header from './components/Header.vue'
-import JsonFormatter from './components/JsonFormatter.vue'
-import JsonToExcel from './components/JsonToExcel.vue'
-import JsonPostmanConverter from './components/JsonPostmanConverter.vue'
-import JsonToPhp from './components/JsonToPhp.vue'
-import TimestampConverter from './components/TimestampConverter.vue'
-import DateCalculator from './components/DateCalculator.vue'
-import CountdownTimer from './components/CountdownTimer.vue'
-import Stopwatch from './components/Stopwatch.vue'
-import Clock from './components/Clock.vue'
-import TimezoneConverter from './components/TimezoneConverter.vue'
-import Base64Converter from './components/Base64Converter.vue'
-import UrlConverter from './components/UrlConverter.vue'
-import HashGenerator from './components/HashGenerator.vue'
-import PasswordGenerator from './components/PasswordGenerator.vue'
-import RsaKeyGenerator from './components/RsaKeyGenerator.vue'
-import CodeFormatter from './components/CodeFormatter.vue'
-import QrGenerator from './components/QrGenerator.vue'
-import CrontabGenerator from './components/CrontabGenerator.vue'
-import BaseConverter from './components/BaseConverter.vue'
-import TextEncoder from './components/TextEncoder.vue'
-import StringCounter from './components/StringCounter.vue'
-import PhpSerializer from './components/PhpSerializer.vue'
-import TextReplacer from './components/TextReplacer.vue'
-import ChineseConverter from './components/ChineseConverter.vue'
-import AsciiLookup from './components/AsciiLookup.vue'
-import UnitConverter from './components/UnitConverter.vue'
-import NumberConverter from './components/NumberConverter.vue'
-import ColorReference from './components/ColorReference.vue'
-import JwtGenerator from './components/JwtGenerator.vue'
-import ImageBase64Converter from './components/ImageBase64Converter.vue'
-import SurnameLookup from './components/SurnameLookup.vue'
-import RegexTester from './components/RegexTester.vue'
-import ApiTester from './components/ApiTester.vue'
-import TextCompare from './components/TextCompare.vue'
-import MimeTypeReference from './components/MimeTypeReference.vue'
-import DynastyQuery from './components/DynastyQuery.vue'
-import UuidGenerator from './components/UuidGenerator.vue'
-import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
-import MarkdownEditor from './components/MarkdownEditor.vue'
-import Teleprompter from './components/Teleprompter.vue'
-import UpdateNotification from './components/UpdateNotification.vue'
-import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
 import cardsConfig from './config/cards.json'
+
+// 懒加载组件
+const JsonFormatter = defineAsyncComponent(() => import('./components/JsonFormatter.vue'))
+const JsonToExcel = defineAsyncComponent(() => import('./components/JsonToExcel.vue'))
+const JsonPostmanConverter = defineAsyncComponent(() => import('./components/JsonPostmanConverter.vue'))
+const JsonToPhp = defineAsyncComponent(() => import('./components/JsonToPhp.vue'))
+const TimestampConverter = defineAsyncComponent(() => import('./components/TimestampConverter.vue'))
+const DateCalculator = defineAsyncComponent(() => import('./components/DateCalculator.vue'))
+const CountdownTimer = defineAsyncComponent(() => import('./components/CountdownTimer.vue'))
+const Stopwatch = defineAsyncComponent(() => import('./components/Stopwatch.vue'))
+const Clock = defineAsyncComponent(() => import('./components/Clock.vue'))
+const TimezoneConverter = defineAsyncComponent(() => import('./components/TimezoneConverter.vue'))
+const Base64Converter = defineAsyncComponent(() => import('./components/Base64Converter.vue'))
+const UrlConverter = defineAsyncComponent(() => import('./components/UrlConverter.vue'))
+const HashGenerator = defineAsyncComponent(() => import('./components/HashGenerator.vue'))
+const PasswordGenerator = defineAsyncComponent(() => import('./components/PasswordGenerator.vue'))
+const RsaKeyGenerator = defineAsyncComponent(() => import('./components/RsaKeyGenerator.vue'))
+const CodeFormatter = defineAsyncComponent(() => import('./components/CodeFormatter.vue'))
+const QrGenerator = defineAsyncComponent(() => import('./components/QrGenerator.vue'))
+const CrontabGenerator = defineAsyncComponent(() => import('./components/CrontabGenerator.vue'))
+const BaseConverter = defineAsyncComponent(() => import('./components/BaseConverter.vue'))
+const TextEncoder = defineAsyncComponent(() => import('./components/TextEncoder.vue'))
+const StringCounter = defineAsyncComponent(() => import('./components/StringCounter.vue'))
+const PhpSerializer = defineAsyncComponent(() => import('./components/PhpSerializer.vue'))
+const TextReplacer = defineAsyncComponent(() => import('./components/TextReplacer.vue'))
+const ChineseConverter = defineAsyncComponent(() => import('./components/ChineseConverter.vue'))
+const AsciiLookup = defineAsyncComponent(() => import('./components/AsciiLookup.vue'))
+const UnitConverter = defineAsyncComponent(() => import('./components/UnitConverter.vue'))
+const NumberConverter = defineAsyncComponent(() => import('./components/NumberConverter.vue'))
+const ColorReference = defineAsyncComponent(() => import('./components/ColorReference.vue'))
+const JwtGenerator = defineAsyncComponent(() => import('./components/JwtGenerator.vue'))
+const ImageBase64Converter = defineAsyncComponent(() => import('./components/ImageBase64Converter.vue'))
+const SurnameLookup = defineAsyncComponent(() => import('./components/SurnameLookup.vue'))
+const RegexTester = defineAsyncComponent(() => import('./components/RegexTester.vue'))
+const ApiTester = defineAsyncComponent(() => import('./components/ApiTester.vue'))
+const TextCompare = defineAsyncComponent(() => import('./components/TextCompare.vue'))
+const MimeTypeReference = defineAsyncComponent(() => import('./components/MimeTypeReference.vue'))
+const DynastyQuery = defineAsyncComponent(() => import('./components/DynastyQuery.vue'))
+const UuidGenerator = defineAsyncComponent(() => import('./components/UuidGenerator.vue'))
+const ProgrammingLanguages = defineAsyncComponent(() => import('./components/ProgrammingLanguages.vue'))
+const MarkdownEditor = defineAsyncComponent(() => import('./components/MarkdownEditor.vue'))
+const Teleprompter = defineAsyncComponent(() => import('./components/Teleprompter.vue'))
+const Settings = defineAsyncComponent(() => import('./components/Settings.vue'))
 
 const activeNav = ref('json')
 const currentTab = ref<any>(null)
@@ -967,9 +968,6 @@ const updateUrl = (category?: string, tool?: string) => {
                 </div>
             </div>
         </div>
-
-        <!-- 版本更新通知 -->
-        <UpdateNotification />
     </div>
 </template>
 

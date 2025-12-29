@@ -5,45 +5,33 @@
                 <h2 class="grid-title">{{ title }}</h2>
                 <p class="grid-subtitle">{{ subtitle }}</p>
             </div>
-            
+
             <!-- 居中的全局搜索框 -->
             <div class="search-container">
                 <div class="search-box">
-                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
                     </svg>
-                    <input 
-                        type="text" 
-                        class="search-input" 
-                        placeholder="搜索工具..." 
-                        v-model="searchQuery"
-                        @input="onSearchInput"
-                        @focus="showSearchResults = true"
-                        @blur="hideSearchResults"
-                        @keydown.enter="selectFirstResult"
-                        @keydown.down.prevent="navigateResults(1)"
-                        @keydown.up.prevent="navigateResults(-1)"
-                        @keydown.escape="clearSearch"
-                    />
+                    <input type="text" class="search-input" placeholder="搜索工具..." v-model="searchQuery"
+                        @input="onSearchInput" @focus="showSearchResults = true" @blur="hideSearchResults"
+                        @keydown.enter="selectFirstResult" @keydown.down.prevent="navigateResults(1)"
+                        @keydown.up.prevent="navigateResults(-1)" @keydown.escape="clearSearch" />
                     <button v-if="searchQuery" class="clear-search" @click="clearSearch">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
                 </div>
-                
+
                 <!-- 搜索结果下拉框 -->
                 <div v-if="showSearchResults && filteredResults.length > 0" class="search-results">
-                    <div 
-                        v-for="(result, index) in filteredResults.slice(0, 8)" 
-                        :key="result.id"
-                        class="search-result-item"
-                        :class="{ active: selectedIndex === index }"
-                        @mousedown.prevent="selectResult(result)"
-                        @mouseenter="selectedIndex = index"
-                    >
+                    <div v-for="(result, index) in filteredResults.slice(0, 8)" :key="result.id"
+                        class="search-result-item" :class="{ active: selectedIndex === index }"
+                        @mousedown.prevent="selectResult(result)" @mouseenter="selectedIndex = index">
                         <div class="result-icon">{{ result.icon }}</div>
                         <div class="result-content">
                             <div class="result-title">{{ result.title }}</div>
@@ -56,7 +44,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="header-spacer">
                 <!-- 右侧占位，保持布局平衡 -->
             </div>
@@ -64,8 +52,7 @@
 
         <div class="cards-container" :class="{ loading: isLoading }">
             <div class="cards-grid">
-                <FunctionCard v-for="(card, index) in cards" :key="card.id" :card="card"
-                    :style="{ animationDelay: `${index * 0.1}s` }" @execute="$emit('execute', $event)" />
+                <FunctionCard v-for="card in cards" :key="card.id" :card="card" @execute="$emit('execute', $event)" />
             </div>
 
             <div v-if="isLoading" class="loading-overlay">
@@ -77,8 +64,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import FunctionCard from './FunctionCard.vue'
+import cardsConfig from '../config/cards.json'
 
 interface Card {
     id: string
@@ -105,30 +93,20 @@ const emit = defineEmits<{
 const searchQuery = ref('')
 const showSearchResults = ref(false)
 const selectedIndex = ref(-1)
-const allTools = ref<any[]>([])
 
-// 加载所有工具数据
-onMounted(async () => {
-    try {
-        // 动态导入配置文件
-        const cardsModule = await import('../config/cards.json')
-        const cards = cardsModule.default.cards
-        
-        // 扁平化所有工具
-        allTools.value = Object.entries(cards).flatMap(([category, tools]: [string, any[]]) => 
-            tools.map(tool => ({ ...tool, category }))
-        )
-    } catch (error) {
-        console.error('加载工具配置失败:', error)
-    }
+// 扁平化所有工具
+const allTools = computed(() => {
+    return Object.entries(cardsConfig.cards).flatMap(([category, tools]: [string, any[]]) =>
+        tools.map(tool => ({ ...tool, category }))
+    )
 })
 
 // 过滤搜索结果
 const filteredResults = computed(() => {
     if (!searchQuery.value.trim()) return []
-    
+
     const query = searchQuery.value.toLowerCase().trim()
-    return allTools.value.filter(tool => 
+    return allTools.value.filter(tool =>
         tool.title.toLowerCase().includes(query) ||
         tool.description.toLowerCase().includes(query) ||
         tool.id.toLowerCase().includes(query)
@@ -146,7 +124,7 @@ const filteredResults = computed(() => {
 const getCategoryName = (category: string) => {
     const categoryNames: Record<string, string> = {
         json: 'JSON工具',
-        time: '时间工具', 
+        time: '时间工具',
         crypto: '加密工具',
         convert: '转换工具',
         create: '创建工具',
@@ -166,7 +144,7 @@ const onSearchInput = () => {
 // 键盘导航
 const navigateResults = (direction: number) => {
     if (filteredResults.value.length === 0) return
-    
+
     const maxIndex = Math.min(filteredResults.value.length - 1, 7) // 最多显示8个
     selectedIndex.value = Math.max(0, Math.min(maxIndex, selectedIndex.value + direction))
 }
@@ -242,14 +220,14 @@ const hideSearchResults = () => {
     border-radius: 24px;
     padding: 0 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
+    box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.1),
         0 1px 2px rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(8px);
 }
 
 .search-box:hover {
-    box-shadow: 
+    box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
@@ -257,7 +235,7 @@ const hideSearchResults = () => {
 
 .search-box:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 
+    box-shadow:
         0 0 0 4px rgba(99, 102, 241, 0.1),
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -328,7 +306,7 @@ const hideSearchResults = () => {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    box-shadow: 
+    box-shadow:
         0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04);
     z-index: 1000;
@@ -343,6 +321,7 @@ const hideSearchResults = () => {
         opacity: 0;
         transform: translateY(-8px) scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -365,9 +344,9 @@ const hideSearchResults = () => {
 
 .search-result-item:hover,
 .search-result-item.active {
-    background: linear-gradient(135deg, 
-        rgba(99, 102, 241, 0.08) 0%, 
-        rgba(99, 102, 241, 0.04) 100%);
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.08) 0%,
+            rgba(99, 102, 241, 0.04) 100%);
     transform: translateX(4px);
 }
 

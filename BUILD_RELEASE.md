@@ -101,7 +101,7 @@ npm run pack:web
 - 生成 `dist/toolbox-web-v1.0.0.zip`
 - 可用于服务器部署
 
-## � 快速使用e
+## 快速使用
 
 ### Web 版本
 ```bash

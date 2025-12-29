@@ -1,7 +1,7 @@
 {
   "name": "toolbox",
   "private": false,
-  "version": "2.1.5",
+  "version": "1.1.1",
   "description": "专业的在线工具箱 - 包含JSON格式化、代码格式化、进制转换、密码生成等实用工具",
   "keywords": [
     "工具箱",
@@ -17,21 +17,16 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run web",
-    "web": "npm run update-version && set BUILD_TARGET=web&& vite build",
+    "web": "set BUILD_TARGET=web&& vite build",
     "web:serve": "npm run web && vite preview --outDir docs",
-    "standalone": "npm run update-version && set BUILD_TARGET=standalone&& vite build --config vite.standalone.config.ts",
-    "ext": "npm run update-version && set BUILD_TARGET=extension&& vite build",
+    "standalone": "set BUILD_TARGET=standalone&& vite build --config vite.standalone.config.ts",
+    "ext": "set BUILD_TARGET=extension&& vite build",
     "build:all": "npm run web && npm run ext",
     "serve": "npm run web && cd docs && npx serve -s . -p 8080",
     "preview": "vite preview",
-    "pack:ext": "npm run ext && cd dist && powershell Compress-Archive -Path * -DestinationPath ./toolbox-extension-v2.1.0.zip -Force && cd ..",
-    "pack:web": "npm run web && cd docs && powershell Compress-Archive -Path * -DestinationPath ../dist/toolbox-web-v2.1.0.zip -Force && cd ..",
+    "pack:ext": "npm run update-version && npm run ext && cd dist && powershell Compress-Archive -Path * -DestinationPath ./toolbox-extension-v1.1.1.zip -Force && powershell \"Remove-Item -Path * -Exclude '*.zip' -Recurse -Force\" && cd ..",
+    "pack:web": "npm run web && cd docs && powershell Compress-Archive -Path * -DestinationPath ../dist/toolbox-web-v1.1.1.zip -Force && cd ..",
     "update-version": "node scripts/update-version.cjs",
-    "bump": "node scripts/interactive-bump.cjs",
-    "bump:patch": "node scripts/bump-version.cjs patch",
-    "bump:minor": "node scripts/bump-version.cjs minor",
-    "bump:major": "node scripts/bump-version.cjs major",
-    "bump:version": "node scripts/bump-version.cjs",
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {

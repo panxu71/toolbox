@@ -2,7 +2,7 @@
 
 > 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 38+ 实用功能
 
-[![Version](https://img.shields.io/badge/version-2.1.5-blue.svg)](https://github.com/panxu71/toolbox)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/panxu71/toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Vue](https://img.shields.io/badge/vue-3.5-brightgreen.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)](https://www.typescriptlang.org/)
