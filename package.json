@@ -1,7 +1,7 @@
 {
   "name": "toolbox",
   "private": false,
-  "version": "2.1.0",
+  "version": "1.1.0",
   "description": "专业的在线工具箱 - 包含JSON格式化、代码格式化、进制转换、密码生成等实用工具",
   "keywords": [
     "工具箱",
@@ -24,8 +24,8 @@
     "build:all": "npm run web && npm run ext",
     "serve": "npm run web && cd docs && npx serve -s . -p 8080",
     "preview": "vite preview",
-    "pack:ext": "npm run ext && cd dist && powershell Compress-Archive -Path * -DestinationPath ./toolbox-extension-v2.1.0.zip -Force && cd ..",
-    "pack:web": "npm run web && cd docs && powershell Compress-Archive -Path * -DestinationPath ../dist/toolbox-web-v2.1.0.zip -Force && cd ..",
+    "pack:ext": "npm run ext && cd dist && powershell Compress-Archive -Path * -DestinationPath ./toolbox-extension-v1.1.0.zip -Force && cd ..",
+    "pack:web": "npm run web && cd docs && powershell Compress-Archive -Path * -DestinationPath ../dist/toolbox-web-v1.1.0.zip -Force && cd ..",
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 # 🧰 Toolbox - 现代化开发者工具箱
 
-> 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 35+ 实用功能
+> 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 38+ 实用功能
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/panxu71/toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -34,12 +34,13 @@
 - **PHP ⇄ JSON 互转** - PHP 数组与 JSON 数据格式互相转换
 
 ### 🕐 时间工具
-- **在线时钟** - 全新专业级在线时钟，支持5种风格切换：简约白色、LED数码屏、模拟表盘、现代卡片、全屏沉浸式。精确到毫秒显示，支持12/24小时制、农历显示、全屏模式，模拟时钟配备真实表盘设计和日期窗口
+- **在线时钟** - 全新专业级在线时钟，支持5种风格切换：简约白色、LED数码屏、模拟表盘、现代卡片、全屏沉浸式。精确到毫秒显示，支持12/24小时制、农历显示、全屏模式（含防息屏功能），模拟时钟配备真实表盘设计和日期窗口
+- **在线秒表** - 专业级在线秒表工具，毫秒级精度计时，支持计次记录、统计分析、CSV导出、全屏模式（含防息屏功能），适用于运动训练和时间管理
+- **在线提词器** - 专业级提词器工具，支持自动滚动、全屏显示、镜像模式、聚焦区域、防息屏功能，适用于演讲、直播、视频录制等场景
 - **时间戳转换** - 时间戳与日期格式互转，支持多种格式
 - **日期计算器** - 计算日期间隔和加减运算
 - **时区转换** - 全球时区时间转换
 - **倒计时器** - 创建倒计时和定时器功能
-- **在线秒表** - 全新的专业级在线秒表工具，为运动训练、时间管理和精确计时提供完整解决方案
 
 ### 🔐 加密解密
 - **Base64 编码** - Base64 编码和解码处理
@@ -111,9 +112,10 @@ npm run preview
 
 #### 方式一：下载安装包（推荐）
 1. 下载最新版本：[toolbox-extension](https://github.com/panxu71/toolbox/releases)
-2. 打开管理扩展程序，拖入zip压缩包就安装完成了。
+2. 打开 Chrome 扩展管理页面：`chrome://extensions/`
+3. 直接拖拽zip压缩包到页面中即可完成安装
 
-#### 方式二：从源码构建
+#### 方式二：从源码构建（开发者）
 ```bash
 # 1. 克隆项目
 git clone https://github.com/panxu71/toolbox.git
@@ -122,15 +124,12 @@ cd toolbox
 # 2. 安装依赖
 npm install
 
-# 3. 构建扩展
-npm run ext
+# 3. 构建并打包扩展
+npm run pack:ext
 
-4. 在 Chrome 中加载
-打开 chrome://extensions/
-开启开发者模式
-点击"加载已解压的扩展程序"
-选择 dist 目录
-
+# 4. 安装扩展
+# 打包完成后会在 dist 目录生成 toolbox-extension-v*.zip
+# 直接拖拽该zip文件到 chrome://extensions/ 页面即可安装
 ```
 
 ## 📦 构建命令
@@ -141,15 +140,15 @@ npm run dev              # 启动开发服务器
 
 # 构建命令
 npm run web              # 构建 Web 版本 (docs/)
-npm run ext              # 构建 Chrome 扩展 (dist/)
-npm run build:all        # 同时构建两个版本
+npm run pack:ext         # 构建并打包 Chrome 扩展为 zip
+npm run build:all        # 构建 Web 版本和扩展版本
 
 # 快速启动
 npm run serve            # 构建并启动 Web 服务器 (http://localhost:8080)
 
 # 打包命令
 npm run pack:web         # 打包 Web 版本为 zip
-npm run pack:ext         # 打包 Chrome 扩展为 zip
+npm run pack:ext         # 打包 Chrome 扩展为 zip（推荐）
 
 # 其他命令
 npm run preview          # 预览构建结果
@@ -194,6 +193,8 @@ toolbox/
 ├── src/
 │   ├── components/          # 功能组件
 │   │   ├── Clock.vue
+│   │   ├── Stopwatch.vue
+│   │   ├── Teleprompter.vue
 │   │   ├── JsonFormatter.vue
 │   │   ├── TimestampConverter.vue
 │   │   ├── PasswordGenerator.vue
@@ -237,10 +238,14 @@ cd toolbox
 # 2. 安装依赖
 npm install
 
-# 3. 启动开发服务器
+# 3. 启动开发服务器（Web版本）
 npm run dev
 
 # 4. 访问 http://localhost:5173
+
+# 5. 构建扩展版本（如需要）
+npm run pack:ext
+# 生成的zip文件可直接拖拽到chrome://extensions/安装
 ```
 
 ### 添加新工具
@@ -280,7 +285,7 @@ npm run type-check
 
 ## 📊 项目统计
 
-- 🛠️ **37+ 实用工具** - 覆盖开发常用场景
+- 🛠️ **38+ 实用工具** - 覆盖开发常用场景
 - 📱 **双端支持** - Web 版本 + Chrome 扩展
 - 🌍 **多语言支持** - 中文界面，国际化友好
 - ⚡ **高性能** - 本地处理，响应迅速
