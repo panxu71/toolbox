@@ -43,6 +43,7 @@ import UuidGenerator from './components/UuidGenerator.vue'
 import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
 import Teleprompter from './components/Teleprompter.vue'
+import UpdateNotification from './components/UpdateNotification.vue'
 import Settings from './components/Settings.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
@@ -966,6 +967,9 @@ const updateUrl = (category?: string, tool?: string) => {
                 </div>
             </div>
         </div>
+
+        <!-- 版本更新通知 -->
+        <UpdateNotification />
     </div>
 </template>
 

@@ -7,7 +7,7 @@
                 </svg>
                 返回
             </button>
-            <h2 class="converter-title">Unix时间戳定义</h2>
+            <h2 class="converter-title">时间戳转换</h2>
             <div class="converter-actions">
                 <button class="action-btn" @click="getCurrentTimestamp" title="获取当前时间戳">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,7 +31,8 @@
                 <div class="section-header">
                     <h3>当前时间</h3>
                     <button class="refresh-btn" @click="refreshCurrentTime" title="刷新">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                             <path d="M21 3v5h-5" />
                             <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
@@ -45,7 +46,8 @@
                         <div class="time-value">
                             <input v-model="currentLocalTime" readonly class="time-input-readonly" />
                             <button class="copy-btn" @click="copyText(currentLocalTime)" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
@@ -59,7 +61,8 @@
                                 <input v-model="currentTimestampSeconds" readonly class="timestamp-input-readonly" />
                                 <span class="unit">秒</span>
                                 <button class="copy-btn" @click="copyText(currentTimestampSeconds)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -69,7 +72,8 @@
                                 <input v-model="currentTimestampMillis" readonly class="timestamp-input-readonly" />
                                 <span class="unit">毫秒</span>
                                 <button class="copy-btn" @click="copyText(currentTimestampMillis)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -88,13 +92,8 @@
                 <div class="conversion-row">
                     <div class="input-group">
                         <label>时间戳(eg:1388307215)</label>
-                        <input 
-                            v-model="timestampInput" 
-                            type="text" 
-                            placeholder="请输入时间戳"
-                            @input="convertTimestampToDate"
-                            class="conversion-input"
-                        />
+                        <input v-model="timestampInput" type="text" placeholder="请输入时间戳" @input="convertTimestampToDate"
+                            class="conversion-input" />
                     </div>
                     <div class="unit-select">
                         <select v-model="timestampUnit" @change="convertTimestampToDate" class="unit-dropdown">
@@ -104,18 +103,17 @@
                     </div>
                     <button class="convert-btn" @click="convertTimestampToDate">转换</button>
                     <div class="result-display">
-                        <input 
-                            v-if="timestampResult" 
-                            v-model="timestampResult.formatted" 
-                            readonly 
-                            class="result-input" 
-                        />
-                        <input 
-                            v-else 
-                            value="请输入时间戳" 
-                            readonly 
-                            class="result-input placeholder" 
-                        />
+                        <div class="result-with-copy" v-if="timestampResult">
+                            <input v-model="timestampResult.formatted" readonly class="result-input" />
+                            <button class="copy-btn" @click="copyText(timestampResult.formatted)" title="复制">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                </svg>
+                            </button>
+                        </div>
+                        <input v-else value="请输入时间戳" readonly class="result-input placeholder" />
                     </div>
                 </div>
             </div>
@@ -129,29 +127,15 @@
                     <div class="input-group">
                         <label>时间(eg:2015-04-01 10:01:01.620)</label>
                         <div class="datetime-input-wrapper">
-                            <input 
-                                v-model="dateTimeInput" 
-                                type="text" 
-                                placeholder="请输入日期时间"
-                                @input="convertDateToTimestamp"
-                                class="conversion-input"
-                            />
-                            <button 
-                                class="datetime-picker-btn" 
-                                @click="showDateTimePicker"
-                                title="选择日期时间"
-                                type="button"
-                            >
+                            <input v-model="dateTimeInput" type="text" placeholder="请输入日期时间"
+                                @input="convertDateToTimestamp" class="conversion-input" />
+                            <button class="datetime-picker-btn" @click="showDateTimePicker" title="选择日期时间"
+                                type="button">
                                 📅
                             </button>
-                            <input 
-                                ref="dateTimePickerRef"
-                                type="datetime-local" 
-                                @change="handleDateTimePickerChange"
-                                @blur="hideDateTimePicker"
-                                class="datetime-picker"
-                                :class="{ 'picker-visible': showPicker }"
-                            />
+                            <input ref="dateTimePickerRef" type="datetime-local" @change="handleDateTimePickerChange"
+                                @blur="hideDateTimePicker" class="datetime-picker"
+                                :class="{ 'picker-visible': showPicker }" />
                         </div>
                     </div>
                     <button class="convert-btn" @click="convertDateToTimestamp">转换</button>
@@ -162,18 +146,17 @@
                         </select>
                     </div>
                     <div class="result-display">
-                        <input 
-                            v-if="dateResult" 
-                            v-model="dateResult.timestamp" 
-                            readonly 
-                            class="result-input" 
-                        />
-                        <input 
-                            v-else 
-                            value="请输入日期时间" 
-                            readonly 
-                            class="result-input placeholder" 
-                        />
+                        <div class="result-with-copy" v-if="dateResult">
+                            <input v-model="dateResult.timestamp" readonly class="result-input" />
+                            <button class="copy-btn" @click="copyText(dateResult.timestamp)" title="复制">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                </svg>
+                            </button>
+                        </div>
+                        <input v-else value="请输入日期时间" readonly class="result-input placeholder" />
                     </div>
                 </div>
             </div>
@@ -209,8 +192,10 @@
                                 <span class="time-display">{{ timezone.time }}</span>
                                 <span class="date-display">{{ timezone.date }}</span>
                             </div>
-                            <button class="copy-btn" @click="copyText(`${timezone.city}: ${timezone.time} ${timezone.date}`)" title="复制时间">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <button class="copy-btn"
+                                @click="copyText(`${timezone.city}: ${timezone.time} ${timezone.date}`)" title="复制时间">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
@@ -311,7 +296,7 @@ const formatDateTime = (date: Date): string => {
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
     const seconds = String(date.getSeconds()).padStart(2, '0')
-    
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
@@ -321,7 +306,7 @@ const updateCurrentTime = () => {
     currentLocalTime.value = formatDateTime(now)
     currentTimestampSeconds.value = Math.floor(now.getTime() / 1000).toString()
     currentTimestampMillis.value = now.getTime().toString()
-    
+
     // 同时更新世界时间
     updateWorldTimes()
 }
@@ -329,7 +314,7 @@ const updateCurrentTime = () => {
 // 更新世界时间
 const updateWorldTimes = () => {
     const now = new Date()
-    
+
     worldTimezones.value = timezoneConfig.map(config => {
         try {
             // 使用 Intl.DateTimeFormat 获取时区时间
@@ -340,24 +325,24 @@ const updateWorldTimes = () => {
                 second: '2-digit',
                 hour12: false
             })
-            
+
             const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
                 timeZone: config.zone,
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit'
             })
-            
+
             // 获取时区偏移
             const offsetFormatter = new Intl.DateTimeFormat('en', {
                 timeZone: config.zone,
                 timeZoneName: 'longOffset'
             })
-            
+
             const offsetParts = offsetFormatter.formatToParts(now)
             const offsetPart = offsetParts.find(part => part.type === 'timeZoneName')
             const offset = offsetPart ? offsetPart.value : 'UTC'
-            
+
             return {
                 city: config.city,
                 country: config.country,
@@ -395,7 +380,7 @@ const convertTimestampToDate = () => {
 
     try {
         let timestamp = parseInt(timestampInput.value.trim())
-        
+
         if (isNaN(timestamp)) {
             throw new Error('请输入有效的数字')
         }
@@ -406,7 +391,7 @@ const convertTimestampToDate = () => {
         }
 
         const date = new Date(timestamp)
-        
+
         if (isNaN(date.getTime())) {
             throw new Error('无效的时间戳')
         }
@@ -431,7 +416,7 @@ const convertDateToTimestamp = () => {
         // 尝试解析多种日期格式
         let date: Date
         const input = dateTimeInput.value.trim()
-        
+
         // 支持多种格式
         if (input.includes('T')) {
             date = new Date(input)
@@ -442,15 +427,15 @@ const convertDateToTimestamp = () => {
         } else {
             date = new Date(input)
         }
-        
+
         if (isNaN(date.getTime())) {
             throw new Error('无效的日期时间格式')
         }
 
         const timestamp = date.getTime()
-        
+
         dateResult.value = {
-            timestamp: outputUnit.value === 'seconds' 
+            timestamp: outputUnit.value === 'seconds'
                 ? Math.floor(timestamp / 1000).toString()
                 : timestamp.toString()
         }
@@ -472,7 +457,7 @@ const getCurrentTimestamp = () => {
 const setCurrentDateTime = () => {
     const now = new Date()
     dateTimeInput.value = formatDateTime(now)
-    
+
     convertDateToTimestamp()
     showMessage('已设置当前日期时间', 'success')
 }
@@ -482,7 +467,7 @@ const setTodayStart = () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     dateTimeInput.value = formatDateTime(today)
-    
+
     convertDateToTimestamp()
     showMessage('已设置今天开始时间', 'success')
 }
@@ -492,7 +477,7 @@ const setTodayEnd = () => {
     const today = new Date()
     today.setHours(23, 59, 59, 999)
     dateTimeInput.value = formatDateTime(today)
-    
+
     convertDateToTimestamp()
     showMessage('已设置今天结束时间', 'success')
 }
@@ -503,7 +488,7 @@ const setYesterdayStart = () => {
     yesterday.setDate(yesterday.getDate() - 1)
     yesterday.setHours(0, 0, 0, 0)
     dateTimeInput.value = formatDateTime(yesterday)
-    
+
     convertDateToTimestamp()
     showMessage('已设置昨天开始时间', 'success')
 }
@@ -514,7 +499,7 @@ const setTomorrowStart = () => {
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(0, 0, 0, 0)
     dateTimeInput.value = formatDateTime(tomorrow)
-    
+
     convertDateToTimestamp()
     showMessage('已设置明天开始时间', 'success')
 }
@@ -539,7 +524,7 @@ const showDateTimePicker = () => {
             // 忽略解析错误
         }
     }
-    
+
     // 聚焦到选择器
     setTimeout(() => {
         if (dateTimePickerRef.value) {
@@ -955,6 +940,16 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     flex-direction: column;
 }
 
+.result-with-copy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-with-copy .result-input {
+    flex: 1;
+}
+
 .result-input {
     padding: 10px 12px;
     border: 1px solid #ddd;
@@ -1043,7 +1038,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 12px;
-    padding-right: 32px; /* 为复制按钮留出空间 */
+    padding-right: 32px;
+    /* 为复制按钮留出空间 */
 }
 
 .city-info {
@@ -1152,6 +1148,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1169,34 +1166,34 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .world-time-item {
         min-height: 100px;
     }
-    
+
     .conversion-row {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .unit-select {
         justify-self: start;
     }
-    
+
     .convert-btn {
         justify-self: start;
         width: fit-content;
     }
-    
+
     .timestamp-values {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .quick-actions {
         justify-content: flex-start;
     }
-    
+
     .converter-content {
         padding: 16px;
     }

@@ -45,7 +45,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="setting-item">
                     <div class="setting-info">
                         <label class="setting-label">显示提示</label>
@@ -71,6 +71,20 @@
                         </label>
                     </div>
                 </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label class="setting-label">版本更新检查</label>
+                        <span class="setting-desc">自动检查并提醒新版本更新</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" v-model="settings.enableUpdateCheck"
+                                @change="handleUpdateCheckChange">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <!-- 数据管理 -->
@@ -86,7 +100,8 @@
                     </div>
                     <div class="setting-control">
                         <button @click="exportSettings" class="action-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7,10 12,15 17,10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -103,14 +118,26 @@
                     </div>
                     <div class="setting-control">
                         <button @click="clearData" class="action-btn danger">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="3,6 5,6 21,6"></polyline>
-                                <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                                <path
+                                    d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2">
+                                </path>
                             </svg>
                             清除
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- 版本检查 -->
+            <div class="settings-section">
+                <h3 class="section-title">
+                    <span class="section-icon">🔄</span>
+                    版本更新
+                </h3>
+                <VersionChecker />
             </div>
 
             <!-- 关于信息 -->
@@ -122,7 +149,7 @@
                 <div class="about-info">
                     <div class="about-item">
                         <span class="about-label">版本</span>
-                        <span class="about-value">v1.0.0</span>
+                        <span class="about-value">v{{ VERSION }}</span>
                     </div>
                     <div class="about-item">
                         <span class="about-label">构建时间</span>
@@ -132,7 +159,8 @@
                         <span class="about-label">开源地址</span>
                         <a href="https://github.com/panxu71/toolbox" target="_blank" class="about-link">
                             GitHub
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                 <polyline points="15,3 21,3 21,9"></polyline>
                                 <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -143,7 +171,8 @@
                         <span class="about-label">问题反馈</span>
                         <a href="https://github.com/panxu71/toolbox/issues" target="_blank" class="about-link">
                             Issues
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                 <polyline points="15,3 21,3 21,9"></polyline>
                                 <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -159,15 +188,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useTheme } from '../composables/useTheme'
+import { useVersionCheck } from '../composables/useVersionCheck'
+import { VERSION } from '../config/version'
+import VersionChecker from './VersionChecker.vue'
 
 const { setTheme } = useTheme()
+const { isUpdateDisabled, setUpdateDisabled } = useVersionCheck()
 
 // 设置数据
 const settings = ref({
     theme: 'auto',
     autoSave: true,
     showToast: true,
-    autoFormat: true
+    autoFormat: true,
+    enableUpdateCheck: true
 })
 
 // 构建时间
@@ -184,6 +218,9 @@ const loadSettings = () => {
             console.warn('Failed to load settings:', e)
         }
     }
+
+    // 同步更新检查设置状态
+    settings.value.enableUpdateCheck = !isUpdateDisabled()
 }
 
 // 保存设置
@@ -198,6 +235,18 @@ const updateTheme = () => {
     saveSettings()
 }
 
+// 处理更新检查开关变化
+const handleUpdateCheckChange = () => {
+    setUpdateDisabled(!settings.value.enableUpdateCheck)
+    saveSettings()
+
+    if (settings.value.enableUpdateCheck) {
+        showMessage('已启用版本更新检查')
+    } else {
+        showMessage('已禁用版本更新检查')
+    }
+}
+
 // 导出设置
 const exportSettings = () => {
     const data = {
@@ -205,7 +254,7 @@ const exportSettings = () => {
         exportTime: new Date().toISOString(),
         version: '1.0.0'
     }
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -215,7 +264,7 @@ const exportSettings = () => {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    
+
     showMessage('设置已导出')
 }
 
@@ -230,8 +279,12 @@ const clearData = () => {
             theme: 'auto',
             autoSave: true,
             showToast: true,
-            autoFormat: true
+            autoFormat: true,
+            enableUpdateCheck: true
         }
+
+        // 重置更新检查设置
+        setUpdateDisabled(false)
     }
 }
 
@@ -416,15 +469,15 @@ onMounted(() => {
     background: white;
     border-radius: 50%;
     transition: var(--transition);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-input:checked + .toggle-slider {
+input:checked+.toggle-slider {
     background: var(--primary-color);
     border-color: var(--primary-color);
 }
 
-input:checked + .toggle-slider:before {
+input:checked+.toggle-slider:before {
     transform: translateX(18px);
 }
 
@@ -503,32 +556,32 @@ input:checked + .toggle-slider:before {
     .settings-container {
         padding: 16px;
     }
-    
+
     .settings-content {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
+
     .settings-section {
         padding: 16px;
     }
-    
+
     .setting-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
         padding: 10px 0;
     }
-    
+
     .setting-info {
         margin-right: 0;
         margin-bottom: 4px;
     }
-    
+
     .setting-control {
         align-self: flex-end;
     }
-    
+
     .about-item {
         flex-direction: column;
         align-items: flex-start;
@@ -540,11 +593,11 @@ input:checked + .toggle-slider:before {
     .settings-title {
         font-size: 20px;
     }
-    
+
     .settings-content {
         gap: 12px;
     }
-    
+
     .settings-section {
         padding: 12px;
     }

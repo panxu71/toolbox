@@ -2,7 +2,7 @@
 
 > 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 38+ 实用功能
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/panxu71/toolbox)
+[![Version](https://img.shields.io/badge/version-2.1.5-blue.svg)](https://github.com/panxu71/toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Vue](https://img.shields.io/badge/vue-3.5-brightgreen.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)](https://www.typescriptlang.org/)
@@ -32,6 +32,12 @@
 - **Excel ⇄ JSON 互转** - Excel 表格与 JSON 数据双向转换
 - **Postman ⇄ JSON 互转** - Postman 参数与 JSON 格式互相转换  
 - **PHP ⇄ JSON 互转** - PHP 数组与 JSON 数据格式互相转换
+
+### 🔄 版本更新
+- **自动检查更新** - 启动时自动检查GitHub releases获取最新版本
+- **更新通知** - 发现新版本时弹窗提醒，支持查看更新内容
+- **版本管理** - 可忽略特定版本，支持手动检查更新
+- **智能缓存** - 24小时缓存机制，避免频繁请求API
 
 ### 🕐 时间工具
 - **在线时钟** - 全新专业级在线时钟，支持5种风格切换：简约白色、LED数码屏、模拟表盘、现代卡片、全屏沉浸式。精确到毫秒显示，支持12/24小时制、农历显示、全屏模式（含防息屏功能），模拟时钟配备真实表盘设计和日期窗口

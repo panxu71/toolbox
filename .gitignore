@@ -25,3 +25,4 @@ GITHUB_RELEASE*.md
 *.njsproj
 *.sln
 *.sw?
+/VERSION_GUIDE.md
