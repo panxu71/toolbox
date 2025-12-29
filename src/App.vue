@@ -48,6 +48,7 @@ import UuidGenerator from './components/UuidGenerator.vue'
 import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
 import Teleprompter from './components/Teleprompter.vue'
+import ScreenTest from './components/ScreenTest.vue'
 import Settings from './components/Settings.vue'
 const activeNav = ref('json')
 const currentTab = ref<any>(null)
@@ -193,6 +194,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'crontab-generator': 'crontab-generator',
         'markdown-editor': 'markdown-editor',
         'teleprompter': 'teleprompter',
+        'screen-test': 'screen-test',
         'text-compare': 'text-compare',
         'string-counter': 'string-counter',
         'ascii-lookup': 'ascii-lookup',
@@ -352,6 +354,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'teleprompter':
                 openPage('teleprompter')
+                return // 不需要loading状态
+            case 'screenTest':
+                openPage('screen-test')
                 return // 不需要loading状态
             case 'generateUuid':
                 openPage('uuid-generator')
@@ -836,6 +841,7 @@ const getToolAction = (toolId: string): string | null => {
         'teleprompter': 'teleprompter',
 
         // 查询工具
+        'screen-test': 'screenTest',
         'text-compare': 'compareText',
         'string-counter': 'countString',
         'ascii-lookup': 'lookupAscii',
@@ -926,6 +932,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <CrontabGenerator v-if="currentPage === 'crontab-generator'" @back="closePage" />
                 <MarkdownEditor v-if="currentPage === 'markdown-editor'" @back="closePage" />
                 <Teleprompter v-if="currentPage === 'teleprompter'" @back="closePage" />
+                <ScreenTest v-if="currentPage === 'screen-test'" @back="closePage" />
                 <BaseConverter v-if="currentPage === 'base-converter'" @back="closePage" />
                 <TextEncoder v-if="currentPage === 'text-encoder'" @back="closePage" />
                 <StringCounter v-if="currentPage === 'string-counter'" @back="closePage" />
