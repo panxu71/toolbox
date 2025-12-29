@@ -137,9 +137,9 @@ export default defineConfig({
       } : {
         main: resolve(__dirname, 'index.html')
       },
-      output: isExtensionBuild ? {
-        entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
+      output: (isExtensionBuild || isWebBuild) ? {
+        entryFileNames: isWebBuild ? 'assets/[name]-[hash].js' : '[name].js',
+        chunkFileNames: isWebBuild ? 'assets/[name]-[hash].js' : '[name].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split('.') || []
           const ext = info[info.length - 1]
@@ -147,9 +147,9 @@ export default defineConfig({
             return `icons/[name].[ext]`
           }
           if (ext === 'css') {
-            return `[name].[ext]`
+            return isWebBuild ? `assets/[name]-[hash].[ext]` : `[name].[ext]`
           }
-          return `[name].[ext]`
+          return isWebBuild ? `assets/[name]-[hash].[ext]` : `[name].[ext]`
         }
       } : {
         entryFileNames: 'assets/[name]-[hash].js',
