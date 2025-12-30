@@ -50,6 +50,7 @@ import MarkdownEditor from './components/MarkdownEditor.vue'
 import Teleprompter from './components/Teleprompter.vue'
 import ScreenTest from './components/ScreenTest.vue'
 import Settings from './components/Settings.vue'
+import CountriesCapitals from './components/CountriesCapitals.vue'
 const activeNav = ref('json')
 const currentTab = ref<any>(null)
 const pageInfo = ref<any>(null)
@@ -122,6 +123,7 @@ const handleToolSelection = (toolId: string, action: string) => {
         'http-status': 'query',
         'regex-tester': 'query',
         'color-reference': 'query',
+        'countries-capitals': 'query',
 
         // 导航工具
         'programming-languages': 'navigation',
@@ -203,7 +205,8 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'surname-lookup': 'surname-lookup',
         'mime-type-reference': 'mime-type-reference',
         'dynasty-query': 'dynasty-query',
-        'programming-languages': 'programming-languages'
+        'programming-languages': 'programming-languages',
+        'countries-capitals': 'countries-capitals'
     }
 
     return pageToolMap[pageName] || null
@@ -395,6 +398,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'dynastyQuery':
                 openPage('dynasty-query')
+                return // 不需要loading状态
+            case 'countriesCapitals':
+                openPage('countries-capitals')
                 return // 不需要loading状态
             case 'testRegex':
                 openPage('regex-tester')
@@ -850,6 +856,7 @@ const getToolAction = (toolId: string): string | null => {
         'surname-lookup': 'lookupSurname',
         'mime-type-reference': 'mimeTypeReference',
         'dynasty-query': 'dynastyQuery',
+        'countries-capitals': 'countriesCapitals',
 
         // 导航工具
         'programming-languages': 'programmingLanguages',
@@ -953,6 +960,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <UuidGenerator v-if="currentPage === 'uuid-generator'" @back="closePage" />
                 <ProgrammingLanguages v-if="currentPage === 'programming-languages'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
+                <CountriesCapitals v-if="currentPage === 'countries-capitals'" @back="closePage" />
             </template>
         </div>
 

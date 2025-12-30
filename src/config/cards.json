@@ -422,6 +422,18 @@
                     "text": "新功能",
                     "color": "#10b981"
                 }
+            },
+            {
+                "id": "countries-capitals",
+                "title": "世界国家和首都",
+                "description": "按洲浏览世界各国及其首都信息",
+                "icon": "🌍",
+                "action": "countriesCapitals",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "navigation": [
