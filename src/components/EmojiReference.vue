@@ -1,0 +1,1831 @@
+<template>
+    <div class="emoji-reference">
+        <div class="emoji-header">
+            <button class="back-btn" @click="$emit('back')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                返回
+            </button>
+            <h2 class="emoji-title">Emoji符号大全</h2>
+            <div class="emoji-actions">
+                <button class="action-btn" @click="copyAllEmojis" title="复制所有表情">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="emoji-content">
+            <!-- 搜索区域 -->
+            <div class="search-section">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
+                        </svg>
+                        <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索表情符号..."
+                            @input="filterEmojis" />
+                        <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分类导航 -->
+            <div class="category-nav">
+                <button v-for="category in categories" :key="category.key"
+                    :class="['category-btn', { active: activeCategory === category.key }]"
+                    @click="setActiveCategory(category.key)">
+                    <span class="category-icon">{{ category.icon }}</span>
+                    <span class="category-name">{{ category.name }}</span>
+                </button>
+            </div>
+
+            <!-- 表情网格 -->
+            <div class="emoji-grid-container">
+                <div v-if="filteredEmojis.length > 0" class="emoji-grid">
+                    <div v-for="emoji in filteredEmojis" :key="emoji.code" class="emoji-item" @click="copyEmoji(emoji)"
+                        :title="emoji.name">
+                        <span class="emoji-symbol">{{ emoji.symbol }}</span>
+                        <span class="emoji-name">{{ emoji.name }}</span>
+                    </div>
+                </div>
+                <div v-else class="no-results">
+                    <div class="no-results-icon">😅</div>
+                    <p>没有找到匹配的表情符号</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 消息提示 -->
+        <div v-if="message" class="message-toast" :class="messageType">
+            {{ message }}
+        </div>
+    </div>
+</template>
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+
+defineEmits<{
+    back: []
+}>()
+
+// 基本状态
+const searchQuery = ref('')
+const activeCategory = ref('all')
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
+
+// 表情符号接口
+interface Emoji {
+    symbol: string
+    name: string
+    code: string
+    category: string
+    keywords: string[]
+}
+
+// 分类配置
+const categories = [
+    { key: 'all', name: '全部', icon: '🌟' },
+    { key: 'smileys', name: '笑脸和情感', icon: '😂' },
+    { key: 'people', name: '人类和身体', icon: '👌' },
+    { key: 'animals', name: '动物和自然', icon: '🐵' },
+    { key: 'food', name: '食物和饮料', icon: '🍓' },
+    { key: 'travel', name: '旅行和地点', icon: '🚌' },
+    { key: 'activities', name: '活动', icon: '⚽' },
+    { key: 'objects', name: '物品', icon: '⌚' },
+    { key: 'symbols', name: '符号', icon: '💯' }
+]
+// 表情符号数据
+const emojis = ref<Emoji[]>([
+    // 笑脸和情感 - 扩展版
+    { symbol: '😀', name: '开心', code: 'U+1F600', category: 'smileys', keywords: ['开心', '笑', '高兴'] },
+    { symbol: '😃', name: '大笑', code: 'U+1F603', category: 'smileys', keywords: ['大笑', '开心', '兴奋'] },
+    { symbol: '😄', name: '笑眯眯', code: 'U+1F604', category: 'smileys', keywords: ['笑眯眯', '开心', '愉快'] },
+    { symbol: '😁', name: '咧嘴笑', code: 'U+1F601', category: 'smileys', keywords: ['咧嘴笑', '开心', '兴奋'] },
+    { symbol: '😆', name: '哈哈大笑', code: 'U+1F606', category: 'smileys', keywords: ['哈哈', '大笑', '开心'] },
+    { symbol: '😅', name: '苦笑', code: 'U+1F605', category: 'smileys', keywords: ['苦笑', '尴尬', '汗'] },
+    { symbol: '🤣', name: '笑哭了', code: 'U+1F923', category: 'smileys', keywords: ['笑哭', '大笑', '眼泪'] },
+    { symbol: '😂', name: '喜极而泣', code: 'U+1F602', category: 'smileys', keywords: ['喜极而泣', '笑哭', '开心'] },
+    { symbol: '🙂', name: '微笑', code: 'U+1F642', category: 'smileys', keywords: ['微笑', '开心', '友好'] },
+    { symbol: '🙃', name: '倒脸', code: 'U+1F643', category: 'smileys', keywords: ['倒脸', '调皮', '搞怪'] },
+    { symbol: '😉', name: '眨眼', code: 'U+1F609', category: 'smileys', keywords: ['眨眼', '调皮', '暗示'] },
+    { symbol: '😊', name: '害羞', code: 'U+1F60A', category: 'smileys', keywords: ['害羞', '开心', '脸红'] },
+    { symbol: '😇', name: '天使', code: 'U+1F607', category: 'smileys', keywords: ['天使', '纯洁', '善良'] },
+    { symbol: '🥰', name: '爱心眼', code: 'U+1F970', category: 'smileys', keywords: ['爱心', '喜欢', '爱'] },
+    { symbol: '😍', name: '花痴', code: 'U+1F60D', category: 'smileys', keywords: ['花痴', '爱心眼', '喜欢'] },
+    { symbol: '🤩', name: '星星眼', code: 'U+1F929', category: 'smileys', keywords: ['星星眼', '崇拜', '兴奋'] },
+    { symbol: '😘', name: '飞吻', code: 'U+1F618', category: 'smileys', keywords: ['飞吻', '亲吻', '爱'] },
+    { symbol: '😗', name: '亲吻', code: 'U+1F617', category: 'smileys', keywords: ['亲吻', '吻', '爱'] },
+    { symbol: '☺️', name: '开心', code: 'U+263A', category: 'smileys', keywords: ['开心', '微笑', '愉快'] },
+    { symbol: '😚', name: '闭眼亲吻', code: 'U+1F61A', category: 'smileys', keywords: ['闭眼', '亲吻', '爱'] },
+    { symbol: '😙', name: '亲吻微笑', code: 'U+1F619', category: 'smileys', keywords: ['亲吻', '微笑', '开心'] },
+    { symbol: '🥲', name: '含泪微笑', code: 'U+1F972', category: 'smileys', keywords: ['含泪', '微笑', '感动'] },
+    { symbol: '😋', name: '美味', code: 'U+1F60B', category: 'smileys', keywords: ['美味', '好吃', '舔嘴'] },
+    { symbol: '😛', name: '吐舌头', code: 'U+1F61B', category: 'smileys', keywords: ['吐舌头', '调皮', '搞怪'] },
+    { symbol: '😜', name: '眨眼吐舌', code: 'U+1F61C', category: 'smileys', keywords: ['眨眼', '吐舌头', '调皮'] },
+    { symbol: '🤪', name: '疯狂', code: 'U+1F92A', category: 'smileys', keywords: ['疯狂', '搞怪', '兴奋'] },
+    { symbol: '😝', name: '闭眼吐舌', code: 'U+1F61D', category: 'smileys', keywords: ['闭眼', '吐舌头', '调皮'] },
+    { symbol: '🤑', name: '财迷', code: 'U+1F911', category: 'smileys', keywords: ['财迷', '金钱', '贪婪'] },
+    { symbol: '🤗', name: '拥抱', code: 'U+1F917', category: 'smileys', keywords: ['拥抱', '温暖', '友好'] },
+    { symbol: '🤭', name: '捂嘴笑', code: 'U+1F92D', category: 'smileys', keywords: ['捂嘴笑', '偷笑', '害羞'] },
+    { symbol: '🫢', name: '捂嘴惊讶', code: 'U+1FAE2', category: 'smileys', keywords: ['捂嘴', '惊讶', '震惊'] },
+    { symbol: '🫣', name: '偷看', code: 'U+1FAE3', category: 'smileys', keywords: ['偷看', '害羞', '好奇'] },
+    { symbol: '🤫', name: '嘘', code: 'U+1F92B', category: 'smileys', keywords: ['嘘', '安静', '秘密'] },
+    { symbol: '🤔', name: '思考', code: 'U+1F914', category: 'smileys', keywords: ['思考', '疑惑', '考虑'] },
+    { symbol: '🫡', name: '敬礼', code: 'U+1FAE1', category: 'smileys', keywords: ['敬礼', '尊敬', '军礼'] },
+    { symbol: '🤐', name: '闭嘴', code: 'U+1F910', category: 'smileys', keywords: ['闭嘴', '拉链', '保密'] },
+    { symbol: '🤨', name: '挑眉', code: 'U+1F928', category: 'smileys', keywords: ['挑眉', '怀疑', '质疑'] },
+    { symbol: '😐', name: '面无表情', code: 'U+1F610', category: 'smileys', keywords: ['面无表情', '平静', '无聊'] },
+    { symbol: '😑', name: '无语', code: 'U+1F611', category: 'smileys', keywords: ['无语', '无奈', '沉默'] },
+    { symbol: '😶', name: '没嘴', code: 'U+1F636', category: 'smileys', keywords: ['没嘴', '沉默', '无话可说'] },
+    { symbol: '🫥', name: '虚线脸', code: 'U+1FAE5', category: 'smileys', keywords: ['虚线脸', '消失', '隐形'] },
+    { symbol: '😏', name: '得意', code: 'U+1F60F', category: 'smileys', keywords: ['得意', '坏笑', '调皮'] },
+    { symbol: '😒', name: '不爽', code: 'U+1F612', category: 'smileys', keywords: ['不爽', '无聊', '厌烦'] },
+    { symbol: '🙄', name: '翻白眼', code: 'U+1F644', category: 'smileys', keywords: ['翻白眼', '无语', '鄙视'] },
+    { symbol: '😬', name: '龇牙', code: 'U+1F62C', category: 'smileys', keywords: ['龇牙', '尴尬', '紧张'] },
+    { symbol: '😮‍💨', name: '叹气', code: 'U+1F62E-200D-1F4A8', category: 'smileys', keywords: ['叹气', '疲惫', '无奈'] },
+    { symbol: '🤥', name: '说谎', code: 'U+1F925', category: 'smileys', keywords: ['说谎', '撒谎', '长鼻子'] },
+    { symbol: '😌', name: '安心', code: 'U+1F60C', category: 'smileys', keywords: ['安心', '满足', '平静'] },
+    { symbol: '😔', name: '沮丧', code: 'U+1F614', category: 'smileys', keywords: ['沮丧', '失望', '难过'] },
+    { symbol: '😪', name: '困倦', code: 'U+1F62A', category: 'smileys', keywords: ['困倦', '睡觉', '疲惫'] },
+    { symbol: '🤤', name: '流口水', code: 'U+1F924', category: 'smileys', keywords: ['流口水', '想要', '睡觉'] },
+    { symbol: '😴', name: '睡觉', code: 'U+1F634', category: 'smileys', keywords: ['睡觉', '困', 'ZZZ'] },
+    { symbol: '😷', name: '戴口罩', code: 'U+1F637', category: 'smileys', keywords: ['戴口罩', '生病', '防护'] },
+    { symbol: '🤒', name: '发烧', code: 'U+1F912', category: 'smileys', keywords: ['发烧', '生病', '温度计'] },
+    { symbol: '🤕', name: '受伤', code: 'U+1F915', category: 'smileys', keywords: ['受伤', '绷带', '疼痛'] },
+    { symbol: '🤢', name: '恶心', code: 'U+1F922', category: 'smileys', keywords: ['恶心', '想吐', '不舒服'] },
+    { symbol: '🤮', name: '呕吐', code: 'U+1F92E', category: 'smileys', keywords: ['呕吐', '恶心', '吐'] },
+    { symbol: '🤧', name: '打喷嚏', code: 'U+1F927', category: 'smileys', keywords: ['打喷嚏', '感冒', '纸巾'] },
+    { symbol: '🥵', name: '热', code: 'U+1F975', category: 'smileys', keywords: ['热', '高温', '出汗'] },
+    { symbol: '🥶', name: '冷', code: 'U+1F976', category: 'smileys', keywords: ['冷', '低温', '发抖'] },
+    { symbol: '🥴', name: '晕', code: 'U+1F974', category: 'smileys', keywords: ['晕', '眩晕', '醉'] },
+    { symbol: '😵', name: '晕倒', code: 'U+1F635', category: 'smileys', keywords: ['晕倒', '昏迷', '眩晕'] },
+    { symbol: '😵‍💫', name: '眼冒金星', code: 'U+1F635-200D-1F4AB', category: 'smileys', keywords: ['眼冒金星', '晕', '眩晕'] },
+    { symbol: '🤯', name: '爆炸头', code: 'U+1F92F', category: 'smileys', keywords: ['爆炸头', '震惊', '惊讶'] },
+    { symbol: '🤠', name: '牛仔', code: 'U+1F920', category: 'smileys', keywords: ['牛仔', '帽子', '西部'] },
+    { symbol: '🥳', name: '派对', code: 'U+1F973', category: 'smileys', keywords: ['派对', '庆祝', '生日'] },
+    { symbol: '🥸', name: '伪装', code: 'U+1F978', category: 'smileys', keywords: ['伪装', '眼镜', '胡子'] },
+    { symbol: '😎', name: '酷', code: 'U+1F60E', category: 'smileys', keywords: ['酷', '墨镜', '帅'] },
+    { symbol: '🤓', name: '书呆子', code: 'U+1F913', category: 'smileys', keywords: ['书呆子', '眼镜', '学霸'] },
+    { symbol: '🧐', name: '单片眼镜', code: 'U+1F9D0', category: 'smileys', keywords: ['单片眼镜', '绅士', '仔细'] },
+    { symbol: '😕', name: '困惑', code: 'U+1F615', category: 'smileys', keywords: ['困惑', '疑惑', '不解'] },
+    { symbol: '🫤', name: '斜眼', code: 'U+1FAE4', category: 'smileys', keywords: ['斜眼', '怀疑', '不确定'] },
+    { symbol: '😟', name: '担心', code: 'U+1F61F', category: 'smileys', keywords: ['担心', '忧虑', '不安'] },
+    { symbol: '🙁', name: '皱眉', code: 'U+1F641', category: 'smileys', keywords: ['皱眉', '不开心', '难过'] },
+    { symbol: '☹️', name: '不开心', code: 'U+2639', category: 'smileys', keywords: ['不开心', '难过', '沮丧'] },
+    { symbol: '😮', name: '惊讶', code: 'U+1F62E', category: 'smileys', keywords: ['惊讶', '震惊', '张嘴'] },
+    { symbol: '😯', name: '安静惊讶', code: 'U+1F62F', category: 'smileys', keywords: ['安静惊讶', '震惊', '沉默'] },
+    { symbol: '😲', name: '震惊', code: 'U+1F632', category: 'smileys', keywords: ['震惊', '惊讶', '不敢相信'] },
+    { symbol: '😳', name: '脸红', code: 'U+1F633', category: 'smileys', keywords: ['脸红', '害羞', '尴尬'] },
+    { symbol: '🥺', name: '可怜', code: 'U+1F97A', category: 'smileys', keywords: ['可怜', '恳求', '委屈'] },
+    { symbol: '🥹', name: '含泪', code: 'U+1F979', category: 'smileys', keywords: ['含泪', '感动', '眼泪'] },
+    { symbol: '😦', name: '皱眉张嘴', code: 'U+1F626', category: 'smileys', keywords: ['皱眉张嘴', '担心', '不安'] },
+    { symbol: '😧', name: '痛苦', code: 'U+1F627', category: 'smileys', keywords: ['痛苦', '难受', '折磨'] },
+    { symbol: '😨', name: '恐惧', code: 'U+1F628', category: 'smileys', keywords: ['恐惧', '害怕', '惊恐'] },
+    { symbol: '😰', name: '焦虑出汗', code: 'U+1F630', category: 'smileys', keywords: ['焦虑', '出汗', '紧张'] },
+    { symbol: '😥', name: '失望但安心', code: 'U+1F625', category: 'smileys', keywords: ['失望', '安心', '复杂'] },
+    { symbol: '😢', name: '哭泣', code: 'U+1F622', category: 'smileys', keywords: ['哭泣', '眼泪', '伤心'] },
+    { symbol: '😭', name: '大哭', code: 'U+1F62D', category: 'smileys', keywords: ['大哭', '痛哭', '伤心'] },
+    { symbol: '😱', name: '尖叫', code: 'U+1F631', category: 'smileys', keywords: ['尖叫', '恐惧', '惊恐'] },
+    { symbol: '😖', name: '困扰', code: 'U+1F616', category: 'smileys', keywords: ['困扰', '烦恼', '纠结'] },
+    { symbol: '😣', name: '坚持', code: 'U+1F623', category: 'smileys', keywords: ['坚持', '努力', '痛苦'] },
+    { symbol: '😞', name: '失望', code: 'U+1F61E', category: 'smileys', keywords: ['失望', '沮丧', '难过'] },
+    { symbol: '😓', name: '冷汗', code: 'U+1F613', category: 'smileys', keywords: ['冷汗', '紧张', '尴尬'] },
+    { symbol: '😩', name: '疲惫', code: 'U+1F629', category: 'smileys', keywords: ['疲惫', '累', '无奈'] },
+    { symbol: '😫', name: '疲倦', code: 'U+1F62B', category: 'smileys', keywords: ['疲倦', '累', '困'] },
+    { symbol: '🥱', name: '打哈欠', code: 'U+1F971', category: 'smileys', keywords: ['打哈欠', '困', '无聊'] },
+    { symbol: '😤', name: '愤怒', code: 'U+1F624', category: 'smileys', keywords: ['愤怒', '生气', '鼻孔冒气'] },
+    { symbol: '😡', name: '红脸愤怒', code: 'U+1F621', category: 'smileys', keywords: ['红脸愤怒', '生气', '愤怒'] },
+    { symbol: '😠', name: '愤怒', code: 'U+1F620', category: 'smileys', keywords: ['愤怒', '生气', '不满'] },
+    { symbol: '🤬', name: '脏话', code: 'U+1F92C', category: 'smileys', keywords: ['脏话', '愤怒', '骂人'] },
+    { symbol: '😈', name: '坏笑恶魔', code: 'U+1F608', category: 'smileys', keywords: ['坏笑恶魔', '恶魔', '坏'] },
+    { symbol: '👿', name: '愤怒恶魔', code: 'U+1F47F', category: 'smileys', keywords: ['愤怒恶魔', '恶魔', '愤怒'] },
+    { symbol: '💀', name: '骷髅', code: 'U+1F480', category: 'smileys', keywords: ['骷髅', '死亡', '恐怖'] },
+    { symbol: '☠️', name: '骷髅交叉骨', code: 'U+2620', category: 'smileys', keywords: ['骷髅交叉骨', '死亡', '危险'] },
+    // 人类和身体 - 扩展版
+    { symbol: '👋', name: '挥手', code: 'U+1F44B', category: 'people', keywords: ['挥手', '再见', '你好'] },
+    { symbol: '🤚', name: '举手背', code: 'U+1F91A', category: 'people', keywords: ['举手', '停止', '手背'] },
+    { symbol: '🖐️', name: '张开手', code: 'U+1F590', category: 'people', keywords: ['张开手', '五指', '手掌'] },
+    { symbol: '✋', name: '举手', code: 'U+270B', category: 'people', keywords: ['举手', '停止', '手掌'] },
+    { symbol: '🖖', name: '瓦肯礼', code: 'U+1F596', category: 'people', keywords: ['瓦肯礼', '星际迷航', '和平'] },
+    { symbol: '👌', name: 'OK手势', code: 'U+1F44C', category: 'people', keywords: ['OK', '好的', '完美'] },
+    { symbol: '🤌', name: '捏手指', code: 'U+1F90C', category: 'people', keywords: ['捏手指', '意大利', '什么'] },
+    { symbol: '🤏', name: '捏一点', code: 'U+1F90F', category: 'people', keywords: ['捏一点', '一点点', '小'] },
+    { symbol: '✌️', name: '胜利手势', code: 'U+270C', category: 'people', keywords: ['胜利', 'V', '和平'] },
+    { symbol: '🤞', name: '交叉手指', code: 'U+1F91E', category: 'people', keywords: ['交叉手指', '祈祷', '好运'] },
+    { symbol: '🤟', name: '爱你手势', code: 'U+1F91F', category: 'people', keywords: ['爱你', 'ILY', '手语'] },
+    { symbol: '🤘', name: '摇滚手势', code: 'U+1F918', category: 'people', keywords: ['摇滚', '角', '重金属'] },
+    { symbol: '🤙', name: '打电话手势', code: 'U+1F919', category: 'people', keywords: ['打电话', '联系', '冲浪'] },
+    { symbol: '👈', name: '左指', code: 'U+1F448', category: 'people', keywords: ['左指', '指向', '那边'] },
+    { symbol: '👉', name: '右指', code: 'U+1F449', category: 'people', keywords: ['右指', '指向', '这边'] },
+    { symbol: '👆', name: '上指', code: 'U+1F446', category: 'people', keywords: ['上指', '指向', '上面'] },
+    { symbol: '🖕', name: '中指', code: 'U+1F595', category: 'people', keywords: ['中指', '愤怒', '侮辱'] },
+    { symbol: '👇', name: '下指', code: 'U+1F447', category: 'people', keywords: ['下指', '指向', '下面'] },
+    { symbol: '☝️', name: '食指', code: 'U+261D', category: 'people', keywords: ['食指', '指向', '一'] },
+    { symbol: '👍', name: '点赞', code: 'U+1F44D', category: 'people', keywords: ['点赞', '好', '赞同'] },
+    { symbol: '👎', name: '踩', code: 'U+1F44E', category: 'people', keywords: ['踩', '不好', '反对'] },
+    { symbol: '✊', name: '拳头', code: 'U+270A', category: 'people', keywords: ['拳头', '力量', '团结'] },
+    { symbol: '👊', name: '碰拳', code: 'U+1F44A', category: 'people', keywords: ['碰拳', '击拳', '友谊'] },
+    { symbol: '🤛', name: '左拳', code: 'U+1F91B', category: 'people', keywords: ['左拳', '击拳', '碰拳'] },
+    { symbol: '🤜', name: '右拳', code: 'U+1F91C', category: 'people', keywords: ['右拳', '击拳', '碰拳'] },
+    { symbol: '👏', name: '鼓掌', code: 'U+1F44F', category: 'people', keywords: ['鼓掌', '赞扬', '庆祝'] },
+    { symbol: '🙌', name: '举双手', code: 'U+1F64C', category: 'people', keywords: ['举双手', '庆祝', '万岁'] },
+    { symbol: '👐', name: '张开双手', code: 'U+1F450', category: 'people', keywords: ['张开双手', '拥抱', '欢迎'] },
+    { symbol: '🤲', name: '托起双手', code: 'U+1F932', category: 'people', keywords: ['托起双手', '祈祷', '请求'] },
+    { symbol: '🤝', name: '握手', code: 'U+1F91D', category: 'people', keywords: ['握手', '合作', '协议'] },
+    { symbol: '🙏', name: '祈祷', code: 'U+1F64F', category: 'people', keywords: ['祈祷', '感谢', '请求'] },
+    { symbol: '✍️', name: '写字', code: 'U+270D', category: 'people', keywords: ['写字', '书写', '签名'] },
+    { symbol: '💅', name: '涂指甲', code: 'U+1F485', category: 'people', keywords: ['涂指甲', '美甲', '时尚'] },
+    { symbol: '🤳', name: '自拍', code: 'U+1F933', category: 'people', keywords: ['自拍', '拍照', '手机'] },
+    { symbol: '💪', name: '肌肉', code: 'U+1F4AA', category: 'people', keywords: ['肌肉', '力量', '强壮'] },
+    { symbol: '🦾', name: '机械臂', code: 'U+1F9BE', category: 'people', keywords: ['机械臂', '假肢', '科技'] },
+    { symbol: '🦿', name: '机械腿', code: 'U+1F9BF', category: 'people', keywords: ['机械腿', '假肢', '科技'] },
+    { symbol: '🦵', name: '腿', code: 'U+1F9B5', category: 'people', keywords: ['腿', '身体', '部位'] },
+    { symbol: '🦶', name: '脚', code: 'U+1F9B6', category: 'people', keywords: ['脚', '身体', '部位'] },
+    { symbol: '👂', name: '耳朵', code: 'U+1F442', category: 'people', keywords: ['耳朵', '听', '身体'] },
+    { symbol: '🦻', name: '助听器', code: 'U+1F9BB', category: 'people', keywords: ['助听器', '听力', '辅助'] },
+    { symbol: '👃', name: '鼻子', code: 'U+1F443', category: 'people', keywords: ['鼻子', '闻', '身体'] },
+    { symbol: '🧠', name: '大脑', code: 'U+1F9E0', category: 'people', keywords: ['大脑', '思考', '智慧'] },
+    { symbol: '🫀', name: '心脏', code: 'U+1FAC0', category: 'people', keywords: ['心脏', '器官', '生命'] },
+    { symbol: '🫁', name: '肺', code: 'U+1FAC1', category: 'people', keywords: ['肺', '呼吸', '器官'] },
+    { symbol: '🦷', name: '牙齿', code: 'U+1F9B7', category: 'people', keywords: ['牙齿', '口腔', '健康'] },
+    { symbol: '🦴', name: '骨头', code: 'U+1F9B4', category: 'people', keywords: ['骨头', '骨骼', '身体'] },
+    { symbol: '👀', name: '眼睛', code: 'U+1F440', category: 'people', keywords: ['眼睛', '看', '注视'] },
+    { symbol: '👁️', name: '眼', code: 'U+1F441', category: 'people', keywords: ['眼', '看', '观察'] },
+    { symbol: '👅', name: '舌头', code: 'U+1F445', category: 'people', keywords: ['舌头', '味觉', '身体'] },
+    { symbol: '👄', name: '嘴唇', code: 'U+1F444', category: 'people', keywords: ['嘴唇', '亲吻', '美丽'] },
+    { symbol: '🫦', name: '咬嘴唇', code: 'U+1FAE6', category: 'people', keywords: ['咬嘴唇', '紧张', '诱惑'] },
+    { symbol: '👶', name: '婴儿', code: 'U+1F476', category: 'people', keywords: ['婴儿', '宝宝', '小孩'] },
+    { symbol: '🧒', name: '儿童', code: 'U+1F9D2', category: 'people', keywords: ['儿童', '小孩', '孩子'] },
+    { symbol: '👦', name: '男孩', code: 'U+1F466', category: 'people', keywords: ['男孩', '小男孩', '儿童'] },
+    { symbol: '👧', name: '女孩', code: 'U+1F467', category: 'people', keywords: ['女孩', '小女孩', '儿童'] },
+    { symbol: '🧑', name: '成人', code: 'U+1F9D1', category: 'people', keywords: ['成人', '人', '大人'] },
+    { symbol: '👱', name: '金发人', code: 'U+1F471', category: 'people', keywords: ['金发人', '金发', '人'] },
+    { symbol: '👨', name: '男人', code: 'U+1F468', category: 'people', keywords: ['男人', '男性', '成年男子'] },
+    { symbol: '🧔', name: '胡须男', code: 'U+1F9D4', category: 'people', keywords: ['胡须男', '胡子', '男人'] },
+    { symbol: '🧔‍♂️', name: '男性胡须', code: 'U+1F9D4-200D-2642-FE0F', category: 'people', keywords: ['男性胡须', '胡子', '男人'] },
+    { symbol: '🧔‍♀️', name: '女性胡须', code: 'U+1F9D4-200D-2640-FE0F', category: 'people', keywords: ['女性胡须', '胡子', '女人'] },
+    { symbol: '👨‍🦰', name: '红发男', code: 'U+1F468-200D-1F9B0', category: 'people', keywords: ['红发男', '红发', '男人'] },
+    { symbol: '👨‍🦱', name: '卷发男', code: 'U+1F468-200D-1F9B1', category: 'people', keywords: ['卷发男', '卷发', '男人'] },
+    { symbol: '👨‍🦳', name: '白发男', code: 'U+1F468-200D-1F9B3', category: 'people', keywords: ['白发男', '白发', '男人'] },
+    { symbol: '👨‍🦲', name: '秃头男', code: 'U+1F468-200D-1F9B2', category: 'people', keywords: ['秃头男', '秃头', '男人'] },
+    { symbol: '👩', name: '女人', code: 'U+1F469', category: 'people', keywords: ['女人', '女性', '成年女子'] },
+    { symbol: '👩‍🦰', name: '红发女', code: 'U+1F469-200D-1F9B0', category: 'people', keywords: ['红发女', '红发', '女人'] },
+    { symbol: '🧑‍🦰', name: '红发人', code: 'U+1F9D1-200D-1F9B0', category: 'people', keywords: ['红发人', '红发', '人'] },
+    { symbol: '👩‍🦱', name: '卷发女', code: 'U+1F469-200D-1F9B1', category: 'people', keywords: ['卷发女', '卷发', '女人'] },
+    { symbol: '🧑‍🦱', name: '卷发人', code: 'U+1F9D1-200D-1F9B1', category: 'people', keywords: ['卷发人', '卷发', '人'] },
+    { symbol: '👩‍🦳', name: '白发女', code: 'U+1F469-200D-1F9B3', category: 'people', keywords: ['白发女', '白发', '女人'] },
+    { symbol: '🧑‍🦳', name: '白发人', code: 'U+1F9D1-200D-1F9B3', category: 'people', keywords: ['白发人', '白发', '人'] },
+    { symbol: '👩‍🦲', name: '秃头女', code: 'U+1F469-200D-1F9B2', category: 'people', keywords: ['秃头女', '秃头', '女人'] },
+    { symbol: '🧑‍🦲', name: '秃头人', code: 'U+1F9D1-200D-1F9B2', category: 'people', keywords: ['秃头人', '秃头', '人'] },
+    { symbol: '👱‍♀️', name: '金发女', code: 'U+1F471-200D-2640-FE0F', category: 'people', keywords: ['金发女', '金发', '女人'] },
+    { symbol: '👱‍♂️', name: '金发男', code: 'U+1F471-200D-2642-FE0F', category: 'people', keywords: ['金发男', '金发', '男人'] },
+    { symbol: '🧓', name: '老人', code: 'U+1F9D3', category: 'people', keywords: ['老人', '年长', '长者'] },
+    { symbol: '👴', name: '老爷爷', code: 'U+1F474', category: 'people', keywords: ['老爷爷', '老人', '爷爷'] },
+    { symbol: '👵', name: '老奶奶', code: 'U+1F475', category: 'people', keywords: ['老奶奶', '老人', '奶奶'] },
+    // 动物和自然 - 扩展版
+    { symbol: '🐶', name: '狗脸', code: 'U+1F436', category: 'animals', keywords: ['狗', '小狗', '宠物'] },
+    { symbol: '🐱', name: '猫脸', code: 'U+1F431', category: 'animals', keywords: ['猫', '小猫', '宠物'] },
+    { symbol: '🐭', name: '老鼠脸', code: 'U+1F42D', category: 'animals', keywords: ['老鼠', '鼠', '小鼠'] },
+    { symbol: '🐹', name: '仓鼠脸', code: 'U+1F439', category: 'animals', keywords: ['仓鼠', '小仓鼠', '宠物'] },
+    { symbol: '🐰', name: '兔子脸', code: 'U+1F430', category: 'animals', keywords: ['兔子', '小兔', '可爱'] },
+    { symbol: '🦊', name: '狐狸脸', code: 'U+1F98A', category: 'animals', keywords: ['狐狸', '狡猾', '聪明'] },
+    { symbol: '🐻', name: '熊脸', code: 'U+1F43B', category: 'animals', keywords: ['熊', '大熊', '可爱'] },
+    { symbol: '🐼', name: '熊猫脸', code: 'U+1F43C', category: 'animals', keywords: ['熊猫', '大熊猫', '中国'] },
+    { symbol: '❄️', name: '北极熊', code: 'U + 1F43B- 200D - 2744 - FE0F', category: 'animals', keywords: ['北极熊', '白熊', '北极'] },
+    { symbol: '🐨', name: '考拉', code: 'U+1F428', category: 'animals', keywords: ['考拉', '树袋熊', '澳洲'] },
+    { symbol: '🐯', name: '老虎脸', code: 'U+1F42F', category: 'animals', keywords: ['老虎', '虎', '威猛'] },
+    { symbol: '🦁', name: '狮子脸', code: 'U+1F981', category: 'animals', keywords: ['狮子', '狮', '王者'] },
+    { symbol: '🐮', name: '牛脸', code: 'U+1F42E', category: 'animals', keywords: ['牛', '奶牛', '农场'] },
+    {
+        symbol: '🐷', name: '猪脸', code: 'U+1F437', category: 'animals', keywords: ['猪', '小猪', '可爱']
+    },
+    {
+        symbol: '🐽', name: '猪鼻子', code: 'U+1F43D', category: 'animals', keywords: ['猪鼻子', '猪', '鼻子']
+    },
+    { symbol: '🐸', name: '青蛙脸', code: 'U+1F438', category: 'animals', keywords: ['青蛙', '蛙', '绿色'] },
+    { symbol: '🐵', name: '猴脸', code: 'U+1F435', category: 'animals', keywords: ['猴子', '猴', '调皮'] },
+    { symbol: '🙈', name: '非礼勿视', code: 'U+1F648', category: 'animals', keywords: ['非礼勿视', '猴子', '害羞'] },
+    { symbol: '🙉', name: '非礼勿听', code: 'U+1F649', category: 'animals', keywords: ['非礼勿听', '猴子', '不听'] },
+    { symbol: '🙊', name: '非礼勿言', code: 'U+1F64A', category: 'animals', keywords: ['非礼勿言', '猴子', '不说'] },
+    {
+        symbol: '🐒', name: '猴子', code: 'U+1F412', category: 'animals', keywords: ['猴子', '猴', '灵长类']
+    },
+    { symbol: '🦍', name: '大猩猩', code: 'U+1F98D', category: 'animals', keywords: ['大猩猩', '猩猩', '强壮'] },
+    { symbol: '🦧', name: '猩猩', code: 'U+1F9A7', category: 'animals', keywords: ['猩猩', '红毛猩猩', '灵长类'] },
+    { symbol: '🐕', name: '狗', code: 'U+1F415', category: 'animals', keywords: ['狗', '犬', '宠物'] },
+    { symbol: '🦺n', name: '导盲犬', code: 'U+1F415-200D-1F9BA', category: 'animals', keywords: ['导盲犬', '服务犬', '工作犬'] },
+    { symbol: '🐩', name: '贵宾犬', code: 'U+1F429', category: 'animals', keywords: ['贵宾犬', '泰迪', '卷毛狗'] },
+    { symbol: '🐺', name: '狼', code: 'U+1F43A', category: 'animals', keywords: ['狼', '野狼', '野生'] },
+    { symbol: '�', name: '浣熊', code: 'U+1F99D', category: 'animals', keywords: ['浣熊', '小熊猫', '可爱'] },
+    { symbol: '🐱‍👤', name: '忍者猫', code: 'U+1F431-200D-1F464', category: 'animals', keywords: ['忍者猫', '猫', '忍者'] },
+    { symbol: '🐱‍🏍', name: '骑车猫', code: 'U+1F431-200D-1F3CD', category: 'animals', keywords: ['骑车猫', '猫', '摩托车'] },
+    { symbol: '🐱‍💻', name: '程序员猫', code: 'U+1F431-200D-1F4BB', category: 'animals', keywords: ['程序员猫', '猫', '电脑'] },
+    { symbol: '🐱‍🐉', name: '龙猫', code: 'U+1F431-200D-1F409', category: 'animals', keywords: ['龙猫', '猫', '龙'] },
+    { symbol: '🐈', name: '猫', code: 'U+1F408', category: 'animals', keywords: ['猫', '家猫', '宠物'] },
+    { symbol: '🐈‍⬛', name: '黑猫', code: 'U+1F408-200D-2B1B', category: 'animals', keywords: ['黑猫', '猫', '黑色'] },
+    { symbol: '🦌', name: '鹿', code: 'U+1F98C', category: 'animals', keywords: ['鹿', '梅花鹿', '野生'] },
+    { symbol: '🐃', name: '水牛', code: 'U+1F403', category: 'animals', keywords: ['水牛', '牛', '农场'] },
+    { symbol: '🐂', name: '公牛', code: 'U+1F402', category: 'animals', keywords: ['公牛', '牛', '强壮'] },
+    { symbol: '🐄', name: '奶牛', code: 'U+1F404', category: 'animals', keywords: ['奶牛', '牛', '农场'] },
+    { symbol: '🐎', name: '马', code: 'U+1F40E', category: 'animals', keywords: ['马', '骏马', '奔跑'] },
+    { symbol: '🐖', name: '猪', code: 'U+1F416', category: 'animals', keywords: ['猪', '家猪', '农场'] },
+    { symbol: '🐗', name: '野猪', code: 'U+1F417', category: 'animals', keywords: ['野猪', '猪', '野生'] },
+    { symbol: '🐏', name: '公羊', code: 'U+1F40F', category: 'animals', keywords: ['公羊', '羊', '角'] },
+    { symbol: '🐑', name: '绵羊', code: 'U+1F411', category: 'animals', keywords: ['绵羊', '羊', '毛茸茸'] },
+    { symbol: '🐐', name: '山羊', code: 'U+1F410', category: 'animals', keywords: ['山羊', '羊', '胡子'] },
+    { symbol: '🦙', name: '羊驼', code: 'U+1F999', category: 'animals', keywords: ['羊驼', '草泥马', '可爱'] },
+    { symbol: '🦏', name: '犀牛', code: 'U+1F98F', category: 'animals', keywords: ['犀牛', '角', '厚皮'] },
+    { symbol: '🦛', name: '河马', code: 'U+1F99B', category: 'animals', keywords: ['河马', '大嘴', '水中'] },
+    { symbol: '🐘', name: '大象', code: 'U+1F418', category: 'animals', keywords: ['大象', '象', '长鼻子'] },
+    { symbol: '🦣', name: '猛犸象', code: 'U+1F9A3', category: 'animals', keywords: ['猛犸象', '象', '史前'] },
+    { symbol: '🐪', name: '骆驼', code: 'U+1F42A', category: 'animals', keywords: ['骆驼', '单峰驼', '沙漠'] },
+    { symbol: '🐫', name: '双峰驼', code: 'U+1F42B', category: 'animals', keywords: ['双峰驼', '骆驼', '沙漠'] },
+    { symbol: '🦒', name: '长颈鹿', code: 'U+1F992', category: 'animals', keywords: ['长颈鹿', '长脖子', '高'] },
+    { symbol: '🦘', name: '袋鼠', code: 'U+1F998', category: 'animals', keywords: ['袋鼠', '跳跃', '澳洲'] },
+    { symbol: '🦬', name: '野牛', code: 'U+1F9AC', category: 'animals', keywords: ['野牛', '美洲野牛', '草原'] },
+    { symbol: '🐃', name: '水牛', code: 'U+1F403', category: 'animals', keywords: ['水牛', '牛', '亚洲'] },
+    { symbol: '🐔', name: '鸡', code: 'U+1F414', category: 'animals', keywords: ['鸡', '公鸡', '农场'] },
+    { symbol: '🐓', name: '公鸡', code: 'U+1F413', category: 'animals', keywords: ['公鸡', '鸡', '报晓'] },
+    { symbol: '🐣', name: '破壳小鸡', code: 'U+1F423', category: 'animals', keywords: ['破壳', '小鸡', '新生'] },
+    { symbol: '🐤', name: '小鸡', code: 'U+1F424', category: 'animals', keywords: ['小鸡', '雏鸡', '可爱'] },
+    { symbol: '🐥', name: '正面小鸡', code: 'U+1F425', category: 'animals', keywords: ['小鸡', '正面', '可爱'] },
+    { symbol: '🦆', name: '鸭子', code: 'U+1F986', category: 'animals', keywords: ['鸭子', '鸭', '水鸟'] },
+    { symbol: '🦢', name: '天鹅', code: 'U+1F9A2', category: 'animals', keywords: ['天鹅', '优雅', '白色'] },
+    { symbol: '🦅', name: '老鹰', code: 'U+1F985', category: 'animals', keywords: ['老鹰', '鹰', '猛禽'] },
+    { symbol: '🦉', name: '猫头鹰', code: 'U+1F989', category: 'animals', keywords: ['猫头鹰', '智慧', '夜晚'] },
+    { symbol: '🦤', name: '渡渡鸟', code: 'U+1F9A4', category: 'animals', keywords: ['渡渡鸟', '灭绝', '鸟类'] },
+    { symbol: '🪶', name: '羽毛', code: 'U+1FAB6', category: 'animals', keywords: ['羽毛', '鸟', '轻盈'] },
+    { symbol: '🦩', name: '火烈鸟', code: 'U+1F9A9', category: 'animals', keywords: ['火烈鸟', '粉色', '优雅'] },
+    { symbol: '🦚', name: '孔雀', code: 'U+1F99A', category: 'animals', keywords: ['孔雀', '美丽', '开屏'] },
+    { symbol: '🦜', name: '鹦鹉', code: 'U+1F99C', category: 'animals', keywords: ['鹦鹉', '彩色', '说话'] },
+    { symbol: '🐦', name: '鸟', code: 'U+1F426', category: 'animals', keywords: ['鸟', '小鸟', '飞行'] },
+    { symbol: '🐦‍⬛', name: '黑鸟', code: 'U+1F426-200D-2B1B', category: 'animals', keywords: ['黑鸟', '乌鸦', '黑色'] },
+    { symbol: '🐧', name: '企鹅', code: 'U+1F427', category: 'animals', keywords: ['企鹅', '南极', '可爱'] },
+    { symbol: '🕊️', name: '鸽子', code: 'U+1F54A', category: 'animals', keywords: ['鸽子', '和平', '白色'] },
+    { symbol: '🐸', name: '青蛙', code: 'U+1F438', category: 'animals', keywords: ['青蛙', '蛙', '绿色'] },
+    { symbol: '🐊', name: '鳄鱼', code: 'U+1F40A', category: 'animals', keywords: ['鳄鱼', '爬行动物', '危险'] },
+    { symbol: '🐢', name: '乌龟', code: 'U+1F422', category: 'animals', keywords: ['乌龟', '龟', '长寿'] },
+    { symbol: '🦎', name: '蜥蜴', code: 'U+1F98E', category: 'animals', keywords: ['蜥蜴', '爬行动物', '变色'] },
+    { symbol: '🐍', name: '蛇', code: 'U+1F40D', category: 'animals', keywords: ['蛇', '爬行动物', '长'] },
+    { symbol: '🐲', name: '龙脸', code: 'U+1F432', category: 'animals', keywords: ['龙脸', '龙', '神话'] },
+    { symbol: '🐉', name: '龙', code: 'U+1F409', category: 'animals', keywords: ['龙', '中国龙', '神话'] },
+    { symbol: '🦕', name: '长颈龙', code: 'U+1F995', category: 'animals', keywords: ['长颈龙', '恐龙', '史前'] },
+    { symbol: '🦖', name: '霸王龙', code: 'U+1F996', category: 'animals', keywords: ['霸王龙', '恐龙', '史前'] },
+    { symbol: '🐳', name: '喷水鲸鱼', code: 'U+1F433', category: 'animals', keywords: ['喷水鲸鱼', '鲸鱼', '海洋'] },
+    { symbol: '🐋', name: '鲸鱼', code: 'U+1F40B', category: 'animals', keywords: ['鲸鱼', '大鲸', '海洋'] },
+    { symbol: '🐬', name: '海豚', code: 'U+1F42C', category: 'animals', keywords: ['海豚', '聪明', '海洋'] },
+    { symbol: '🦭', name: '海豹', code: 'U+1F9AD', category: 'animals', keywords: ['海豹', '海洋', '可爱'] },
+    { symbol: '🐟', name: '鱼', code: 'U+1F41F', category: 'animals', keywords: ['鱼', '游泳', '水中'] },
+    { symbol: '🐠', name: '热带鱼', code: 'U+1F420', category: 'animals', keywords: ['热带鱼', '彩色', '美丽'] },
+    { symbol: '🐡', name: '河豚', code: 'U+1F421', category: 'animals', keywords: ['河豚', '刺', '膨胀'] },
+    { symbol: '🦈', name: '鲨鱼', code: 'U+1F988', category: 'animals', keywords: ['鲨鱼', '危险', '海洋'] },
+    { symbol: '🐙', name: '章鱼', code: 'U+1F419', category: 'animals', keywords: ['章鱼', '八爪鱼', '海洋'] },
+    { symbol: '🐚', name: '贝壳', code: 'U+1F41A', category: 'animals', keywords: ['贝壳', '海螺', '海洋'] },
+    { symbol: '🪸', name: '珊瑚', code: 'U+1FAB8', category: 'animals', keywords: ['珊瑚', '海洋', '生物'] },
+    { symbol: '🐌', name: '蜗牛', code: 'U+1F40C', category: 'animals', keywords: ['蜗牛', '慢', '壳'] },
+    { symbol: '🦋', name: '蝴蝶', code: 'U+1F98B', category: 'animals', keywords: ['蝴蝶', '美丽', '飞舞'] },
+    { symbol: '🐛', name: '毛毛虫', code: 'U+1F41B', category: 'animals', keywords: ['毛毛虫', '虫子', '变化'] },
+    { symbol: '🐜', name: '蚂蚁', code: 'U+1F41C', category: 'animals', keywords: ['蚂蚁', '勤劳', '小'] },
+    { symbol: '🐝', name: '蜜蜂', code: 'U+1F41D', category: 'animals', keywords: ['蜜蜂', '蜂蜜', '勤劳'] },
+    { symbol: '🪲', name: '甲虫', code: 'U+1FAB2', category: 'animals', keywords: ['甲虫', '昆虫', '硬壳'] },
+    { symbol: '🐞', name: '瓢虫', code: 'U+1F41E', category: 'animals', keywords: ['瓢虫', '红色', '斑点'] },
+    { symbol: '🦗', name: '蟋蟀', code: 'U+1F997', category: 'animals', keywords: ['蟋蟀', '昆虫', '鸣叫'] },
+    { symbol: '🪳', name: '蟑螂', code: 'U+1FAB3', category: 'animals', keywords: ['蟑螂', '昆虫', '讨厌'] },
+    { symbol: '🕷️', name: '蜘蛛', code: 'U+1F577', category: 'animals', keywords: ['蜘蛛', '网', '八条腿'] },
+    { symbol: '🕸️', name: '蜘蛛网', code: 'U+1F578', category: 'animals', keywords: ['蜘蛛网', '网', '陷阱'] },
+    { symbol: '🦂', name: '蝎子', code: 'U+1F982', category: 'animals', keywords: ['蝎子', '毒', '尾巴'] },
+    { symbol: '🦟', name: '蚊子', code: 'U+1F99F', category: 'animals', keywords: ['蚊子', '叮咬', '讨厌'] },
+    { symbol: '🪰', name: '苍蝇', code: 'U+1FAB0', category: 'animals', keywords: ['苍蝇', '昆虫', '讨厌'] },
+    { symbol: '🪱', name: '蚯蚓', code: 'U+1FAB1', category: 'animals', keywords: ['蚯蚓', '虫子', '土壤'] },
+    { symbol: '🦠', name: '细菌', code: 'U+1F9A0', category: 'animals', keywords: ['细菌', '病毒', '微生物'] },
+    // 食物和饮料 - 扩展版
+    { symbol: '🍎', name: '红苹果', code: 'U+1F34E', category: 'food', keywords: ['苹果', '红苹果', '水果'] },
+    { symbol: '🍏', name: '青苹果', code: 'U+1F34F', category: 'food', keywords: ['苹果', '青苹果', '水果'] },
+    { symbol: '🍊', name: '橘子', code: 'U+1F34A', category: 'food', keywords: ['橘子', '橙子', '水果'] },
+    { symbol: '🍋', name: '柠檬', code: 'U+1F34B', category: 'food', keywords: ['柠檬', '酸', '水果'] },
+    { symbol: '🍌', name: '香蕉', code: 'U+1F34C', category: 'food', keywords: ['香蕉', '黄色', '水果'] },
+    { symbol: '🍉', name: '西瓜', code: 'U+1F349', category: 'food', keywords: ['西瓜', '夏天', '水果'] },
+    { symbol: '🍇', name: '葡萄', code: 'U+1F347', category: 'food', keywords: ['葡萄', '紫色', '水果'] },
+    { symbol: '🍓', name: '草莓', code: 'U+1F353', category: 'food', keywords: ['草莓', '红色', '水果'] },
+    { symbol: '🫐', name: '蓝莓', code: 'U+1FAD0', category: 'food', keywords: ['蓝莓', '蓝色', '水果'] },
+    { symbol: '🍈', name: '甜瓜', code: 'U+1F348', category: 'food', keywords: ['甜瓜', '哈密瓜', '水果'] },
+    { symbol: '🍒', name: '樱桃', code: 'U+1F352', category: 'food', keywords: ['樱桃', '红色', '水果'] },
+    { symbol: '🍑', name: '桃子', code: 'U+1F351', category: 'food', keywords: ['桃子', '粉色', '水果'] },
+    { symbol: '🥭', name: '芒果', code: 'U+1F96D', category: 'food', keywords: ['芒果', '热带', '水果'] },
+    { symbol: '🍍', name: '菠萝', code: 'U+1F34D', category: 'food', keywords: ['菠萝', '热带', '水果'] },
+    { symbol: '🥥', name: '椰子', code: 'U+1F965', category: 'food', keywords: ['椰子', '热带', '水果'] },
+    { symbol: '🥝', name: '猕猴桃', code: 'U+1F95D', category: 'food', keywords: ['猕猴桃', '绿色', '水果'] },
+    { symbol: '🍅', name: '番茄', code: 'U+1F345', category: 'food', keywords: ['番茄', '西红柿', '蔬菜'] },
+    { symbol: '🍆', name: '茄子', code: 'U+1F346', category: 'food', keywords: ['茄子', '紫色', '蔬菜'] },
+    { symbol: '🥑', name: '牛油果', code: 'U+1F951', category: 'food', keywords: ['牛油果', '鳄梨', '健康'] },
+    { symbol: '🥦', name: '西兰花', code: 'U+1F966', category: 'food', keywords: ['西兰花', '绿色', '蔬菜'] },
+    { symbol: '🥬', name: '绿叶菜', code: 'U+1F96C', category: 'food', keywords: ['绿叶菜', '蔬菜', '健康'] },
+    { symbol: '🥒', name: '黄瓜', code: 'U+1F952', category: 'food', keywords: ['黄瓜', '绿色', '蔬菜'] },
+    { symbol: '🌶️', name: '辣椒', code: 'U+1F336', category: 'food', keywords: ['辣椒', '辣', '香料'] },
+    { symbol: '🫑', name: '甜椒', code: 'U+1FAD1', category: 'food', keywords: ['甜椒', '彩椒', '蔬菜'] },
+    { symbol: '🌽', name: '玉米', code: 'U+1F33D', category: 'food', keywords: ['玉米', '黄色', '蔬菜'] },
+    { symbol: '🥕', name: '胡萝卜', code: 'U+1F955', category: 'food', keywords: ['胡萝卜', '橙色', '蔬菜'] },
+    { symbol: '🫒', name: '橄榄', code: 'U+1FAD2', category: 'food', keywords: ['橄榄', '绿色', '水果'] },
+    { symbol: '🧄', name: '大蒜', code: 'U+1F9C4', category: 'food', keywords: ['大蒜', '香料', '调料'] },
+    { symbol: '🧅', name: '洋葱', code: 'U+1F9C5', category: 'food', keywords: ['洋葱', '蔬菜', '调料'] },
+    { symbol: '🥔', name: '土豆', code: 'U+1F954', category: 'food', keywords: ['土豆', '马铃薯', '蔬菜'] },
+    { symbol: '🍠', name: '红薯', code: 'U+1F360', category: 'food', keywords: ['红薯', '甘薯', '蔬菜'] },
+    { symbol: '🫘', name: '豆子', code: 'U+1FAD8', category: 'food', keywords: ['豆子', '豆类', '蛋白质'] },
+    { symbol: '🥜', name: '花生', code: 'U+1F95C', category: 'food', keywords: ['花生', '坚果', '蛋白质'] },
+    { symbol: '🌰', name: '栗子', code: 'U+1F330', category: 'food', keywords: ['栗子', '坚果', '秋天'] },
+    { symbol: '🍞', name: '面包', code: 'U+1F35E', category: 'food', keywords: ['面包', '主食', '烘焙'] },
+    { symbol: '🥐', name: '牛角包', code: 'U+1F950', category: 'food', keywords: ['牛角包', '面包', '法式'] },
+    { symbol: '🥖', name: '法棍', code: 'U+1F956', category: 'food', keywords: ['法棍', '面包', '法式'] },
+    { symbol: '🫓', name: '薄饼', code: 'U+1FAD3', category: 'food', keywords: ['薄饼', '面包', '平面'] },
+    { symbol: '🥨', name: '椒盐卷饼', code: 'U+1F968', category: 'food', keywords: ['椒盐卷饼', '面包', '德式'] },
+    { symbol: '🥯', name: '贝果', code: 'U+1F96F', category: 'food', keywords: ['贝果', '面包', '圆形'] },
+    { symbol: '🥞', name: '煎饼', code: 'U+1F95E', category: 'food', keywords: ['煎饼', '早餐', '甜点'] },
+    { symbol: '🧇', name: '华夫饼', code: 'U+1F9C7', category: 'food', keywords: ['华夫饼', '早餐', '甜点'] },
+    { symbol: '🧀', name: '奶酪', code: 'U+1F9C0', category: 'food', keywords: ['奶酪', '乳制品', '黄色'] },
+    { symbol: '🍖', name: '带骨肉', code: 'U+1F356', category: 'food', keywords: ['带骨肉', '肉类', '蛋白质'] },
+    { symbol: '🍗', name: '鸡腿', code: 'U+1F357', category: 'food', keywords: ['鸡腿', '鸡肉', '蛋白质'] },
+    { symbol: '🥩', name: '牛排', code: 'U+1F969', category: 'food', keywords: ['牛排', '牛肉', '蛋白质'] },
+    { symbol: '🥓', name: '培根', code: 'U+1F953', category: 'food', keywords: ['培根', '猪肉', '早餐'] },
+    { symbol: '🍔', name: '汉堡', code: 'U+1F354', category: 'food', keywords: ['汉堡', '快餐', '美式'] },
+    { symbol: '🍟', name: '薯条', code: 'U+1F35F', category: 'food', keywords: ['薯条', '快餐', '土豆'] },
+    { symbol: '🍕', name: '披萨', code: 'U+1F355', category: 'food', keywords: ['披萨', '意式', '快餐'] },
+    { symbol: '🌭', name: '热狗', code: 'U+1F32D', category: 'food', keywords: ['热狗', '快餐', '香肠'] },
+    { symbol: '🥪', name: '三明治', code: 'U+1F96A', category: 'food', keywords: ['三明治', '面包', '快餐'] },
+    { symbol: '🌮', name: '墨西哥卷饼', code: 'U+1F32E', category: 'food', keywords: ['墨西哥卷饼', '墨式', '玉米饼'] },
+    { symbol: '🌯', name: '卷饼', code: 'U+1F32F', category: 'food', keywords: ['卷饼', '墨式', '包裹'] },
+    { symbol: '🫔', name: '玉米粽', code: 'U+1FAD4', category: 'food', keywords: ['玉米粽', '墨式', '玉米'] },
+    { symbol: '🥙', name: '口袋饼', code: 'U+1F959', category: 'food', keywords: ['口袋饼', '中东', '面包'] },
+    { symbol: '🧆', name: '沙拉三明治', code: 'U+1F9C6', category: 'food', keywords: ['沙拉三明治', '中东', '素食'] },
+    { symbol: '🥚', name: '鸡蛋', code: 'U+1F95A', category: 'food', keywords: ['鸡蛋', '蛋白质', '早餐'] },
+    { symbol: '🍳', name: '煎蛋', code: 'U+1F373', category: 'food', keywords: ['煎蛋', '早餐', '蛋类'] },
+    { symbol: '🥘', name: '浅锅菜', code: 'U+1F958', category: 'food', keywords: ['浅锅菜', '西班牙', '海鲜饭'] },
+    { symbol: '🍲', name: '火锅', code: 'U+1F372', category: 'food', keywords: ['火锅', '热汤', '中式'] },
+    { symbol: '🫕', name: '火锅', code: 'U+1FAD5', category: 'food', keywords: ['火锅', '奶酪', '瑞士'] },
+    { symbol: '🥣', name: '碗', code: 'U+1F963', category: 'food', keywords: ['碗', '汤', '谷物'] },
+    { symbol: '🥗', name: '沙拉', code: 'U+1F957', category: 'food', keywords: ['沙拉', '蔬菜', '健康'] },
+    { symbol: '🍿', name: '爆米花', code: 'U+1F37F', category: 'food', keywords: ['爆米花', '零食', '电影'] },
+    { symbol: '🧈', name: '黄油', code: 'U+1F9C8', category: 'food', keywords: ['黄油', '乳制品', '调料'] },
+    { symbol: '🧂', name: '盐', code: 'U+1F9C2', category: 'food', keywords: ['盐', '调料', '白色'] },
+    { symbol: '🥫', name: '罐头', code: 'U+1F96B', category: 'food', keywords: ['罐头', '保存', '食品'] },
+    { symbol: '🍱', name: '便当', code: 'U+1F371', category: 'food', keywords: ['便当', '日式', '盒饭'] },
+    { symbol: '🍘', name: '米饼', code: 'U+1F358', category: 'food', keywords: ['米饼', '日式', '零食'] },
+    { symbol: '🍙', name: '饭团', code: 'U+1F359', category: 'food', keywords: ['饭团', '日式', '米饭'] },
+    { symbol: '🍚', name: '米饭', code: 'U+1F35A', category: 'food', keywords: ['米饭', '主食', '亚洲'] },
+    { symbol: '🍛', name: '咖喱饭', code: 'U+1F35B', category: 'food', keywords: ['咖喱饭', '日式', '辣'] },
+    { symbol: '🍜', name: '拉面', code: 'U+1F35C', category: 'food', keywords: ['拉面', '日式', '面条'] },
+    { symbol: '🍝', name: '意面', code: 'U+1F35D', category: 'food', keywords: ['意面', '意式', '面条'] },
+    { symbol: '🍠', name: '烤红薯', code: 'U+1F360', category: 'food', keywords: ['烤红薯', '甘薯', '烘烤'] },
+    { symbol: '🍢', name: '关东煮', code: 'U+1F362', category: 'food', keywords: ['关东煮', '日式', '串'] },
+    { symbol: '🍣', name: '寿司', code: 'U+1F363', category: 'food', keywords: ['寿司', '日式', '生鱼'] },
+    { symbol: '🍤', name: '炸虾', code: 'U+1F364', category: 'food', keywords: ['炸虾', '日式', '海鲜'] },
+    { symbol: '🍥', name: '鱼糕', code: 'U+1F365', category: 'food', keywords: ['鱼糕', '日式', '鱼肉'] },
+    { symbol: '🥮', name: '月饼', code: 'U+1F96E', category: 'food', keywords: ['月饼', '中式', '节日'] },
+    { symbol: '🍡', name: '团子', code: 'U+1F361', category: 'food', keywords: ['团子', '日式', '甜点'] },
+    { symbol: '🥟', name: '饺子', code: 'U+1F95F', category: 'food', keywords: ['饺子', '中式', '包子'] },
+    { symbol: '🥠', name: '幸运饼干', code: 'U+1F960', category: 'food', keywords: ['幸运饼干', '中式', '预言'] },
+    { symbol: '🥡', name: '外卖盒', code: 'U+1F961', category: 'food', keywords: ['外卖盒', '中式', '打包'] },
+    { symbol: '🦀', name: '螃蟹', code: 'U+1F980', category: 'food', keywords: ['螃蟹', '海鲜', '甲壳类'] },
+    { symbol: '🦞', name: '龙虾', code: 'U+1F99E', category: 'food', keywords: ['龙虾', '海鲜', '甲壳类'] },
+    { symbol: '🦐', name: '虾', code: 'U+1F990', category: 'food', keywords: ['虾', '海鲜', '甲壳类'] },
+    { symbol: '🦑', name: '鱿鱼', code: 'U+1F991', category: 'food', keywords: ['鱿鱼', '海鲜', '软体动物'] },
+    { symbol: '🦪', name: '牡蛎', code: 'U+1F9AA', category: 'food', keywords: ['牡蛎', '海鲜', '贝类'] },
+    { symbol: '🍦', name: '软冰淇淋', code: 'U+1F366', category: 'food', keywords: ['软冰淇淋', '甜点', '冷饮'] },
+    { symbol: '🍧', name: '刨冰', code: 'U+1F367', category: 'food', keywords: ['刨冰', '甜点', '冷饮'] },
+    { symbol: '🍨', name: '冰淇淋', code: 'U+1F368', category: 'food', keywords: ['冰淇淋', '甜点', '冷饮'] },
+    { symbol: '🍩', name: '甜甜圈', code: 'U+1F369', category: 'food', keywords: ['甜甜圈', '甜点', '圆形'] },
+    { symbol: '🍪', name: '饼干', code: 'U+1F36A', category: 'food', keywords: ['饼干', '甜点', '零食'] },
+    { symbol: '🎂', name: '生日蛋糕', code: 'U+1F382', category: 'food', keywords: ['生日蛋糕', '蛋糕', '庆祝'] },
+    { symbol: '🍰', name: '蛋糕', code: 'U+1F370', category: 'food', keywords: ['蛋糕', '甜点', '奶油'] },
+    { symbol: '🧁', name: '纸杯蛋糕', code: 'U+1F9C1', category: 'food', keywords: ['纸杯蛋糕', '甜点', '小蛋糕'] },
+    { symbol: '🥧', name: '派', code: 'U+1F967', category: 'food', keywords: ['派', '甜点', '烘焙'] },
+    { symbol: '🍫', name: '巧克力', code: 'U+1F36B', category: 'food', keywords: ['巧克力', '甜点', '糖果'] },
+    { symbol: '🍬', name: '糖果', code: 'U+1F36C', category: 'food', keywords: ['糖果', '甜点', '零食'] },
+    { symbol: '🍭', name: '棒棒糖', code: 'U+1F36D', category: 'food', keywords: ['棒棒糖', '糖果', '甜点'] },
+    { symbol: '🍮', name: '布丁', code: 'U+1F36E', category: 'food', keywords: ['布丁', '甜点', '奶制品'] },
+    { symbol: '🍯', name: '蜂蜜', code: 'U+1F36F', category: 'food', keywords: ['蜂蜜', '甜', '天然'] },
+    { symbol: '🍼', name: '奶瓶', code: 'U+1F37C', category: 'food', keywords: ['奶瓶', '婴儿', '牛奶'] },
+    { symbol: '🥛', name: '牛奶', code: 'U+1F95B', category: 'food', keywords: ['牛奶', '饮料', '乳制品'] },
+    { symbol: '☕', name: '咖啡', code: 'U+2615', category: 'food', keywords: ['咖啡', '饮料', '提神'] },
+    { symbol: '🫖', name: '茶壶', code: 'U+1FAD6', category: 'food', keywords: ['茶壶', '茶', '饮料'] },
+    { symbol: '🍵', name: '茶', code: 'U+1F375', category: 'food', keywords: ['茶', '饮料', '热饮'] },
+    { symbol: '🍶', name: '清酒', code: 'U+1F376', category: 'food', keywords: ['清酒', '日式', '酒类'] },
+    { symbol: '🍾', name: '香槟', code: 'U+1F37E', category: 'food', keywords: ['香槟', '庆祝', '酒类'] },
+    { symbol: '🍷', name: '红酒', code: 'U+1F377', category: 'food', keywords: ['红酒', '酒类', '优雅'] },
+    { symbol: '🍸', name: '鸡尾酒', code: 'U+1F378', category: 'food', keywords: ['鸡尾酒', '酒类', '调酒'] },
+    { symbol: '🍹', name: '热带饮料', code: 'U+1F379', category: 'food', keywords: ['热带饮料', '鸡尾酒', '度假'] },
+    { symbol: '🍺', name: '啤酒', code: 'U+1F37A', category: 'food', keywords: ['啤酒', '酒类', '泡沫'] },
+    { symbol: '🍻', name: '干杯', code: 'U+1F37B', category: 'food', keywords: ['干杯', '啤酒', '庆祝'] },
+    { symbol: '🥂', name: '碰杯', code: 'U+1F942', category: 'food', keywords: ['碰杯', '香槟', '庆祝'] },
+    { symbol: '🥃', name: '威士忌', code: 'U+1F943', category: 'food', keywords: ['威士忌', '酒类', '烈酒'] },
+    { symbol: '🫗', name: '倒液体', code: 'U+1FAD7', category: 'food', keywords: ['倒液体', '饮料', '倾倒'] },
+    { symbol: '🥤', name: '饮料杯', code: 'U+1F964', category: 'food', keywords: ['饮料杯', '软饮', '吸管'] },
+    { symbol: '🧋', name: '珍珠奶茶', code: 'U+1F9CB', category: 'food', keywords: ['珍珠奶茶', '奶茶', '台式'] },
+    { symbol: '🧃', name: '果汁盒', code: 'U+1F9C3', category: 'food', keywords: ['果汁盒', '果汁', '儿童'] },
+    { symbol: '🧉', name: '马黛茶', code: 'U+1F9C9', category: 'food', keywords: ['马黛茶', '南美', '茶类'] },
+    { symbol: '🧊', name: '冰块', code: 'U+1F9CA', category: 'food', keywords: ['冰块', '冰', '冷饮'] },
+    // 旅行和地点 - 扩展版
+    { symbol: '🚗', name: '汽车', code: 'U+1F697', category: 'travel', keywords: ['汽车', '车', '交通'] },
+    { symbol: '🚕', name: '出租车', code: 'U+1F695', category: 'travel', keywords: ['出租车', '的士', '交通'] },
+    { symbol: '🚙', name: 'SUV', code: 'U+1F699', category: 'travel', keywords: ['SUV', '越野车', '交通'] },
+    { symbol: '🚌', name: '公交车', code: 'U+1F68C', category: 'travel', keywords: ['公交车', '巴士', '交通'] },
+    { symbol: '🚎', name: '无轨电车', code: 'U+1F68E', category: 'travel', keywords: ['无轨电车', '电车', '交通'] },
+    { symbol: '🏎️', name: '赛车', code: 'U+1F3CE', category: 'travel', keywords: ['赛车', '跑车', '速度'] },
+    { symbol: '🚓', name: '警车', code: 'U+1F693', category: 'travel', keywords: ['警车', '警察', '执法'] },
+    { symbol: '🚑', name: '救护车', code: 'U+1F691', category: 'travel', keywords: ['救护车', '医疗', '急救'] },
+    { symbol: '🚒', name: '消防车', code: 'U+1F692', category: 'travel', keywords: ['消防车', '消防', '救火'] },
+    { symbol: '🚐', name: '小巴', code: 'U+1F690', category: 'travel', keywords: ['小巴', '面包车', '交通'] },
+    { symbol: '🛻', name: '皮卡', code: 'U+1F6FB', category: 'travel', keywords: ['皮卡', '卡车', '货车'] },
+    { symbol: '🚚', name: '货车', code: 'U+1F69A', category: 'travel', keywords: ['货车', '卡车', '运输'] },
+    { symbol: '🚛', name: '拖车', code: 'U+1F69B', category: 'travel', keywords: ['拖车', '大卡车', '运输'] },
+    { symbol: '🚜', name: '拖拉机', code: 'U+1F69C', category: 'travel', keywords: ['拖拉机', '农机', '农业'] },
+    { symbol: '🏍️', name: '摩托车', code: 'U+1F3CD', category: 'travel', keywords: ['摩托车', '机车', '交通'] },
+    { symbol: '🛵', name: '踏板车', code: 'U+1F6F5', category: 'travel', keywords: ['踏板车', '电动车', '交通'] },
+    { symbol: '🚲', name: '自行车', code: 'U+1F6B2', category: 'travel', keywords: ['自行车', '单车', '环保'] },
+    { symbol: '🛴', name: '滑板车', code: 'U+1F6F4', category: 'travel', keywords: ['滑板车', '踏板车', '交通'] },
+    { symbol: '🛹', name: '滑板', code: 'U+1F6F9', category: 'travel', keywords: ['滑板', '运动', '街头'] },
+    { symbol: '🛼', name: '旱冰鞋', code: 'U+1F6FC', category: 'travel', keywords: ['旱冰鞋', '滑冰', '运动'] },
+    { symbol: '�', name: '直升机', code: 'U+1F681', category: 'travel', keywords: ['直升机', '飞机', '航空'] },
+    { symbol: '✈️', name: '飞机', code: 'U+2708', category: 'travel', keywords: ['飞机', '航空', '旅行'] },
+    { symbol: '�️', name: '小飞机', code: 'U+1F6E9', category: 'travel', keywords: ['小飞机', '私人飞机', '航空'] },
+    { symbol: '�', name: '起飞', code: 'U+1F6EB', category: 'travel', keywords: ['起飞', '飞机', '出发'] },
+    { symbol: '�', name: '降落', code: 'U+1F6EC', category: 'travel', keywords: ['降落', '飞机', '到达'] },
+    { symbol: '🪂', name: '降落伞', code: 'U+1FA82', category: 'travel', keywords: ['降落伞', '跳伞', '极限运动'] },
+    { symbol: '�', name: '座位', code: 'U + 1F4BA', category: 'travel', keywords: ['座位', '飞机', '旅行'] },
+    { symbol: '�', name: '火箭', code: 'U+1F680', category: 'travel', keywords: ['火箭', '太空', '科技'] },
+    { symbol: '🛸', name: 'UFO', code: 'U+1F6F8', category: 'travel', keywords: ['UFO', '飞碟', '外星人'] },
+    { symbol: '🚉', name: '车站', code: 'U+1F689', category: 'travel', keywords: ['车站', '火车站', '交通'] },
+    { symbol: '🚇', name: '地铁', code: 'U+1F687', category: 'travel', keywords: ['地铁', '地下铁', '交通'] },
+    { symbol: '🚝', name: '单轨列车', code: 'U+1F69D', category: 'travel', keywords: ['单轨列车', '轻轨', '交通'] },
+    { symbol: '🚄', name: '高铁', code: 'U+1F684', category: 'travel', keywords: ['高铁', '高速列车', '交通'] },
+    { symbol: '🚅', name: '子弹头列车', code: 'U+1F685', category: 'travel', keywords: ['子弹头列车', '新干线', '高铁'] },
+    { symbol: '🚈', name: '轻轨', code: 'U+1F688', category: 'travel', keywords: ['轻轨', '电车', '交通'] },
+    { symbol: '🚞', name: '山地铁路', code: 'U+1F69E', category: 'travel', keywords: ['山地铁路', '登山', '交通'] },
+    { symbol: '🚋', name: '电车', code: 'U+1F68B', category: 'travel', keywords: ['电车', '有轨电车', '交通'] },
+    { symbol: '🚃', name: '铁路车厢', code: 'U+1F683', category: 'travel', keywords: ['铁路车厢', '火车', '交通'] },
+    { symbol: '🚋', name: '电车', code: 'U+1F68B', category: 'travel', keywords: ['电车', '有轨电车', '交通'] },
+    { symbol: '🚆', name: '火车', code: 'U+1F686', category: 'travel', keywords: ['火车', '列车', '交通'] },
+    { symbol: '🚂', name: '蒸汽火车', code: 'U+1F682', category: 'travel', keywords: ['蒸汽火车', '老式', '怀旧'] },
+    { symbol: '🚊', name: '电车', code: 'U+1F68A', category: 'travel', keywords: ['电车', '有轨电车', '城市'] },
+    { symbol: '🚝', name: '单轨列车', code: 'U+1F69D', category: 'travel', keywords: ['单轨列车', '现代', '交通'] },
+    { symbol: '🚠', name: '山地缆车', code: 'U+1F6A0', category: 'travel', keywords: ['山地缆车', '缆车', '山区'] },
+    { symbol: '🚡', name: '空中缆车', code: 'U+1F6A1', category: 'travel', keywords: ['空中缆车', '缆车', '观光'] },
+    { symbol: '🛰️', name: '卫星', code: 'U+1F6F0', category: 'travel', keywords: ['卫星', '太空', '通讯'] },
+    { symbol: '🚢', name: '船', code: 'U+1F6A2', category: 'travel', keywords: ['船', '轮船', '海运'] },
+    { symbol: '⛵', name: '帆船', code: 'U+26F5', category: 'travel', keywords: ['帆船', '航海', '风帆'] },
+    { symbol: '🛥️', name: '快艇', code: 'U+1F6E5', category: 'travel', keywords: ['快艇', '游艇', '水上'] },
+    { symbol: '🚤', name: '快艇', code: 'U+1F6A4', category: 'travel', keywords: ['快艇', '摩托艇', '水上'] },
+    { symbol: '⛴️', name: '渡轮', code: 'U+26F4', category: 'travel', keywords: ['渡轮', '轮渡', '海运'] },
+    { symbol: '🛳️', name: '客轮', code: 'U+1F6F3', category: 'travel', keywords: ['客轮', '邮轮', '旅游'] },
+    { symbol: '🚁', name: '直升机', code: 'U+1F681', category: 'travel', keywords: ['直升机', '旋翼', '航空'] },
+    { symbol: '🛶', name: '独木舟', code: 'U+1F6F6', category: 'travel', keywords: ['独木舟', '皮划艇', '水上'] },
+    { symbol: '⚓', name: '锚', code: 'U+2693', category: 'travel', keywords: ['锚', '船锚', '海洋'] },
+    { symbol: '⛽', name: '加油站', code: 'U+26FD', category: 'travel', keywords: ['加油站', '燃料', '汽车'] },
+    { symbol: '🚨', name: '警车灯', code: 'U+1F6A8', category: 'travel', keywords: ['警车灯', '警报', '紧急'] },
+    { symbol: '🚥', name: '水平红绿灯', code: 'U+1F6A5', category: 'travel', keywords: ['水平红绿灯', '交通灯', '信号'] },
+    { symbol: '🚦', name: '垂直红绿灯', code: 'U+1F6A6', category: 'travel', keywords: ['垂直红绿灯', '交通灯', '信号'] },
+    { symbol: '🛑', name: '停车标志', code: 'U+1F6D1', category: 'travel', keywords: ['停车标志', '停止', '交通'] },
+    { symbol: '🚧', name: '施工', code: 'U+1F6A7', category: 'travel', keywords: ['施工', '建设', '道路'] },
+    { symbol: '🏗️', name: '建筑起重机', code: 'U+1F3D7', category: 'travel', keywords: ['建筑起重机', '建设', '工程'] },
+    { symbol: '🏭', name: '工厂', code: 'U+1F3ED', category: 'travel', keywords: ['工厂', '制造', '工业'] },
+    { symbol: '🏠', name: '房子', code: 'U+1F3E0', category: 'travel', keywords: ['房子', '家', '住宅'] },
+    { symbol: '🏡', name: '带花园的房子', code: 'U+1F3E1', category: 'travel', keywords: ['带花园的房子', '别墅', '住宅'] },
+    { symbol: '🏘️', name: '住宅区', code: 'U+1F3D8', category: 'travel', keywords: ['住宅区', '社区', '房屋'] },
+    { symbol: '🏚️', name: '废弃房屋', code: 'U+1F3DA', category: 'travel', keywords: ['废弃房屋', '破房子', '荒废'] },
+    { symbol: '🏗️', name: '建筑工地', code: 'U+1F3D7', category: 'travel', keywords: ['建筑工地', '施工', '建设'] },
+    { symbol: '🏢', name: '办公楼', code: 'U+1F3E2', category: 'travel', keywords: ['办公楼', '商务', '工作'] },
+    { symbol: '🏬', name: '百货商店', code: 'U+1F3EC', category: 'travel', keywords: ['百货商店', '购物', '商场'] },
+    { symbol: '🏣', name: '日式邮局', code: 'U+1F3E3', category: 'travel', keywords: ['日式邮局', '邮局', '日本'] },
+    { symbol: '🏤', name: '欧式邮局', code: 'U+1F3E4', category: 'travel', keywords: ['欧式邮局', '邮局', '欧洲'] },
+    { symbol: '🏥', name: '医院', code: 'U+1F3E5', category: 'travel', keywords: ['医院', '医疗', '健康'] },
+    { symbol: '🏦', name: '银行', code: 'U+1F3E6', category: 'travel', keywords: ['银行', '金融', '钱'] },
+    { symbol: '🏨', name: '酒店', code: 'U+1F3E8', category: 'travel', keywords: ['酒店', '住宿', '旅行'] },
+    { symbol: '🏩', name: '情人酒店', code: 'U+1F3E9', category: 'travel', keywords: ['情人酒店', '爱情', '浪漫'] },
+    { symbol: '🏪', name: '便利店', code: 'U+1F3EA', category: 'travel', keywords: ['便利店', '商店', '购物'] },
+    { symbol: '🏫', name: '学校', code: 'U+1F3EB', category: 'travel', keywords: ['学校', '教育', '学习'] },
+    { symbol: '🏬', name: '百货商店', code: 'U+1F3EC', category: 'travel', keywords: ['百货商店', '购物中心', '商场'] },
+    { symbol: '🏭', name: '工厂', code: 'U+1F3ED', category: 'travel', keywords: ['工厂', '制造业', '工业'] },
+    { symbol: '🏯', name: '日式城堡', code: 'U+1F3EF', category: 'travel', keywords: ['日式城堡', '城堡', '日本'] },
+    { symbol: '🏰', name: '欧式城堡', code: 'U+1F3F0', category: 'travel', keywords: ['欧式城堡', '城堡', '欧洲'] },
+    { symbol: '💒', name: '婚礼', code: 'U+1F492', category: 'travel', keywords: ['婚礼', '教堂', '结婚'] },
+    { symbol: '🗼', name: '东京塔', code: 'U+1F5FC', category: 'travel', keywords: ['东京塔', '塔', '日本'] },
+    { symbol: '🗽', name: '自由女神像', code: 'U+1F5FD', category: 'travel', keywords: ['自由女神像', '纽约', '美国'] },
+    { symbol: '⛪', name: '教堂', code: 'U+26EA', category: 'travel', keywords: ['教堂', '宗教', '基督教'] },
+    { symbol: '🕌', name: '清真寺', code: 'U+1F54C', category: 'travel', keywords: ['清真寺', '宗教', '伊斯兰教'] },
+    { symbol: '🛕', name: '印度教神庙', code: 'U+1F6D5', category: 'travel', keywords: ['印度教神庙', '宗教', '印度教'] },
+    { symbol: '🕍', name: '犹太教堂', code: 'U+1F54D', category: 'travel', keywords: ['犹太教堂', '宗教', '犹太教'] },
+    // 活动
+    { symbol: '⚽', name: '足球', code: 'U+26BD', category: 'activities', keywords: ['足球', '运动', '球类'] },
+    { symbol: '🏀', name: '篮球', code: 'U+1F3C0', category: 'activities', keywords: ['篮球', '运动', '球类'] },
+    { symbol: '🏈', name: '橄榄球', code: 'U+1F3C8', category: 'activities', keywords: ['橄榄球', '美式足球', '运动'] },
+    { symbol: '⚾', name: '棒球', code: 'U+26BE', category: 'activities', keywords: ['棒球', '运动', '球类'] },
+    { symbol: '🥎', name: '垒球', code: 'U+1F94E', category: 'activities', keywords: ['垒球', '运动', '球类'] },
+    { symbol: '🎾', name: '网球', code: 'U+1F3BE', category: 'activities', keywords: ['网球', '运动', '球类'] },
+    { symbol: '🏐', name: '排球', code: 'U+1F3D0', category: 'activities', keywords: ['排球', '运动', '球类'] },
+    { symbol: '🏉', name: '橄榄球', code: 'U+1F3C9', category: 'activities', keywords: ['橄榄球', '英式橄榄球', '运动'] },
+    { symbol: '🥏', name: '飞盘', code: 'U+1F94F', category: 'activities', keywords: ['飞盘', '运动', '户外'] },
+    { symbol: '🎱', name: '台球', code: 'U+1F3B1', category: 'activities', keywords: ['台球', '8号球', '运动'] },
+    { symbol: '🪀', name: '悠悠球', code: 'U+1FA80', category: 'activities', keywords: ['悠悠球', '玩具', '技巧'] },
+    { symbol: '🏓', name: '乒乓球', code: 'U+1F3D3', category: 'activities', keywords: ['乒乓球', '运动', '球类'] },
+    { symbol: '🏸', name: '羽毛球', code: 'U+1F3F8', category: 'activities', keywords: ['羽毛球', '运动', '球类'] },
+    { symbol: '🏒', name: '冰球', code: 'U+1F3D2', category: 'activities', keywords: ['冰球', '运动', '冰上'] },
+    { symbol: '🥍', name: '长曲棍球', code: 'U+1F94D', category: 'activities', keywords: ['长曲棍球', '运动', '球类'] },
+    { symbol: '🏑', name: '曲棍球', code: 'U+1F3D1', category: 'activities', keywords: ['曲棍球', '运动', '球类'] },
+    { symbol: '🛝', name: '滑梯', code: 'U+1F6DD', category: 'activities', keywords: ['滑梯', '游乐场', '儿童'] },
+    { symbol: '🎿', name: '滑雪', code: 'U+1F3BF', category: 'activities', keywords: ['滑雪', '运动', '冬季'] },
+    { symbol: '🛷', name: '雪橇', code: 'U+1F6F7', category: 'activities', keywords: ['雪橇', '运动', '冬季'] },
+    { symbol: '⛸️', name: '滑冰', code: 'U+26F8', category: 'activities', keywords: ['滑冰', '运动', '冰上'] },
+    { symbol: '🥌', name: '冰壶', code: 'U+1F94C', category: 'activities', keywords: ['冰壶', '运动', '冰上'] },
+    { symbol: '🎯', name: '飞镖', code: 'U+1F3AF', category: 'activities', keywords: ['飞镖', '靶心', '游戏'] },
+    { symbol: '🪁', name: '风筝', code: 'U+1FA81', category: 'activities', keywords: ['风筝', '户外', '飞行'] },
+    { symbol: '🎣', name: '钓鱼', code: 'U+1F3A3', category: 'activities', keywords: ['钓鱼', '户外', '休闲'] },
+    { symbol: '🤿', name: '潜水', code: 'U+1F93F', category: 'activities', keywords: ['潜水', '水下', '运动'] },
+    { symbol: '🏊', name: '游泳', code: 'U+1F3CA', category: 'activities', keywords: ['游泳', '运动', '水上'] },
+    { symbol: '🏄', name: '冲浪', code: 'U+1F3C4', category: 'activities', keywords: ['冲浪', '运动', '海浪'] },
+    { symbol: '🚣', name: '划船', code: 'U+1F6A3', category: 'activities', keywords: ['划船', '运动', '水上'] },
+    { symbol: '🧗', name: '攀岩', code: 'U+1F9D7', category: 'activities', keywords: ['攀岩', '运动', '极限'] },
+    { symbol: '🚴', name: '骑自行车', code: 'U+1F6B4', category: 'activities', keywords: ['骑自行车', '运动', '健身'] },
+    { symbol: '🚵', name: '山地自行车', code: 'U+1F6B5', category: 'activities', keywords: ['山地自行车', '运动', '户外'] },
+    { symbol: '🤸', name: '翻筋斗', code: 'U+1F938', category: 'activities', keywords: ['翻筋斗', '体操', '运动'] },
+    { symbol: '🤼', name: '摔跤', code: 'U+1F93C', category: 'activities', keywords: ['摔跤', '运动', '格斗'] },
+    { symbol: '🤽', name: '水球', code: 'U+1F93D', category: 'activities', keywords: ['水球', '运动', '水上'] },
+    { symbol: '🤾', name: '手球', code: 'U+1F93E', category: 'activities', keywords: ['手球', '运动', '球类'] },
+    { symbol: '🤹', name: '杂耍', code: 'U+1F939', category: 'activities', keywords: ['杂耍', '表演', '技巧'] },
+    { symbol: '🧘', name: '冥想', code: 'U+1F9D8', category: 'activities', keywords: ['冥想', '瑜伽', '放松'] },
+    { symbol: '🛀', name: '洗澡', code: 'U+1F6C0', category: 'activities', keywords: ['洗澡', '清洁', '放松'] },
+    { symbol: '🛌', name: '睡觉', code: 'U+1F6CC', category: 'activities', keywords: ['睡觉', '休息', '床'] },
+    { symbol: '🎭', name: '表演艺术', code: 'U+1F3AD', category: 'activities', keywords: ['表演艺术', '戏剧', '面具'] },
+    { symbol: '🩰', name: '芭蕾舞鞋', code: 'U+1FA70', category: 'activities', keywords: ['芭蕾舞鞋', '舞蹈', '艺术'] },
+    { symbol: '🎨', name: '艺术', code: 'U+1F3A8', category: 'activities', keywords: ['艺术', '绘画', '创作'] },
+    { symbol: '🎬', name: '电影', code: 'U+1F3AC', category: 'activities', keywords: ['电影', '拍摄', '娱乐'] },
+    { symbol: '🎤', name: '麦克风', code: 'U+1F3A4', category: 'activities', keywords: ['麦克风', '唱歌', '音乐'] },
+    { symbol: '🎧', name: '耳机', code: 'U+1F3A7', category: 'activities', keywords: ['耳机', '音乐', '听歌'] },
+    { symbol: '🎼', name: '乐谱', code: 'U+1F3BC', category: 'activities', keywords: ['乐谱', '音乐', '作曲'] },
+    { symbol: '🎵', name: '音符', code: 'U+1F3B5', category: 'activities', keywords: ['音符', '音乐', '旋律'] },
+    { symbol: '🎶', name: '多个音符', code: 'U+1F3B6', category: 'activities', keywords: ['多个音符', '音乐', '歌曲'] },
+    { symbol: '🎹', name: '钢琴', code: 'U+1F3B9', category: 'activities', keywords: ['钢琴', '音乐', '乐器'] },
+    { symbol: '🥁', name: '鼓', code: 'U+1F941', category: 'activities', keywords: ['鼓', '音乐', '乐器'] },
+    { symbol: '🪘', name: '长鼓', code: 'U+1FA98', category: 'activities', keywords: ['长鼓', '音乐', '乐器'] },
+    { symbol: '🎷', name: '萨克斯', code: 'U+1F3B7', category: 'activities', keywords: ['萨克斯', '音乐', '乐器'] },
+    { symbol: '🎺', name: '小号', code: 'U+1F3BA', category: 'activities', keywords: ['小号', '音乐', '乐器'] },
+    { symbol: '🎸', name: '吉他', code: 'U+1F3B8', category: 'activities', keywords: ['吉他', '音乐', '乐器'] },
+    { symbol: '🪕', name: '班卓琴', code: 'U+1FA95', category: 'activities', keywords: ['班卓琴', '音乐', '乐器'] },
+    { symbol: '🎻', name: '小提琴', code: 'U+1F3BB', category: 'activities', keywords: ['小提琴', '音乐', '乐器'] },
+    { symbol: '🪗', name: '手风琴', code: 'U+1FA97', category: 'activities', keywords: ['手风琴', '音乐', '乐器'] },
+    { symbol: '🎲', name: '骰子', code: 'U+1F3B2', category: 'activities', keywords: ['骰子', '游戏', '运气'] },
+    { symbol: '♠️', name: '黑桃', code: 'U+2660', category: 'activities', keywords: ['黑桃', '扑克', '游戏'] },
+    { symbol: '♥️', name: '红心', code: 'U+2665', category: 'activities', keywords: ['红心', '扑克', '游戏'] },
+    { symbol: '♦️', name: '方块', code: 'U+2666', category: 'activities', keywords: ['方块', '扑克', '游戏'] },
+    { symbol: '♣️', name: '梅花', code: 'U+2663', category: 'activities', keywords: ['梅花', '扑克', '游戏'] },
+    { symbol: '♟️', name: '棋子', code: 'U+265F', category: 'activities', keywords: ['棋子', '国际象棋', '游戏'] },
+    { symbol: '🃏', name: '小丑牌', code: 'U+1F0CF', category: 'activities', keywords: ['小丑牌', '扑克', '游戏'] },
+    { symbol: '🀄', name: '麻将红中', code: 'U+1F004', category: 'activities', keywords: ['麻将红中', '麻将', '游戏'] },
+    { symbol: '🎴', name: '花札', code: 'U+1F3B4', category: 'activities', keywords: ['花札', '日式纸牌', '游戏'] },
+    { symbol: '🎮', name: '游戏手柄', code: 'U+1F3AE', category: 'activities', keywords: ['游戏手柄', '电子游戏', '娱乐'] },
+    { symbol: '🕹️', name: '操纵杆', code: 'U+1F579', category: 'activities', keywords: ['操纵杆', '游戏', '街机'] },
+    { symbol: '🎰', name: '老虎机', code: 'U+1F3B0', category: 'activities', keywords: ['老虎机', '赌博', '游戏'] },
+    { symbol: '🎳', name: '保龄球', code: 'U+1F3B3', category: 'activities', keywords: ['保龄球', '运动', '游戏'] },
+
+    // 物品 - 大幅扩展
+    { symbol: '⌚', name: '手表', code: 'U+231A', category: 'objects', keywords: ['手表', '时间', '配饰'] },
+    { symbol: '📱', name: '手机', code: 'U+1F4F1', category: 'objects', keywords: ['手机', '电话', '通讯'] },
+    { symbol: '📲', name: '手机来电', code: 'U+1F4F2', category: 'objects', keywords: ['手机来电', '电话', '通讯'] },
+    { symbol: '💻', name: '笔记本电脑', code: 'U+1F4BB', category: 'objects', keywords: ['笔记本电脑', '电脑', '工作'] },
+    { symbol: '⌨️', name: '键盘', code: 'U+2328', category: 'objects', keywords: ['键盘', '电脑', '输入'] },
+    { symbol: '🖥️', name: '台式电脑', code: 'U+1F5A5', category: 'objects', keywords: ['台式电脑', '电脑', '显示器'] },
+    { symbol: '🖨️', name: '打印机', code: 'U+1F5A8', category: 'objects', keywords: ['打印机', '办公', '设备'] },
+    { symbol: '🖱️', name: '鼠标', code: 'U+1F5B1', category: 'objects', keywords: ['鼠标', '电脑', '点击'] },
+    { symbol: '🖲️', name: '轨迹球', code: 'U+1F5B2', category: 'objects', keywords: ['轨迹球', '电脑', '输入'] },
+    { symbol: '🕹️', name: '操纵杆', code: 'U+1F579', category: 'objects', keywords: ['操纵杆', '游戏', '控制'] },
+    { symbol: '🗜️', name: '压缩', code: 'U+1F5DC', category: 'objects', keywords: ['压缩', '工具', '夹子'] },
+    { symbol: '💽', name: '迷你光盘', code: 'U+1F4BD', category: 'objects', keywords: ['迷你光盘', '存储', '数据'] },
+    { symbol: '💾', name: '软盘', code: 'U+1F4BE', category: 'objects', keywords: ['软盘', '存储', '保存'] },
+    { symbol: '💿', name: 'CD', code: 'U+1F4BF', category: 'objects', keywords: ['CD', '光盘', '音乐'] },
+    { symbol: '📀', name: 'DVD', code: 'U+1F4C0', category: 'objects', keywords: ['DVD', '光盘', '视频'] },
+    { symbol: '🧮', name: '算盘', code: 'U+1F9EE', category: 'objects', keywords: ['算盘', '计算', '传统'] },
+    { symbol: '🎥', name: '摄像机', code: 'U+1F3A5', category: 'objects', keywords: ['摄像机', '拍摄', '电影'] },
+    { symbol: '📹', name: '摄像机', code: 'U+1F4F9', category: 'objects', keywords: ['摄像机', '录像', '视频'] },
+    { symbol: '📷', name: '相机', code: 'U+1F4F7', category: 'objects', keywords: ['相机', '拍照', '摄影'] },
+    { symbol: '📸', name: '闪光灯相机', code: 'U+1F4F8', category: 'objects', keywords: ['闪光灯相机', '拍照', '闪光'] },
+    { symbol: '🔍', name: '放大镜', code: 'U+1F50D', category: 'objects', keywords: ['放大镜', '搜索', '查找'] },
+    { symbol: '🔎', name: '右向放大镜', code: 'U+1F50E', category: 'objects', keywords: ['右向放大镜', '搜索', '查找'] },
+    { symbol: '🕯️', name: '蜡烛', code: 'U+1F56F', category: 'objects', keywords: ['蜡烛', '光', '浪漫'] },
+    { symbol: '💡', name: '灯泡', code: 'U+1F4A1', category: 'objects', keywords: ['灯泡', '想法', '创意'] },
+    { symbol: '🔦', name: '手电筒', code: 'U+1F526', category: 'objects', keywords: ['手电筒', '照明', '工具'] },
+    { symbol: '🏮', name: '红灯笼', code: 'U+1F3EE', category: 'objects', keywords: ['红灯笼', '中式', '装饰'] },
+    { symbol: '🪔', name: '油灯', code: 'U+1FA94', category: 'objects', keywords: ['油灯', '传统', '照明'] },
+    { symbol: '📔', name: '装饰笔记本', code: 'U+1F4D4', category: 'objects', keywords: ['装饰笔记本', '笔记', '书写'] },
+    { symbol: '📕', name: '闭合书本', code: 'U+1F4D5', category: 'objects', keywords: ['闭合书本', '书', '阅读'] },
+    { symbol: '📖', name: '打开书本', code: 'U+1F4D6', category: 'objects', keywords: ['打开书本', '书', '阅读'] },
+    { symbol: '📗', name: '绿色书本', code: 'U+1F4D7', category: 'objects', keywords: ['绿色书本', '书', '阅读'] },
+    { symbol: '📘', name: '蓝色书本', code: 'U+1F4D8', category: 'objects', keywords: ['蓝色书本', '书', '阅读'] },
+    { symbol: '📙', name: '橙色书本', code: 'U+1F4D9', category: 'objects', keywords: ['橙色书本', '书', '阅读'] },
+    { symbol: '📚', name: '书堆', code: 'U+1F4DA', category: 'objects', keywords: ['书堆', '书籍', '学习'] },
+    { symbol: '📓', name: '笔记本', code: 'U+1F4D3', category: 'objects', keywords: ['笔记本', '记录', '书写'] },
+    { symbol: '📒', name: '账本', code: 'U+1F4D2', category: 'objects', keywords: ['账本', '记录', '账目'] },
+    { symbol: '📃', name: '卷页', code: 'U+1F4C3', category: 'objects', keywords: ['卷页', '文档', '纸张'] },
+    { symbol: '📜', name: '卷轴', code: 'U+1F4DC', category: 'objects', keywords: ['卷轴', '古代', '文档'] },
+    { symbol: '📄', name: '文档', code: 'U+1F4C4', category: 'objects', keywords: ['文档', '文件', '纸张'] },
+    { symbol: '📰', name: '报纸', code: 'U+1F4F0', category: 'objects', keywords: ['报纸', '新闻', '信息'] },
+    { symbol: '🗞️', name: '卷起的报纸', code: 'U+1F5DE', category: 'objects', keywords: ['卷起的报纸', '新闻', '信息'] },
+    { symbol: '📑', name: '书签标签', code: 'U+1F4D1', category: 'objects', keywords: ['书签标签', '标记', '文档'] },
+    { symbol: '🔖', name: '书签', code: 'U+1F516', category: 'objects', keywords: ['书签', '标记', '阅读'] },
+    { symbol: '🏷️', name: '标签', code: 'U+1F3F7', category: 'objects', keywords: ['标签', '标记', '分类'] },
+    { symbol: '💰', name: '钱袋', code: 'U+1F4B0', category: 'objects', keywords: ['钱袋', '金钱', '财富'] },
+    { symbol: '🪙', name: '硬币', code: 'U+1FA99', category: 'objects', keywords: ['硬币', '金钱', '货币'] },
+    { symbol: '💴', name: '日元', code: 'U+1F4B4', category: 'objects', keywords: ['日元', '货币', '钞票'] },
+    { symbol: '💵', name: '美元', code: 'U+1F4B5', category: 'objects', keywords: ['美元', '货币', '钞票'] },
+    { symbol: '💶', name: '欧元', code: 'U+1F4B6', category: 'objects', keywords: ['欧元', '货币', '钞票'] },
+    { symbol: '💷', name: '英镑', code: 'U+1F4B7', category: 'objects', keywords: ['英镑', '货币', '钞票'] },
+    { symbol: '💸', name: '飞走的钱', code: 'U+1F4B8', category: 'objects', keywords: ['飞走的钱', '花钱', '支出'] },
+    { symbol: '💳', name: '信用卡', code: 'U+1F4B3', category: 'objects', keywords: ['信用卡', '支付', '银行卡'] },
+    { symbol: '🧾', name: '收据', code: 'U+1F9FE', category: 'objects', keywords: ['收据', '账单', '购物'] },
+    { symbol: '💎', name: '钻石', code: 'U+1F48E', category: 'objects', keywords: ['钻石', '宝石', '珍贵'] },
+    { symbol: '⚖️', name: '天平', code: 'U+2696', category: 'objects', keywords: ['天平', '平衡', '正义'] },
+    { symbol: '🪜', name: '梯子', code: 'U+1FA9C', category: 'objects', keywords: ['梯子', '攀爬', '工具'] },
+    { symbol: '🧰', name: '工具箱', code: 'U+1F9F0', category: 'objects', keywords: ['工具箱', '工具', '修理'] },
+    { symbol: '🔧', name: '扳手', code: 'U+1F527', category: 'objects', keywords: ['扳手', '工具', '修理'] },
+    { symbol: '🔨', name: '锤子', code: 'U+1F528', category: 'objects', keywords: ['锤子', '工具', '建造'] },
+    { symbol: '⚒️', name: '锤子和镐', code: 'U+2692', category: 'objects', keywords: ['锤子和镐', '工具', '建造'] },
+    { symbol: '🛠️', name: '锤子和扳手', code: 'U+1F6E0', category: 'objects', keywords: ['锤子和扳手', '工具', '修理'] },
+    { symbol: '⛏️', name: '镐', code: 'U+26CF', category: 'objects', keywords: ['镐', '工具', '挖掘'] },
+    { symbol: '🪚', name: '锯子', code: 'U+1FA9A', category: 'objects', keywords: ['锯子', '工具', '切割'] },
+    { symbol: '🔩', name: '螺栓', code: 'U+1F529', category: 'objects', keywords: ['螺栓', '螺丝', '固定'] },
+    { symbol: '⚙️', name: '齿轮', code: 'U+2699', category: 'objects', keywords: ['齿轮', '机械', '设置'] },
+    { symbol: '🪤', name: '捕鼠器', code: 'U+1FAA4', category: 'objects', keywords: ['捕鼠器', '陷阱', '工具'] },
+    { symbol: '🧲', name: '磁铁', code: 'U+1F9F2', category: 'objects', keywords: ['磁铁', '吸引', '科学'] },
+    { symbol: '🪣', name: '水桶', code: 'U+1FAA3', category: 'objects', keywords: ['水桶', '容器', '清洁'] },
+    { symbol: '🔫', name: '水枪', code: 'U+1F52B', category: 'objects', keywords: ['水枪', '玩具', '游戏'] },
+    { symbol: '🧨', name: '炸药', code: 'U+1F9E8', category: 'objects', keywords: ['炸药', '爆炸', '危险'] },
+    { symbol: '🪓', name: '斧头', code: 'U+1FA93', category: 'objects', keywords: ['斧头', '工具', '砍伐'] },
+    { symbol: '🔪', name: '菜刀', code: 'U+1F52A', category: 'objects', keywords: ['菜刀', '厨具', '切割'] },
+    { symbol: '🗡️', name: '剑', code: 'U+1F5E1', category: 'objects', keywords: ['剑', '武器', '古代'] },
+    { symbol: '⚔️', name: '交叉剑', code: 'U+2694', category: 'objects', keywords: ['交叉剑', '战斗', '武器'] },
+    { symbol: '🛡️', name: '盾牌', code: 'U+1F6E1', category: 'objects', keywords: ['盾牌', '防护', '安全'] },
+    { symbol: '🚬', name: '香烟', code: 'U+1F6AC', category: 'objects', keywords: ['香烟', '吸烟', '不健康'] },
+    { symbol: '⚰️', name: '棺材', code: 'U+26B0', category: 'objects', keywords: ['棺材', '死亡', '葬礼'] },
+    { symbol: '🪦', name: '墓碑', code: 'U+1FAA6', category: 'objects', keywords: ['墓碑', '死亡', '纪念'] },
+    { symbol: '⚱️', name: '骨灰盒', code: 'U+26B1', category: 'objects', keywords: ['骨灰盒', '死亡', '纪念'] },
+    { symbol: '🏺', name: '双耳瓶', code: 'U+1F3FA', category: 'objects', keywords: ['双耳瓶', '古代', '容器'] },
+    { symbol: '🔮', name: '水晶球', code: 'U+1F52E', category: 'objects', keywords: ['水晶球', '预言', '神秘'] },
+    { symbol: '📿', name: '念珠', code: 'U+1F4FF', category: 'objects', keywords: ['念珠', '宗教', '祈祷'] },
+    { symbol: '🧿', name: '恶魔之眼', code: 'U+1F9FF', category: 'objects', keywords: ['恶魔之眼', '护身符', '保护'] },
+    { symbol: '💈', name: '理发店标志', code: 'U+1F488', category: 'objects', keywords: ['理发店标志', '理发', '服务'] },
+    { symbol: '⚗️', name: '蒸馏器', code: 'U+2697', category: 'objects', keywords: ['蒸馏器', '化学', '实验'] },
+    { symbol: '🔭', name: '望远镜', code: 'U+1F52D', category: 'objects', keywords: ['望远镜', '观察', '天文'] },
+    { symbol: '🔬', name: '显微镜', code: 'U+1F52C', category: 'objects', keywords: ['显微镜', '科学', '研究'] },
+    { symbol: '🕳️', name: '洞', code: 'U+1F573', category: 'objects', keywords: ['洞', '空洞', '缺失'] },
+    { symbol: '🩹', name: '创可贴', code: 'U+1FA79', category: 'objects', keywords: ['创可贴', '医疗', '治疗'] },
+    { symbol: '🩺', name: '听诊器', code: 'U+1FA7A', category: 'objects', keywords: ['听诊器', '医疗', '检查'] },
+    { symbol: '💊', name: '药丸', code: 'U+1F48A', category: 'objects', keywords: ['药丸', '医疗', '治疗'] },
+    { symbol: '💉', name: '注射器', code: 'U+1F489', category: 'objects', keywords: ['注射器', '医疗', '疫苗'] },
+    { symbol: '🩸', name: '血滴', code: 'U+1FA78', category: 'objects', keywords: ['血滴', '血液', '医疗'] },
+    { symbol: '🧬', name: 'DNA', code: 'U+1F9EC', category: 'objects', keywords: ['DNA', '基因', '科学'] },
+    { symbol: '🦠', name: '微生物', code: 'U+1F9A0', category: 'objects', keywords: ['微生物', '细菌', '病毒'] },
+    { symbol: '🧫', name: '培养皿', code: 'U+1F9EB', category: 'objects', keywords: ['培养皿', '实验', '科学'] },
+    { symbol: '🧪', name: '试管', code: 'U+1F9EA', category: 'objects', keywords: ['试管', '实验', '化学'] },
+    { symbol: '🌡️', name: '温度计', code: 'U+1F321', category: 'objects', keywords: ['温度计', '温度', '测量'] },
+    { symbol: '🧹', name: '扫帚', code: 'U+1F9F9', category: 'objects', keywords: ['扫帚', '清洁', '打扫'] },
+    { symbol: '🪠', name: '马桶塞', code: 'U+1FAA0', category: 'objects', keywords: ['马桶塞', '清洁', '工具'] },
+    { symbol: '🧽', name: '海绵', code: 'U+1F9FD', category: 'objects', keywords: ['海绵', '清洁', '洗涤'] },
+    { symbol: '🧴', name: '洗涤瓶', code: 'U+1F9F4', category: 'objects', keywords: ['洗涤瓶', '清洁', '容器'] },
+    { symbol: '🛎️', name: '服务铃', code: 'U+1F6CE', category: 'objects', keywords: ['服务铃', '铃铛', '服务'] },
+    { symbol: '🔑', name: '钥匙', code: 'U+1F511', category: 'objects', keywords: ['钥匙', '开锁', '安全'] },
+    { symbol: '🗝️', name: '老式钥匙', code: 'U+1F5DD', category: 'objects', keywords: ['老式钥匙', '古代', '开锁'] },
+    { symbol: '🚪', name: '门', code: 'U+1F6AA', category: 'objects', keywords: ['门', '入口', '建筑'] },
+    { symbol: '🪑', name: '椅子', code: 'U+1FA91', category: 'objects', keywords: ['椅子', '家具', '坐'] },
+    { symbol: '🛏️', name: '床', code: 'U+1F6CF', category: 'objects', keywords: ['床', '家具', '睡觉'] },
+    { symbol: '🛋️', name: '沙发', code: 'U+1F6CB', category: 'objects', keywords: ['沙发', '家具', '休息'] },
+    { symbol: '🪞', name: '镜子', code: 'U+1FA9E', category: 'objects', keywords: ['镜子', '反射', '家具'] },
+    { symbol: '🚽', name: '马桶', code: 'U+1F6BD', category: 'objects', keywords: ['马桶', '厕所', '卫生间'] },
+    { symbol: '🚿', name: '淋浴', code: 'U+1F6BF', category: 'objects', keywords: ['淋浴', '洗澡', '清洁'] },
+    { symbol: '🛁', name: '浴缸', code: 'U+1F6C1', category: 'objects', keywords: ['浴缸', '洗澡', '放松'] },
+    { symbol: '🪒', name: '剃须刀', code: 'U+1FA92', category: 'objects', keywords: ['剃须刀', '剃须', '清洁'] },
+    { symbol: '🧴', name: '洗发水', code: 'U+1F9F4', category: 'objects', keywords: ['洗发水', '洗头', '清洁'] },
+    { symbol: '🧷', name: '安全别针', code: 'U+1F9F7', category: 'objects', keywords: ['安全别针', '别针', '固定'] },
+    { symbol: '🧼', name: '肥皂', code: 'U+1F9FC', category: 'objects', keywords: ['肥皂', '清洁', '洗手'] },
+    { symbol: '🪥', name: '牙刷', code: 'U+1FAA5', category: 'objects', keywords: ['牙刷', '刷牙', '清洁'] },
+    { symbol: '🧻', name: '卷纸', code: 'U+1F9FB', category: 'objects', keywords: ['卷纸', '纸巾', '清洁'] },
+    { symbol: '🪖', name: '军用头盔', code: 'U+1FA96', category: 'objects', keywords: ['军用头盔', '保护', '军事'] },
+    { symbol: '⛑️', name: '救援头盔', code: 'U+26D1', category: 'objects', keywords: ['救援头盔', '安全', '救援'] },
+    { symbol: '📿', name: '念珠', code: 'U+1F4FF', category: 'objects', keywords: ['念珠', '宗教', '祈祷'] },
+    { symbol: '💄', name: '口红', code: 'U+1F484', category: 'objects', keywords: ['口红', '化妆', '美容'] },
+    { symbol: '💍', name: '戒指', code: 'U+1F48D', category: 'objects', keywords: ['戒指', '珠宝', '结婚'] },
+    { symbol: '💎', name: '宝石', code: 'U+1F48E', category: 'objects', keywords: ['宝石', '钻石', '珍贵'] },
+    { symbol: '🔇', name: '静音', code: 'U+1F507', category: 'objects', keywords: ['静音', '无声', '音量'] },
+    { symbol: '🔈', name: '低音量', code: 'U+1F508', category: 'objects', keywords: ['低音量', '声音', '音响'] },
+    { symbol: '🔉', name: '中音量', code: 'U+1F509', category: 'objects', keywords: ['中音量', '声音', '音响'] },
+    { symbol: '🔊', name: '高音量', code: 'U+1F50A', category: 'objects', keywords: ['高音量', '声音', '音响'] },
+    { symbol: '📢', name: '扩音器', code: 'U+1F4E2', category: 'objects', keywords: ['扩音器', '广播', '通知'] },
+    { symbol: '📣', name: '喇叭', code: 'U+1F4E3', category: 'objects', keywords: ['喇叭', '呐喊', '加油'] },
+    { symbol: '📯', name: '邮号', code: 'U+1F4EF', category: 'objects', keywords: ['邮号', '号角', '音乐'] },
+    { symbol: '🔔', name: '铃铛', code: 'U+1F514', category: 'objects', keywords: ['铃铛', '通知', '提醒'] },
+    { symbol: '🔕', name: '静音铃铛', code: 'U+1F515', category: 'objects', keywords: ['静音铃铛', '静音', '关闭'] },
+    { symbol: '🎼', name: '乐谱', code: 'U+1F3BC', category: 'objects', keywords: ['乐谱', '音乐', '作曲'] },
+    { symbol: '🎵', name: '音符', code: 'U+1F3B5', category: 'objects', keywords: ['音符', '音乐', '旋律'] },
+    { symbol: '🎶', name: '音符', code: 'U+1F3B6', category: 'objects', keywords: ['音符', '音乐', '歌曲'] },
+    { symbol: '🎙️', name: '录音室麦克风', code: 'U+1F399', category: 'objects', keywords: ['录音室麦克风', '录音', '广播'] },
+    { symbol: '🎚️', name: '电平滑块', code: 'U+1F39A', category: 'objects', keywords: ['电平滑块', '音响', '调节'] },
+    { symbol: '🎛️', name: '控制旋钮', code: 'U+1F39B', category: 'objects', keywords: ['控制旋钮', '音响', '调节'] },
+    { symbol: '🎤', name: '麦克风', code: 'U+1F3A4', category: 'objects', keywords: ['麦克风', '唱歌', '录音'] },
+    { symbol: '🎧', name: '耳机', code: 'U+1F3A7', category: 'objects', keywords: ['耳机', '音乐', '听歌'] },
+    { symbol: '📻', name: '收音机', code: 'U+1F4FB', category: 'objects', keywords: ['收音机', '广播', '音乐'] },
+    { symbol: '🎷', name: '萨克斯', code: 'U+1F3B7', category: 'objects', keywords: ['萨克斯', '乐器', '音乐'] },
+    { symbol: '🪗', name: '手风琴', code: 'U+1FA97', category: 'objects', keywords: ['手风琴', '乐器', '音乐'] },
+    { symbol: '🎸', name: '吉他', code: 'U+1F3B8', category: 'objects', keywords: ['吉他', '乐器', '音乐'] },
+    { symbol: '🎹', name: '钢琴键', code: 'U+1F3B9', category: 'objects', keywords: ['钢琴键', '钢琴', '音乐'] },
+    { symbol: '🎺', name: '小号', code: 'U+1F3BA', category: 'objects', keywords: ['小号', '乐器', '音乐'] },
+    { symbol: '🎻', name: '小提琴', code: 'U+1F3BB', category: 'objects', keywords: ['小提琴', '乐器', '音乐'] },
+    { symbol: '🪕', name: '班卓琴', code: 'U+1FA95', category: 'objects', keywords: ['班卓琴', '乐器', '音乐'] },
+    { symbol: '🥁', name: '鼓', code: 'U+1F941', category: 'objects', keywords: ['鼓', '乐器', '音乐'] },
+    { symbol: '🪘', name: '长鼓', code: 'U+1FA98', category: 'objects', keywords: ['长鼓', '乐器', '音乐'] },
+    { symbol: '📱', name: '智能手机', code: 'U+1F4F1', category: 'objects', keywords: ['智能手机', '手机', '通讯'] },
+    { symbol: '📞', name: '电话听筒', code: 'U+1F4DE', category: 'objects', keywords: ['电话听筒', '电话', '通话'] },
+    { symbol: '☎️', name: '电话', code: 'U+260E', category: 'objects', keywords: ['电话', '座机', '通讯'] },
+    { symbol: '📟', name: '寻呼机', code: 'U+1F4DF', category: 'objects', keywords: ['寻呼机', '通讯', '老式'] },
+    { symbol: '📠', name: '传真机', code: 'U+1F4E0', category: 'objects', keywords: ['传真机', '办公', '通讯'] },
+    { symbol: '🔋', name: '电池', code: 'U+1F50B', category: 'objects', keywords: ['电池', '电力', '能源'] },
+    { symbol: '🪫', name: '低电量电池', code: 'U+1FAAB', category: 'objects', keywords: ['低电量电池', '电池', '电力不足'] },
+    { symbol: '🔌', name: '电源插头', code: 'U+1F50C', category: 'objects', keywords: ['电源插头', '电力', '插座'] },
+    { symbol: '💻', name: '笔记本', code: 'U+1F4BB', category: 'objects', keywords: ['笔记本', '电脑', '工作'] },
+    { symbol: '🖥️', name: '桌面电脑', code: 'U+1F5A5', category: 'objects', keywords: ['桌面电脑', '电脑', '办公'] },
+    { symbol: '🖨️', name: '打印机', code: 'U+1F5A8', category: 'objects', keywords: ['打印机', '办公', '文档'] },
+    { symbol: '⌨️', name: '键盘', code: 'U+2328', category: 'objects', keywords: ['键盘', '输入', '电脑'] },
+    { symbol: '🖱️', name: '电脑鼠标', code: 'U+1F5B1', category: 'objects', keywords: ['电脑鼠标', '鼠标', '点击'] },
+    { symbol: '🖲️', name: '轨迹球', code: 'U+1F5B2', category: 'objects', keywords: ['轨迹球', '输入', '电脑'] },
+    { symbol: '💽', name: 'MD', code: 'U+1F4BD', category: 'objects', keywords: ['MD', '迷你光盘', '存储'] },
+    { symbol: '💾', name: '软盘', code: 'U+1F4BE', category: 'objects', keywords: ['软盘', '存储', '保存'] },
+    { symbol: '💿', name: '光盘', code: 'U+1F4BF', category: 'objects', keywords: ['光盘', 'CD', '音乐'] },
+    { symbol: '📀', name: 'DVD', code: 'U+1F4C0', category: 'objects', keywords: ['DVD', '视频', '电影'] },
+    { symbol: '🧮', name: '算盘', code: 'U+1F9EE', category: 'objects', keywords: ['算盘', '计算', '传统'] },
+    { symbol: '🎥', name: '电影摄像机', code: 'U+1F3A5', category: 'objects', keywords: ['电影摄像机', '拍摄', '电影'] },
+    { symbol: '📹', name: '摄像机', code: 'U+1F4F9', category: 'objects', keywords: ['摄像机', '录像', '视频'] },
+    { symbol: '📷', name: '照相机', code: 'U+1F4F7', category: 'objects', keywords: ['照相机', '拍照', '摄影'] },
+    { symbol: '📸', name: '闪光照相机', code: 'U+1F4F8', category: 'objects', keywords: ['闪光照相机', '拍照', '闪光'] },
+    { symbol: '🔍', name: '左指放大镜', code: 'U+1F50D', category: 'objects', keywords: ['左指放大镜', '搜索', '查找'] },
+    { symbol: '🔎', name: '右指放大镜', code: 'U+1F50E', category: 'objects', keywords: ['右指放大镜', '搜索', '查找'] },
+    { symbol: '🕯️', name: '蜡烛', code: 'U+1F56F', category: 'objects', keywords: ['蜡烛', '光线', '浪漫'] },
+    { symbol: '💡', name: '电灯泡', code: 'U+1F4A1', category: 'objects', keywords: ['电灯泡', '想法', '创意'] },
+    { symbol: '🔦', name: '手电筒', code: 'U+1F526', category: 'objects', keywords: ['手电筒', '照明', '工具'] },
+    { symbol: '🏮', name: '红纸灯笼', code: 'U+1F3EE', category: 'objects', keywords: ['红纸灯笼', '中式', '节日'] },
+    { symbol: '🪔', name: '迪雅油灯', code: 'U+1FA94', category: 'objects', keywords: ['迪雅油灯', '印度', '节日'] },
+    { symbol: '📔', name: '装饰封面笔记本', code: 'U+1F4D4', category: 'objects', keywords: ['装饰封面笔记本', '笔记', '记录'] },
+    { symbol: '📕', name: '闭合的书', code: 'U+1F4D5', category: 'objects', keywords: ['闭合的书', '书籍', '阅读'] },
+    { symbol: '📖', name: '打开的书', code: 'U+1F4D6', category: 'objects', keywords: ['打开的书', '阅读', '学习'] },
+    { symbol: '📗', name: '绿皮书', code: 'U+1F4D7', category: 'objects', keywords: ['绿皮书', '书籍', '阅读'] },
+    { symbol: '📘', name: '蓝皮书', code: 'U+1F4D8', category: 'objects', keywords: ['蓝皮书', '书籍', '阅读'] },
+    { symbol: '📙', name: '橙皮书', code: 'U+1F4D9', category: 'objects', keywords: ['橙皮书', '书籍', '阅读'] },
+    { symbol: '📚', name: '书籍', code: 'U+1F4DA', category: 'objects', keywords: ['书籍', '书堆', '学习'] },
+    { symbol: '📓', name: '笔记本', code: 'U+1F4D3', category: 'objects', keywords: ['笔记本', '记录', '学习'] },
+    { symbol: '📒', name: '账本', code: 'U+1F4D2', category: 'objects', keywords: ['账本', '记录', '账务'] },
+    { symbol: '📃', name: '卷页文档', code: 'U+1F4C3', category: 'objects', keywords: ['卷页文档', '文件', '纸张'] },
+    { symbol: '📜', name: '卷轴', code: 'U+1F4DC', category: 'objects', keywords: ['卷轴', '古代', '文档'] },
+    { symbol: '📄', name: '朝上文档', code: 'U+1F4C4', category: 'objects', keywords: ['朝上文档', '文件', '纸张'] },
+    { symbol: '📰', name: '报纸', code: 'U+1F4F0', category: 'objects', keywords: ['报纸', '新闻', '信息'] },
+    { symbol: '🗞️', name: '卷起的报纸', code: 'U+1F5DE', category: 'objects', keywords: ['卷起的报纸', '新闻', '媒体'] },
+    { symbol: '📑', name: '书签标签页', code: 'U+1F4D1', category: 'objects', keywords: ['书签标签页', '标记', '文档'] },
+    { symbol: '🔖', name: '书签', code: 'U+1F516', category: 'objects', keywords: ['书签', '标记', '阅读'] },
+    { symbol: '🏷️', name: '标签', code: 'U+1F3F7', category: 'objects', keywords: ['标签', '标记', '分类'] },
+    { symbol: '🏷️', name: '划船', code: 'U+1F6A3', category: 'activities', keywords: ['划船', '运动', '水上'] },
+    { symbol: '🧗', name: '攀岩', code: 'U+1F9D7', category: 'activities', keywords: ['攀岩', '运动', '极限'] },
+    { symbol: '🚵', name: '山地自行车', code: 'U+1F6B5', category: 'activities', keywords: ['山地自行车', '运动', '户外'] },
+    { symbol: '🚴', name: '骑自行车', code: 'U+1F6B4', category: 'activities', keywords: ['骑自行车', '运动', '健身'] },
+    { symbol: '🏇', name: '赛马', code: 'U+1F3C7', category: 'activities', keywords: ['赛马', '运动', '马术'] },
+    { symbol: '🤸', name: '体操', code: 'U+1F938', category: 'activities', keywords: ['体操', '运动', '翻跟头'] },
+    { symbol: '🤼', name: '摔跤', code: 'U+1F93C', category: 'activities', keywords: ['摔跤', '运动', '格斗'] },
+    { symbol: '🤽', name: '水球', code: 'U+1F93D', category: 'activities', keywords: ['水球', '运动', '水上'] },
+    { symbol: '🤾', name: '手球', code: 'U+1F93E', category: 'activities', keywords: ['手球', '运动', '球类'] },
+    { symbol: '🤹', name: '杂耍', code: 'U+1F939', category: 'activities', keywords: ['杂耍', '表演', '技巧'] },
+    { symbol: '🧘', name: '冥想', code: 'U+1F9D8', category: 'activities', keywords: ['冥想', '瑜伽', '放松'] },
+    { symbol: '🛀', name: '洗澡', code: 'U+1F6C0', category: 'activities', keywords: ['洗澡', '放松', '清洁'] },
+    { symbol: '🛌', name: '睡觉', code: 'U+1F6CC', category: 'activities', keywords: ['睡觉', '休息', '床'] },
+    { symbol: '🎭', name: '表演艺术', code: 'U+1F3AD', category: 'activities', keywords: ['表演艺术', '戏剧', '面具'] },
+    { symbol: '🩰', name: '芭蕾舞鞋', code: 'U+1FA70', category: 'activities', keywords: ['芭蕾舞鞋', '舞蹈', '艺术'] },
+    { symbol: '🎨', name: '艺术', code: 'U+1F3A8', category: 'activities', keywords: ['艺术', '绘画', '创作'] },
+    { symbol: '🎬', name: '电影', code: 'U+1F3AC', category: 'activities', keywords: ['电影', '拍摄', '娱乐'] },
+    { symbol: '🎤', name: '麦克风', code: 'U+1F3A4', category: 'activities', keywords: ['麦克风', '唱歌', '表演'] },
+    { symbol: '🎧', name: '耳机', code: 'U+1F3A7', category: 'activities', keywords: ['耳机', '音乐', '听歌'] },
+    { symbol: '🎼', name: '乐谱', code: 'U+1F3BC', category: 'activities', keywords: ['乐谱', '音乐', '作曲'] },
+    { symbol: '🎵', name: '音符', code: 'U+1F3B5', category: 'activities', keywords: ['音符', '音乐', '旋律'] },
+    { symbol: '🎶', name: '多个音符', code: 'U+1F3B6', category: 'activities', keywords: ['多个音符', '音乐', '歌曲'] },
+    { symbol: '🎹', name: '钢琴', code: 'U+1F3B9', category: 'activities', keywords: ['钢琴', '音乐', '乐器'] },
+    { symbol: '🥁', name: '鼓', code: 'U+1F941', category: 'activities', keywords: ['鼓', '音乐', '乐器'] },
+    { symbol: '🪘', name: '长鼓', code: 'U+1FA98', category: 'activities', keywords: ['长鼓', '音乐', '乐器'] },
+    { symbol: '🎷', name: '萨克斯', code: 'U+1F3B7', category: 'activities', keywords: ['萨克斯', '音乐', '乐器'] },
+    { symbol: '🎺', name: '小号', code: 'U+1F3BA', category: 'activities', keywords: ['小号', '音乐', '乐器'] },
+    { symbol: '🎸', name: '吉他', code: 'U+1F3B8', category: 'activities', keywords: ['吉他', '音乐', '乐器'] },
+    { symbol: '🪕', name: '班卓琴', code: 'U+1FA95', category: 'activities', keywords: ['班卓琴', '音乐', '乐器'] },
+    { symbol: '🎻', name: '小提琴', code: 'U+1F3BB', category: 'activities', keywords: ['小提琴', '音乐', '乐器'] },
+    { symbol: '🪗', name: '手风琴', code: 'U+1FA97', category: 'activities', keywords: ['手风琴', '音乐', '乐器'] },
+    { symbol: '🪈', name: '长笛', code: 'U+1FA88', category: 'activities', keywords: ['长笛', '音乐', '乐器'] },
+    { symbol: '🎲', name: '骰子', code: 'U+1F3B2', category: 'activities', keywords: ['骰子', '游戏', '运气'] },
+    { symbol: '♟️', name: '国际象棋', code: 'U+265F', category: 'activities', keywords: ['国际象棋', '棋类', '策略'] },
+    { symbol: '🎳', name: '保龄球', code: 'U+1F3B3', category: 'activities', keywords: ['保龄球', '运动', '游戏'] },
+    { symbol: '🎮', name: '游戏手柄', code: 'U+1F3AE', category: 'activities', keywords: ['游戏手柄', '电子游戏', '娱乐'] },
+    { symbol: '🎰', name: '老虎机', code: 'U+1F3B0', category: 'activities', keywords: ['老虎机', '赌博', '运气'] },
+    { symbol: '🧩', name: '拼图', code: 'U+1F9E9', category: 'activities', keywords: ['拼图', '游戏', '智力'] },
+    { symbol: '🃏', name: '小丑牌', code: 'U+1F0CF', category: 'activities', keywords: ['小丑牌', '扑克', '游戏'] },
+    { symbol: '🀄', name: '麻将红中', code: 'U+1F004', category: 'activities', keywords: ['麻将红中', '麻将', '游戏'] },
+    { symbol: '🎴', name: '花札', code: 'U+1F3B4', category: 'activities', keywords: ['花札', '日式纸牌', '游戏'] },
+    { symbol: '🎊', name: '彩带', code: 'U+1F38A', category: 'activities', keywords: ['彩带', '庆祝', '派对'] },
+    { symbol: '🎉', name: '拉炮', code: 'U+1F389', category: 'activities', keywords: ['拉炮', '庆祝', '派对'] },
+    { symbol: '🎈', name: '气球', code: 'U+1F388', category: 'activities', keywords: ['气球', '庆祝', '派对'] },
+    { symbol: '🎁', name: '礼物', code: 'U+1F381', category: 'activities', keywords: ['礼物', '礼品', '惊喜'] },
+    { symbol: '🎀', name: '蝴蝶结', code: 'U+1F380', category: 'activities', keywords: ['蝴蝶结', '装饰', '可爱'] },
+    { symbol: '🎗️', name: '丝带', code: 'U+1F397', category: 'activities', keywords: ['丝带', '纪念', '支持'] },
+    { symbol: '🎟️', name: '门票', code: 'U+1F39F', category: 'activities', keywords: ['门票', '入场券', '活动'] },
+    { symbol: '🎫', name: '票', code: 'U+1F3AB', category: 'activities', keywords: ['票', '门票', '入场'] },
+    // 物品 - 扩展版
+    { symbol: '⌚', name: '手表', code: 'U+231A', category: 'objects', keywords: ['手表', '时间', '配饰'] },
+    { symbol: '📱', name: '手机', code: 'U+1F4F1', category: 'objects', keywords: ['手机', '电话', '通讯'] },
+    { symbol: '📲', name: '手机来电', code: 'U+1F4F2', category: 'objects', keywords: ['手机来电', '电话', '通讯'] },
+    { symbol: '💻', name: '笔记本电脑', code: 'U+1F4BB', category: 'objects', keywords: ['笔记本电脑', '电脑', '工作'] },
+    { symbol: '⌨️', name: '键盘', code: 'U+2328', category: 'objects', keywords: ['键盘', '电脑', '输入'] },
+    { symbol: '🖥️', name: '台式电脑', code: 'U+1F5A5', category: 'objects', keywords: ['台式电脑', '显示器', '电脑'] },
+    { symbol: '🖨️', name: '打印机', code: 'U+1F5A8', category: 'objects', keywords: ['打印机', '办公', '设备'] },
+    { symbol: '🖱️', name: '鼠标', code: 'U+1F5B1', category: 'objects', keywords: ['鼠标', '电脑', '点击'] },
+    { symbol: '🖲️', name: '轨迹球', code: 'U+1F5B2', category: 'objects', keywords: ['轨迹球', '电脑', '输入'] },
+    { symbol: '🕹️', name: '游戏手柄', code: 'U+1F579', category: 'objects', keywords: ['游戏手柄', '游戏', '控制器'] },
+    { symbol: '🗜️', name: '压缩', code: 'U+1F5DC', category: 'objects', keywords: ['压缩', '工具', '夹子'] },
+    { symbol: '💽', name: '光盘', code: 'U+1F4BD', category: 'objects', keywords: ['光盘', 'CD', '存储'] },
+    { symbol: '💾', name: '软盘', code: 'U+1F4BE', category: 'objects', keywords: ['软盘', '保存', '存储'] },
+    { symbol: '💿', name: 'CD', code: 'U+1F4BF', category: 'objects', keywords: ['CD', '光盘', '音乐'] },
+    { symbol: '📀', name: 'DVD', code: 'U+1F4C0', category: 'objects', keywords: ['DVD', '光盘', '视频'] },
+    { symbol: '🧮', name: '算盘', code: 'U+1F9EE', category: 'objects', keywords: ['算盘', '计算', '传统'] },
+    { symbol: '🎥', name: '摄像机', code: 'U+1F3A5', category: 'objects', keywords: ['摄像机', '拍摄', '电影'] },
+    { symbol: '📹', name: '摄像头', code: 'U+1F4F9', category: 'objects', keywords: ['摄像头', '录像', '拍摄'] },
+    { symbol: '📷', name: '相机', code: 'U+1F4F7', category: 'objects', keywords: ['相机', '拍照', '摄影'] },
+    { symbol: '📸', name: '闪光灯相机', code: 'U+1F4F8', category: 'objects', keywords: ['闪光灯相机', '拍照', '摄影'] },
+    { symbol: '🔍', name: '放大镜', code: 'U+1F50D', category: 'objects', keywords: ['放大镜', '搜索', '查找'] },
+    { symbol: '🔎', name: '右向放大镜', code: 'U+1F50E', category: 'objects', keywords: ['放大镜', '搜索', '查找'] },
+    { symbol: '🕯️', name: '蜡烛', code: 'U+1F56F', category: 'objects', keywords: ['蜡烛', '火焰', '照明'] },
+    { symbol: '💡', name: '灯泡', code: 'U+1F4A1', category: 'objects', keywords: ['灯泡', '想法', '照明'] },
+    { symbol: '🔦', name: '手电筒', code: 'U+1F526', category: 'objects', keywords: ['手电筒', '照明', '工具'] },
+    { symbol: '🏮', name: '红灯笼', code: 'U+1F3EE', category: 'objects', keywords: ['红灯笼', '中国', '节日'] },
+    { symbol: '🪔', name: '油灯', code: 'U+1FA94', category: 'objects', keywords: ['油灯', '照明', '传统'] },
+    { symbol: '📔', name: '笔记本', code: 'U+1F4D4', category: 'objects', keywords: ['笔记本', '记录', '学习'] },
+    { symbol: '📕', name: '闭合书本', code: 'U+1F4D5', category: 'objects', keywords: ['闭合书本', '书', '阅读'] },
+    { symbol: '📖', name: '打开书本', code: 'U+1F4D6', category: 'objects', keywords: ['打开书本', '书', '阅读'] },
+    { symbol: '📗', name: '绿色书本', code: 'U+1F4D7', category: 'objects', keywords: ['绿色书本', '书', '学习'] },
+    { symbol: '📘', name: '蓝色书本', code: 'U+1F4D8', category: 'objects', keywords: ['蓝色书本', '书', '学习'] },
+    { symbol: '📙', name: '橙色书本', code: 'U+1F4D9', category: 'objects', keywords: ['橙色书本', '书', '学习'] },
+    { symbol: '📚', name: '书堆', code: 'U+1F4DA', category: 'objects', keywords: ['书堆', '书籍', '学习'] },
+    { symbol: '📓', name: '笔记本', code: 'U+1F4D3', category: 'objects', keywords: ['笔记本', '记录', '写作'] },
+    { symbol: '📒', name: '账本', code: 'U+1F4D2', category: 'objects', keywords: ['账本', '记录', '账目'] },
+    { symbol: '📃', name: '卷页', code: 'U+1F4C3', category: 'objects', keywords: ['卷页', '文档', '纸张'] },
+    { symbol: '📜', name: '卷轴', code: 'U+1F4DC', category: 'objects', keywords: ['卷轴', '古代', '文档'] },
+    { symbol: '📄', name: '文档', code: 'U+1F4C4', category: 'objects', keywords: ['文档', '纸张', '文件'] },
+    { symbol: '📰', name: '报纸', code: 'U+1F4F0', category: 'objects', keywords: ['报纸', '新闻', '信息'] },
+    { symbol: '🗞️', name: '卷起的报纸', code: 'U+1F5DE', category: 'objects', keywords: ['卷起的报纸', '新闻', '信息'] },
+    { symbol: '📑', name: '书签标签', code: 'U+1F4D1', category: 'objects', keywords: ['书签标签', '标记', '文档'] },
+    { symbol: '🔖', name: '书签', code: 'U+1F516', category: 'objects', keywords: ['书签', '标记', '阅读'] },
+    { symbol: '🏷️', name: '标签', code: 'U+1F3F7', category: 'objects', keywords: ['标签', '标记', '分类'] },
+    { symbol: '💰', name: '钱袋', code: 'U+1F4B0', category: 'objects', keywords: ['钱袋', '金钱', '财富'] },
+    { symbol: '🪙', name: '硬币', code: 'U+1FA99', category: 'objects', keywords: ['硬币', '金钱', '货币'] },
+    { symbol: '💴', name: '日元', code: 'U+1F4B4', category: 'objects', keywords: ['日元', '货币', '日本'] },
+    { symbol: '💵', name: '美元', code: 'U+1F4B5', category: 'objects', keywords: ['美元', '货币', '美国'] },
+    { symbol: '💶', name: '欧元', code: 'U+1F4B6', category: 'objects', keywords: ['欧元', '货币', '欧洲'] },
+    { symbol: '💷', name: '英镑', code: 'U+1F4B7', category: 'objects', keywords: ['英镑', '货币', '英国'] },
+    { symbol: '💸', name: '飞走的钱', code: 'U+1F4B8', category: 'objects', keywords: ['飞走的钱', '花钱', '支出'] },
+    { symbol: '💳', name: '信用卡', code: 'U+1F4B3', category: 'objects', keywords: ['信用卡', '支付', '银行卡'] },
+    { symbol: '🧾', name: '收据', code: 'U+1F9FE', category: 'objects', keywords: ['收据', '账单', '购物'] },
+    { symbol: '💎', name: '钻石', code: 'U+1F48E', category: 'objects', keywords: ['钻石', '宝石', '珍贵'] },
+    { symbol: '⚖️', name: '天平', code: 'U+2696', category: 'objects', keywords: ['天平', '正义', '平衡'] },
+    { symbol: '🪜', name: '梯子', code: 'U+1FA9C', category: 'objects', keywords: ['梯子', '攀爬', '工具'] },
+    { symbol: '🧰', name: '工具箱', code: 'U+1F9F0', category: 'objects', keywords: ['工具箱', '工具', '修理'] },
+    { symbol: '🔧', name: '扳手', code: 'U+1F527', category: 'objects', keywords: ['扳手', '工具', '修理'] },
+    { symbol: '🔨', name: '锤子', code: 'U+1F528', category: 'objects', keywords: ['锤子', '工具', '建造'] },
+    { symbol: '⚒️', name: '锤子和镐', code: 'U+2692', category: 'objects', keywords: ['锤子和镐', '工具', '挖掘'] },
+    { symbol: '🛠️', name: '锤子和扳手', code: 'U+1F6E0', category: 'objects', keywords: ['锤子和扳手', '工具', '修理'] },
+    { symbol: '⛏️', name: '镐', code: 'U+26CF', category: 'objects', keywords: ['镐', '工具', '挖掘'] },
+    { symbol: '🪚', name: '锯子', code: 'U+1FA9A', category: 'objects', keywords: ['锯子', '工具', '切割'] },
+    { symbol: '🔩', name: '螺栓', code: 'U+1F529', category: 'objects', keywords: ['螺栓', '工具', '固定'] },
+    { symbol: '⚙️', name: '齿轮', code: 'U+2699', category: 'objects', keywords: ['齿轮', '机械', '设置'] },
+    { symbol: '🪤', name: '捕鼠器', code: 'U+1FAA4', category: 'objects', keywords: ['捕鼠器', '陷阱', '工具'] },
+    { symbol: '🧲', name: '磁铁', code: 'U+1F9F2', category: 'objects', keywords: ['磁铁', '吸引', '科学'] },
+    { symbol: '🪣', name: '水桶', code: 'U+1FAA3', category: 'objects', keywords: ['水桶', '容器', '清洁'] },
+    { symbol: '🔫', name: '水枪', code: 'U+1F52B', category: 'objects', keywords: ['水枪', '玩具', '游戏'] },
+    { symbol: '💣', name: '炸弹', code: 'U+1F4A3', category: 'objects', keywords: ['炸弹', '爆炸', '危险'] },
+    { symbol: '🧨', name: '鞭炮', code: 'U+1F9E8', category: 'objects', keywords: ['鞭炮', '爆竹', '庆祝'] },
+    { symbol: '🪓', name: '斧头', code: 'U+1FA93', category: 'objects', keywords: ['斧头', '工具', '砍伐'] },
+    { symbol: '🔪', name: '菜刀', code: 'U+1F52A', category: 'objects', keywords: ['菜刀', '厨具', '切割'] },
+    { symbol: '🗡️', name: '剑', code: 'U+1F5E1', category: 'objects', keywords: ['剑', '武器', '古代'] },
+    { symbol: '⚔️', name: '交叉剑', code: 'U+2694', category: 'objects', keywords: ['交叉剑', '战斗', '武器'] },
+    { symbol: '🛡️', name: '盾牌', code: 'U+1F6E1', category: 'objects', keywords: ['盾牌', '防护', '保护'] },
+    { symbol: '🚬', name: '香烟', code: 'U+1F6AC', category: 'objects', keywords: ['香烟', '吸烟', '不健康'] },
+    { symbol: '⚰️', name: '棺材', code: 'U+26B0', category: 'objects', keywords: ['棺材', '死亡', '葬礼'] },
+    { symbol: '🪦', name: '墓碑', code: 'U+1FAA6', category: 'objects', keywords: ['墓碑', '死亡', '纪念'] },
+    { symbol: '⚱️', name: '骨灰盒', code: 'U+26B1', category: 'objects', keywords: ['骨灰盒', '死亡', '纪念'] },
+    { symbol: '🏺', name: '双耳瓶', code: 'U+1F3FA', category: 'objects', keywords: ['双耳瓶', '古代', '容器'] },
+    { symbol: '🔮', name: '水晶球', code: 'U+1F52E', category: 'objects', keywords: ['水晶球', '预言', '神秘'] },
+    { symbol: '📿', name: '念珠', code: 'U+1F4FF', category: 'objects', keywords: ['念珠', '宗教', '祈祷'] },
+    { symbol: '🧿', name: '恶魔之眼', code: 'U+1F9FF', category: 'objects', keywords: ['恶魔之眼', '护身符', '保护'] },
+    { symbol: '💈', name: '理发店标志', code: 'U+1F488', category: 'objects', keywords: ['理发店标志', '理发', '服务'] },
+    { symbol: '⚗️', name: '蒸馏器', code: 'U+2697', category: 'objects', keywords: ['蒸馏器', '化学', '实验'] },
+    { symbol: '🔭', name: '望远镜', code: 'U+1F52D', category: 'objects', keywords: ['望远镜', '观察', '天文'] },
+    { symbol: '🔬', name: '显微镜', code: 'U+1F52C', category: 'objects', keywords: ['显微镜', '科学', '研究'] },
+    { symbol: '🔦', name: '手电筒', code: 'U+1F526', category: 'objects', keywords: ['手电筒', '照明', '工具'] },
+    { symbol: '🏮', name: '红灯笼', code: 'U+1F3EE', category: 'objects', keywords: ['红灯笼', '中国', '节日'] },
+    { symbol: '🪔', name: '油灯', code: 'U+1FA94', category: 'objects', keywords: ['油灯', '照明', '传统'] },
+    { symbol: '📔', name: '笔记本', code: 'U+1F4D4', category: 'objects', keywords: ['笔记本', '记录', '学习'] },
+    // 符号
+    { symbol: '❤️', name: '红心', code: 'U+2764', category: 'symbols', keywords: ['红心', '爱', '喜欢'] },
+    { symbol: '🧡', name: '橙心', code: 'U+1F9E1', category: 'symbols', keywords: ['橙心', '爱', '温暖'] },
+    { symbol: '💛', name: '黄心', code: 'U+1F49B', category: 'symbols', keywords: ['黄心', '爱', '友谊'] },
+    { symbol: '💚', name: '绿心', code: 'U+1F49A', category: 'symbols', keywords: ['绿心', '爱', '自然'] },
+    { symbol: '💙', name: '蓝心', code: 'U+1F499', category: 'symbols', keywords: ['蓝心', '爱', '平静'] },
+    { symbol: '💜', name: '紫心', code: 'U+1F49C', category: 'symbols', keywords: ['紫心', '爱', '神秘'] },
+    { symbol: '🖤', name: '黑心', code: 'U+1F5A4', category: 'symbols', keywords: ['黑心', '爱', '酷'] },
+    { symbol: '🤍', name: '白心', code: 'U+1F90D', category: 'symbols', keywords: ['白心', '爱', '纯洁'] },
+    { symbol: '🤎', name: '棕心', code: 'U+1F90E', category: 'symbols', keywords: ['棕心', '爱', '大地'] },
+    { symbol: '💔', name: '心碎', code: 'U+1F494', category: 'symbols', keywords: ['心碎', '伤心', '分手'] },
+    { symbol: '❣️', name: '心形感叹号', code: 'U+2763', category: 'symbols', keywords: ['心形感叹号', '爱', '强调'] },
+    { symbol: '💕', name: '两颗心', code: 'U+1F495', category: 'symbols', keywords: ['两颗心', '爱', '恋爱'] },
+    { symbol: '💞', name: '旋转的心', code: 'U+1F49E', category: 'symbols', keywords: ['旋转的心', '爱', '恋爱'] },
+    { symbol: '💓', name: '心跳', code: 'U+1F493', category: 'symbols', keywords: ['心跳', '爱', '兴奋'] },
+    { symbol: '💗', name: '成长的心', code: 'U+1F497', category: 'symbols', keywords: ['成长的心', '爱', '增长'] },
+    { symbol: '💖', name: '闪亮的心', code: 'U+1F496', category: 'symbols', keywords: ['闪亮的心', '爱', '特别'] },
+    { symbol: '💘', name: '丘比特之箭', code: 'U+1F498', category: 'symbols', keywords: ['丘比特之箭', '爱', '恋爱'] },
+    { symbol: '💝', name: '心形礼物', code: 'U+1F49D', category: 'symbols', keywords: ['心形礼物', '爱', '礼物'] },
+    { symbol: '💟', name: '心形装饰', code: 'U+1F49F', category: 'symbols', keywords: ['心形装饰', '爱', '装饰'] },
+    { symbol: '☮️', name: '和平符号', code: 'U+262E', category: 'symbols', keywords: ['和平符号', '和平', '反战'] },
+    { symbol: '✝️', name: '十字架', code: 'U+271D', category: 'symbols', keywords: ['十字架', '基督教', '宗教'] },
+    { symbol: '☪️', name: '星月符号', code: 'U+262A', category: 'symbols', keywords: ['星月符号', '伊斯兰教', '宗教'] },
+    { symbol: '🕉️', name: '奥姆符号', code: 'U+1F549', category: 'symbols', keywords: ['奥姆符号', '印度教', '宗教'] },
+    { symbol: '☸️', name: '法轮', code: 'U+2638', category: 'symbols', keywords: ['法轮', '佛教', '宗教'] },
+    { symbol: '✡️', name: '大卫之星', code: 'U+2721', category: 'symbols', keywords: ['大卫之星', '犹太教', '宗教'] },
+    { symbol: '🔯', name: '六芒星', code: 'U+1F52F', category: 'symbols', keywords: ['六芒星', '星星', '符号'] },
+    { symbol: '🕎', name: '烛台', code: 'U+1F54E', category: 'symbols', keywords: ['烛台', '犹太教', '宗教'] },
+    { symbol: '☯️', name: '阴阳', code: 'U+262F', category: 'symbols', keywords: ['阴阳', '太极', '平衡'] },
+    { symbol: '♈', name: '白羊座', code: 'U+2648', category: 'symbols', keywords: ['白羊座', '星座', '占星'] },
+    { symbol: '♉', name: '金牛座', code: 'U+2649', category: 'symbols', keywords: ['金牛座', '星座', '占星'] },
+    { symbol: '♊', name: '双子座', code: 'U+264A', category: 'symbols', keywords: ['双子座', '星座', '占星'] },
+    { symbol: '♋', name: '巨蟹座', code: 'U+264B', category: 'symbols', keywords: ['巨蟹座', '星座', '占星'] },
+    { symbol: '♌', name: '狮子座', code: 'U+264C', category: 'symbols', keywords: ['狮子座', '星座', '占星'] },
+    { symbol: '♍', name: '处女座', code: 'U+264D', category: 'symbols', keywords: ['处女座', '星座', '占星'] },
+    { symbol: '♎', name: '天秤座', code: 'U+264E', category: 'symbols', keywords: ['天秤座', '星座', '占星'] },
+    { symbol: '♏', name: '天蝎座', code: 'U+264F', category: 'symbols', keywords: ['天蝎座', '星座', '占星'] },
+    { symbol: '♐', name: '射手座', code: 'U+2650', category: 'symbols', keywords: ['射手座', '星座', '占星'] },
+    { symbol: '♑', name: '摩羯座', code: 'U+2651', category: 'symbols', keywords: ['摩羯座', '星座', '占星'] },
+    { symbol: '♒', name: '水瓶座', code: 'U+2652', category: 'symbols', keywords: ['水瓶座', '星座', '占星'] },
+    { symbol: '♓', name: '双鱼座', code: 'U+2653', category: 'symbols', keywords: ['双鱼座', '星座', '占星'] },
+    { symbol: '⛎', name: '蛇夫座', code: 'U+26CE', category: 'symbols', keywords: ['蛇夫座', '星座', '占星'] },
+    { symbol: '🔀', name: '随机播放', code: 'U+1F500', category: 'symbols', keywords: ['随机播放', '音乐', '控制'] },
+    { symbol: '🔁', name: '重复', code: 'U+1F501', category: 'symbols', keywords: ['重复', '循环', '控制'] },
+    { symbol: '🔂', name: '单曲循环', code: 'U+1F502', category: 'symbols', keywords: ['单曲循环', '重复', '音乐'] },
+    { symbol: '▶️', name: '播放', code: 'U+25B6', category: 'symbols', keywords: ['播放', '开始', '控制'] },
+    { symbol: '⏩', name: '快进', code: 'U+23E9', category: 'symbols', keywords: ['快进', '前进', '控制'] },
+    { symbol: '⏭️', name: '下一首', code: 'U+23ED', category: 'symbols', keywords: ['下一首', '跳过', '控制'] },
+    { symbol: '⏯️', name: '播放暂停', code: 'U+23EF', category: 'symbols', keywords: ['播放暂停', '控制', '媒体'] },
+    { symbol: '◀️', name: '倒退', code: 'U+25C0', category: 'symbols', keywords: ['倒退', '后退', '控制'] },
+    { symbol: '⏪', name: '快退', code: 'U+23EA', category: 'symbols', keywords: ['快退', '后退', '控制'] },
+    { symbol: '⏮️', name: '上一首', code: 'U+23EE', category: 'symbols', keywords: ['上一首', '返回', '控制'] },
+    { symbol: '🔼', name: '向上', code: 'U+1F53C', category: 'symbols', keywords: ['向上', '上升', '方向'] },
+    { symbol: '⏫', name: '快速向上', code: 'U+23EB', category: 'symbols', keywords: ['快速向上', '上升', '控制'] },
+    { symbol: '🔽', name: '向下', code: 'U+1F53D', category: 'symbols', keywords: ['向下', '下降', '方向'] },
+    { symbol: '⏬', name: '快速向下', code: 'U+23EC', category: 'symbols', keywords: ['快速向下', '下降', '控制'] },
+    { symbol: '⏸️', name: '暂停', code: 'U+23F8', category: 'symbols', keywords: ['暂停', '停止', '控制'] },
+    { symbol: '⏹️', name: '停止', code: 'U+23F9', category: 'symbols', keywords: ['停止', '结束', '控制'] },
+    { symbol: '⏺️', name: '录制', code: 'U+23FA', category: 'symbols', keywords: ['录制', '记录', '控制'] },
+    { symbol: '⏏️', name: '弹出', code: 'U+23CF', category: 'symbols', keywords: ['弹出', '退出', '控制'] },
+    { symbol: '🎦', name: '电影院', code: 'U+1F3A6', category: 'symbols', keywords: ['电影院', '电影', '娱乐'] },
+    { symbol: '🔅', name: '低亮度', code: 'U+1F505', category: 'symbols', keywords: ['低亮度', '暗', '调节'] },
+    { symbol: '🔆', name: '高亮度', code: 'U+1F506', category: 'symbols', keywords: ['高亮度', '亮', '调节'] },
+    { symbol: '📶', name: '信号强度', code: 'U+1F4F6', category: 'symbols', keywords: ['信号强度', '网络', '通讯'] },
+    { symbol: '📳', name: '振动模式', code: 'U+1F4F3', category: 'symbols', keywords: ['振动模式', '静音', '手机'] },
+    { symbol: '📴', name: '手机关机', code: 'U+1F4F4', category: 'symbols', keywords: ['手机关机', '关闭', '禁止'] },
+    { symbol: '♀️', name: '女性符号', code: 'U+2640', category: 'symbols', keywords: ['女性符号', '女', '性别'] },
+    { symbol: '♂️', name: '男性符号', code: 'U+2642', category: 'symbols', keywords: ['男性符号', '男', '性别'] },
+    { symbol: '⚧️', name: '跨性别符号', code: 'U+26A7', category: 'symbols', keywords: ['跨性别符号', '性别', '多元'] },
+    { symbol: '✖️', name: '乘号', code: 'U+2716', category: 'symbols', keywords: ['乘号', '乘法', '数学'] },
+    { symbol: '➕', name: '加号', code: 'U+2795', category: 'symbols', keywords: ['加号', '加法', '数学'] },
+    { symbol: '➖', name: '减号', code: 'U+2796', category: 'symbols', keywords: ['减号', '减法', '数学'] },
+    { symbol: '➗', name: '除号', code: 'U+2797', category: 'symbols', keywords: ['除号', '除法', '数学'] },
+    { symbol: '♾️', name: '无穷大', code: 'U+267E', category: 'symbols', keywords: ['无穷大', '无限', '数学'] },
+    { symbol: '‼️', name: '双感叹号', code: 'U+203C', category: 'symbols', keywords: ['双感叹号', '强调', '惊讶'] },
+    { symbol: '⁉️', name: '感叹问号', code: 'U+2049', category: 'symbols', keywords: ['感叹问号', '疑问', '惊讶'] },
+    { symbol: '❓', name: '问号', code: 'U+2753', category: 'symbols', keywords: ['问号', '疑问', '询问'] },
+    { symbol: '❔', name: '白色问号', code: 'U+2754', category: 'symbols', keywords: ['白色问号', '疑问', '询问'] },
+    { symbol: '❕', name: '白色感叹号', code: 'U+2755', category: 'symbols', keywords: ['白色感叹号', '强调', '注意'] },
+    { symbol: '❗', name: '感叹号', code: 'U+2757', category: 'symbols', keywords: ['感叹号', '强调', '注意'] },
+    { symbol: '〰️', name: '波浪线', code: 'U+3030', category: 'symbols', keywords: ['波浪线', '装饰', '符号'] },
+    { symbol: '💱', name: '货币兑换', code: 'U+1F4B1', category: 'symbols', keywords: ['货币兑换', '汇率', '金融'] },
+    { symbol: '💲', name: '美元符号', code: 'U+1F4B2', category: 'symbols', keywords: ['美元符号', '金钱', '货币'] },
+    { symbol: '⚕️', name: '医疗符号', code: 'U+2695', category: 'symbols', keywords: ['医疗符号', '医学', '健康'] },
+    { symbol: '♻️', name: '回收符号', code: 'U+267B', category: 'symbols', keywords: ['回收符号', '环保', '循环'] },
+    { symbol: '⚜️', name: '百合花饰', code: 'U+269C', category: 'symbols', keywords: ['百合花饰', '装饰', '法国'] },
+    { symbol: '🔱', name: '三叉戟', code: 'U+1F531', category: 'symbols', keywords: ['三叉戟', '武器', '海神'] },
+    { symbol: '📛', name: '姓名牌', code: 'U+1F4DB', category: 'symbols', keywords: ['姓名牌', '标识', '名字'] },
+    { symbol: '🔰', name: '日式初学者标志', code: 'U+1F530', category: 'symbols', keywords: ['日式初学者标志', '新手', '学习'] },
+    { symbol: '⭕', name: '红色圆圈', code: 'U+2B55', category: 'symbols', keywords: ['红色圆圈', '正确', '标记'] },
+    { symbol: '✅', name: '绿色勾选', code: 'U+2705', category: 'symbols', keywords: ['绿色勾选', '正确', '完成'] },
+    { symbol: '☑️', name: '勾选框', code: 'U+2611', category: 'symbols', keywords: ['勾选框', '选中', '完成'] },
+    { symbol: '✔️', name: '勾选', code: 'U+2714', category: 'symbols', keywords: ['勾选', '正确', '确认'] },
+    { symbol: '❌', name: '叉号', code: 'U+274C', category: 'symbols', keywords: ['叉号', '错误', '取消'] },
+    { symbol: '❎', name: '叉号按钮', code: 'U+274E', category: 'symbols', keywords: ['叉号按钮', '错误', '取消'] },
+    { symbol: '➰', name: '卷曲环', code: 'U+27B0', category: 'symbols', keywords: ['卷曲环', '装饰', '符号'] },
+    { symbol: '➿', name: '双卷曲环', code: 'U+27BF', category: 'symbols', keywords: ['双卷曲环', '装饰', '符号'] },
+    { symbol: '〽️', name: '部分交替标记', code: 'U+303D', category: 'symbols', keywords: ['部分交替标记', '日式', '符号'] },
+    { symbol: '✳️', name: '八角星', code: 'U+2733', category: 'symbols', keywords: ['八角星', '星星', '装饰'] },
+    { symbol: '✴️', name: '八角星', code: 'U+2734', category: 'symbols', keywords: ['八角星', '星星', '装饰'] },
+    { symbol: '❇️', name: '闪光', code: 'U+2747', category: 'symbols', keywords: ['闪光', '星星', '装饰'] },
+    { symbol: '©️', name: '版权', code: 'U+00A9', category: 'symbols', keywords: ['版权', '著作权', '法律'] },
+    { symbol: '®️', name: '注册商标', code: 'U+00AE', category: 'symbols', keywords: ['注册商标', '商标', '法律'] },
+    { symbol: '™️', name: '商标', code: 'U+2122', category: 'symbols', keywords: ['商标', '品牌', '法律'] },
+    { symbol: '#️⃣', name: '井号键', code: 'U+0023-FE0F-20E3', category: 'symbols', keywords: ['井号键', '数字', '键盘'] },
+    { symbol: '*️⃣', name: '星号键', code: 'U+002A-FE0F-20E3', category: 'symbols', keywords: ['星号键', '符号', '键盘'] },
+    { symbol: '0️⃣', name: '数字0', code: 'U+0030-FE0F-20E3', category: 'symbols', keywords: ['数字0', '零', '数字'] },
+    { symbol: '1️⃣', name: '数字1', code: 'U+0031-FE0F-20E3', category: 'symbols', keywords: ['数字1', '一', '数字'] },
+    { symbol: '2️⃣', name: '数字2', code: 'U+0032-FE0F-20E3', category: 'symbols', keywords: ['数字2', '二', '数字'] },
+    { symbol: '3️⃣', name: '数字3', code: 'U+0033-FE0F-20E3', category: 'symbols', keywords: ['数字3', '三', '数字'] },
+    { symbol: '4️⃣', name: '数字4', code: 'U+0034-FE0F-20E3', category: 'symbols', keywords: ['数字4', '四', '数字'] },
+    { symbol: '5️⃣', name: '数字5', code: 'U+0035-FE0F-20E3', category: 'symbols', keywords: ['数字5', '五', '数字'] },
+    { symbol: '6️⃣', name: '数字6', code: 'U+0036-FE0F-20E3', category: 'symbols', keywords: ['数字6', '六', '数字'] },
+    { symbol: '7️⃣', name: '数字7', code: 'U+0037-FE0F-20E3', category: 'symbols', keywords: ['数字7', '七', '数字'] },
+    { symbol: '8️⃣', name: '数字8', code: 'U+0038-FE0F-20E3', category: 'symbols', keywords: ['数字8', '八', '数字'] },
+    { symbol: '9️⃣', name: '数字9', code: 'U+0039-FE0F-20E3', category: 'symbols', keywords: ['数字9', '九', '数字'] },
+    { symbol: '🔟', name: '数字10', code: 'U+1F51F', category: 'symbols', keywords: ['数字10', '十', '数字'] },
+    { symbol: '🔠', name: '大写字母', code: 'U+1F520', category: 'symbols', keywords: ['大写字母', '字母', '输入'] },
+    { symbol: '🔡', name: '小写字母', code: 'U+1F521', category: 'symbols', keywords: ['小写字母', '字母', '输入'] },
+    { symbol: '🔢', name: '数字', code: 'U+1F522', category: 'symbols', keywords: ['数字', '数字键盘', '输入'] },
+    { symbol: '🔣', name: '符号', code: 'U+1F523', category: 'symbols', keywords: ['符号', '特殊字符', '输入'] },
+    { symbol: '🔤', name: '字母', code: 'U+1F524', category: 'symbols', keywords: ['字母', 'ABC', '输入'] },
+    { symbol: '🅰️', name: 'A型血', code: 'U+1F170', category: 'symbols', keywords: ['A型血', '血型', '医疗'] },
+    { symbol: '🆎', name: 'AB型血', code: 'U+1F18E', category: 'symbols', keywords: ['AB型血', '血型', '医疗'] },
+    { symbol: '🅱️', name: 'B型血', code: 'U+1F171', category: 'symbols', keywords: ['B型血', '血型', '医疗'] },
+    { symbol: '🆑', name: '清除', code: 'U+1F191', category: 'symbols', keywords: ['清除', 'CL', '按钮'] },
+    { symbol: '🆒', name: '酷', code: 'U+1F192', category: 'symbols', keywords: ['酷', 'COOL', '按钮'] },
+    { symbol: '🆓', name: '免费', code: 'U+1F193', category: 'symbols', keywords: ['免费', 'FREE', '按钮'] },
+    { symbol: 'ℹ️', name: '信息', code: 'U+2139', category: 'symbols', keywords: ['信息', '提示', '帮助'] },
+    { symbol: '🆔', name: 'ID', code: 'U+1F194', category: 'symbols', keywords: ['ID', '身份', '标识'] },
+    { symbol: 'Ⓜ️', name: '地铁', code: 'U+24C2', category: 'symbols', keywords: ['地铁', '交通', '标志'] },
+    { symbol: '🆕', name: '新', code: 'U+1F195', category: 'symbols', keywords: ['新', 'NEW', '按钮'] },
+    { symbol: '🆖', name: 'NG', code: 'U+1F196', category: 'symbols', keywords: ['NG', '不好', '按钮'] },
+    { symbol: '🅾️', name: 'O型血', code: 'U+1F17E', category: 'symbols', keywords: ['O型血', '血型', '医疗'] },
+    { symbol: '🆗', name: 'OK', code: 'U+1F197', category: 'symbols', keywords: ['OK', '好的', '按钮'] },
+    { symbol: '🅿️', name: '停车', code: 'U+1F17F', category: 'symbols', keywords: ['停车', '停车场', '交通'] },
+    { symbol: '🆘', name: 'SOS', code: 'U+1F198', category: 'symbols', keywords: ['SOS', '求救', '紧急'] },
+    { symbol: '🆙', name: '向上', code: 'U+1F199', category: 'symbols', keywords: ['向上', 'UP', '按钮'] },
+    { symbol: '🆚', name: '对战', code: 'U+1F19A', category: 'symbols', keywords: ['对战', 'VS', '比赛'] },
+    { symbol: '🈁', name: '日文这里', code: 'U+1F201', category: 'symbols', keywords: ['日文这里', '日语', '汉字'] },
+    { symbol: '🈂️', name: '日文服务费', code: 'U+1F202', category: 'symbols', keywords: ['日文服务费', '日语', '汉字'] },
+    { symbol: '🈷️', name: '日文月', code: 'U+1F237', category: 'symbols', keywords: ['日文月', '日语', '汉字'] },
+    { symbol: '🈶', name: '日文有', code: 'U+1F236', category: 'symbols', keywords: ['日文有', '日语', '汉字'] },
+    { symbol: '🈯', name: '日文指', code: 'U+1F22F', category: 'symbols', keywords: ['日文指', '日语', '汉字'] },
+    { symbol: '🉐', name: '日文得', code: 'U+1F250', category: 'symbols', keywords: ['日文得', '日语', '汉字'] },
+    { symbol: '🈹', name: '日文割', code: 'U+1F239', category: 'symbols', keywords: ['日文割', '日语', '汉字'] },
+    { symbol: '🈚', name: '日文无', code: 'U+1F21A', category: 'symbols', keywords: ['日文无', '日语', '汉字'] },
+    { symbol: '🈲', name: '日文禁', code: 'U+1F232', category: 'symbols', keywords: ['日文禁', '日语', '汉字'] },
+    { symbol: '🉑', name: '日文可', code: 'U+1F251', category: 'symbols', keywords: ['日文可', '日语', '汉字'] },
+    { symbol: '🈸', name: '日文申', code: 'U+1F238', category: 'symbols', keywords: ['日文申', '日语', '汉字'] },
+    { symbol: '🈴', name: '日文合', code: 'U+1F234', category: 'symbols', keywords: ['日文合', '日语', '汉字'] },
+    { symbol: '🈳', name: '日文空', code: 'U+1F233', category: 'symbols', keywords: ['日文空', '日语', '汉字'] },
+    { symbol: '㊗️', name: '日文祝', code: 'U+3297', category: 'symbols', keywords: ['日文祝', '日语', '汉字'] },
+    { symbol: '㊙️', name: '日文秘', code: 'U+3299', category: 'symbols', keywords: ['日文秘', '日语', '汉字'] },
+    { symbol: '🈺', name: '日文营', code: 'U+1F23A', category: 'symbols', keywords: ['日文营', '日语', '汉字'] },
+    { symbol: '🈵', name: '日文满', code: 'U+1F235', category: 'symbols', keywords: ['日文满', '日语', '汉字'] },
+
+    // 自然和天气 - 新增分类
+    { symbol: '🌍', name: '地球欧非', code: 'U+1F30D', category: 'animals', keywords: ['地球', '欧洲', '非洲'] },
+    { symbol: '🌎', name: '地球美洲', code: 'U+1F30E', category: 'animals', keywords: ['地球', '美洲', '世界'] },
+    { symbol: '🌏', name: '地球亚澳', code: 'U+1F30F', category: 'animals', keywords: ['地球', '亚洲', '澳洲'] },
+    { symbol: '🌐', name: '地球经纬线', code: 'U+1F310', category: 'animals', keywords: ['地球经纬线', '全球', '网络'] },
+    { symbol: '🗺️', name: '世界地图', code: 'U+1F5FA', category: 'animals', keywords: ['世界地图', '地图', '地理'] },
+    { symbol: '🗾', name: '日本地图', code: 'U+1F5FE', category: 'animals', keywords: ['日本地图', '日本', '地图'] },
+    { symbol: '🧭', name: '指南针', code: 'U+1F9ED', category: 'animals', keywords: ['指南针', '方向', '导航'] },
+    { symbol: '🏔️', name: '雪山', code: 'U+1F3D4', category: 'animals', keywords: ['雪山', '山峰', '雪'] },
+    { symbol: '⛰️', name: '山', code: 'U+26F0', category: 'animals', keywords: ['山', '山峰', '自然'] },
+    { symbol: '🌋', name: '火山', code: 'U+1F30B', category: 'animals', keywords: ['火山', '爆发', '岩浆'] },
+    { symbol: '🗻', name: '富士山', code: 'U+1F5FB', category: 'animals', keywords: ['富士山', '日本', '山'] },
+    { symbol: '🏕️', name: '露营', code: 'U+1F3D5', category: 'animals', keywords: ['露营', '帐篷', '户外'] },
+    { symbol: '🏖️', name: '海滩伞', code: 'U+1F3D6', category: 'animals', keywords: ['海滩伞', '海滩', '度假'] },
+    { symbol: '🏜️', name: '沙漠', code: 'U+1F3DC', category: 'animals', keywords: ['沙漠', '干旱', '沙丘'] },
+    { symbol: '🏝️', name: '荒岛', code: 'U+1F3DD', category: 'animals', keywords: ['荒岛', '岛屿', '热带'] },
+    { symbol: '🏞️', name: '国家公园', code: 'U+1F3DE', category: 'animals', keywords: ['国家公园', '自然', '风景'] },
+    { symbol: '🌅', name: '日出', code: 'U+1F305', category: 'animals', keywords: ['日出', '早晨', '太阳'] },
+    { symbol: '🌄', name: '山上日出', code: 'U+1F304', category: 'animals', keywords: ['山上日出', '日出', '山'] },
+    { symbol: '🌠', name: '流星', code: 'U+1F320', category: 'animals', keywords: ['流星', '星星', '夜空'] },
+    { symbol: '🎇', name: '烟花', code: 'U+1F387', category: 'animals', keywords: ['烟花', '庆祝', '节日'] },
+    { symbol: '🎆', name: '焰火', code: 'U+1F386', category: 'animals', keywords: ['焰火', '庆祝', '夜空'] },
+    { symbol: '🌇', name: '城市日落', code: 'U+1F307', category: 'animals', keywords: ['城市日落', '日落', '城市'] },
+    { symbol: '🌆', name: '黄昏城市', code: 'U+1F306', category: 'animals', keywords: ['黄昏城市', '黄昏', '城市'] },
+    { symbol: '🏙️', name: '城市景观', code: 'U+1F3D9', category: 'animals', keywords: ['城市景观', '城市', '建筑'] },
+    { symbol: '🌃', name: '星空夜晚', code: 'U+1F303', category: 'animals', keywords: ['星空夜晚', '夜晚', '星星'] },
+    { symbol: '🌌', name: '银河', code: 'U+1F30C', category: 'animals', keywords: ['银河', '星系', '宇宙'] },
+    { symbol: '🌉', name: '夜晚大桥', code: 'U+1F309', category: 'animals', keywords: ['夜晚大桥', '桥', '夜景'] },
+    { symbol: '🌁', name: '雾', code: 'U+1F301', category: 'animals', keywords: ['雾', '迷雾', '天气'] },
+    { symbol: '☀️', name: '太阳', code: 'U+2600', category: 'animals', keywords: ['太阳', '晴天', '天气'] },
+    { symbol: '🌤️', name: '晴间多云', code: 'U+1F324', category: 'animals', keywords: ['晴间多云', '天气', '云'] },
+    { symbol: '⛅', name: '多云', code: 'U+26C5', category: 'animals', keywords: ['多云', '天气', '云'] },
+    { symbol: '🌥️', name: '阴天', code: 'U+1F325', category: 'animals', keywords: ['阴天', '天气', '云'] },
+    { symbol: '☁️', name: '云', code: 'U+2601', category: 'animals', keywords: ['云', '天气', '阴天'] },
+    { symbol: '🌦️', name: '晴雨', code: 'U+1F326', category: 'animals', keywords: ['晴雨', '天气', '雨'] },
+    { symbol: '🌧️', name: '雨云', code: 'U+1F327', category: 'animals', keywords: ['雨云', '下雨', '天气'] },
+    { symbol: '⛈️', name: '雷雨', code: 'U+26C8', category: 'animals', keywords: ['雷雨', '雷电', '天气'] },
+    { symbol: '🌩️', name: '闪电', code: 'U+1F329', category: 'animals', keywords: ['闪电', '雷电', '天气'] },
+    { symbol: '🌨️', name: '雪云', code: 'U+1F328', category: 'animals', keywords: ['雪云', '下雪', '天气'] },
+    { symbol: '❄️', name: '雪花', code: 'U+2744', category: 'animals', keywords: ['雪花', '雪', '冬天'] },
+    { symbol: '☃️', name: '雪人', code: 'U+2603', category: 'animals', keywords: ['雪人', '雪', '冬天'] },
+    { symbol: '⛄', name: '无雪雪人', code: 'U+26C4', category: 'animals', keywords: ['无雪雪人', '雪人', '冬天'] },
+    { symbol: '🌬️', name: '风脸', code: 'U+1F32C', category: 'animals', keywords: ['风脸', '风', '天气'] },
+    { symbol: '💨', name: '疾风', code: 'U+1F4A8', category: 'animals', keywords: ['疾风', '风', '快速'] },
+    { symbol: '🌪️', name: '龙卷风', code: 'U+1F32A', category: 'animals', keywords: ['龙卷风', '风暴', '天气'] },
+    { symbol: '🌫️', name: '雾', code: 'U+1F32B', category: 'animals', keywords: ['雾', '迷雾', '天气'] },
+    { symbol: '🌈', name: '彩虹', code: 'U+1F308', category: 'animals', keywords: ['彩虹', '雨后', '美丽'] },
+    { symbol: '🌂', name: '闭合雨伞', code: 'U+1F302', category: 'animals', keywords: ['闭合雨伞', '雨伞', '雨天'] },
+    { symbol: '☂️', name: '雨伞', code: 'U+2602', category: 'animals', keywords: ['雨伞', '下雨', '保护'] },
+    { symbol: '☔', name: '雨伞雨滴', code: 'U+2614', category: 'animals', keywords: ['雨伞雨滴', '下雨', '天气'] },
+    { symbol: '⛱️', name: '沙滩伞', code: 'U+26F1', category: 'animals', keywords: ['沙滩伞', '海滩', '夏天'] },
+    { symbol: '⚡', name: '高压电', code: 'U+26A1', category: 'animals', keywords: ['高压电', '闪电', '电力'] },
+    { symbol: '🔥', name: '火', code: 'U+1F525', category: 'animals', keywords: ['火', '火焰', '热'] },
+    { symbol: '💧', name: '水滴', code: 'U+1F4A7', category: 'animals', keywords: ['水滴', '水', '液体'] },
+    { symbol: '🌊', name: '海浪', code: 'U+1F30A', category: 'animals', keywords: ['海浪', '海洋', '波浪'] },
+
+    // 植物
+    { symbol: '🎄', name: '圣诞树', code: 'U+1F384', category: 'animals', keywords: ['圣诞树', '圣诞节', '节日'] },
+    { symbol: '🌲', name: '常青树', code: 'U+1F332', category: 'animals', keywords: ['常青树', '松树', '森林'] },
+    { symbol: '🌳', name: '落叶树', code: 'U+1F333', category: 'animals', keywords: ['落叶树', '树', '森林'] },
+    { symbol: '🌴', name: '棕榈树', code: 'U+1F334', category: 'animals', keywords: ['棕榈树', '热带', '海滩'] },
+    { symbol: '🌱', name: '幼苗', code: 'U+1F331', category: 'animals', keywords: ['幼苗', '成长', '植物'] },
+    { symbol: '🌿', name: '草本植物', code: 'U+1F33F', category: 'animals', keywords: ['草本植物', '叶子', '绿色'] },
+    { symbol: '☘️', name: '三叶草', code: 'U+2618', category: 'animals', keywords: ['三叶草', '幸运', '爱尔兰'] },
+    { symbol: '🍀', name: '四叶草', code: 'U+1F340', category: 'animals', keywords: ['四叶草', '幸运', '稀有'] },
+    { symbol: '🎍', name: '松竹装饰', code: 'U+1F38D', category: 'animals', keywords: ['松竹装饰', '日式', '新年'] },
+    { symbol: '🪴', name: '盆栽植物', code: 'U+1FAB4', category: 'animals', keywords: ['盆栽植物', '植物', '装饰'] },
+    { symbol: '🎋', name: '七夕树', code: 'U+1F38B', category: 'animals', keywords: ['七夕树', '竹子', '节日'] },
+    { symbol: '🍃', name: '飘落叶子', code: 'U+1F343', category: 'animals', keywords: ['飘落叶子', '叶子', '秋天'] },
+    { symbol: '🍂', name: '落叶', code: 'U+1F342', category: 'animals', keywords: ['落叶', '秋天', '叶子'] },
+    { symbol: '🍁', name: '枫叶', code: 'U+1F341', category: 'animals', keywords: ['枫叶', '秋天', '加拿大'] },
+
+    // 月亮和星星
+    { symbol: '🌔', name: '渐盈凸月', code: 'U+1F314', category: 'animals', keywords: ['渐盈凸月', '月亮', '夜晚'] },
+    { symbol: '🌓', name: '上弦月', code: 'U+1F313', category: 'animals', keywords: ['上弦月', '月亮', '夜晚'] },
+    { symbol: '🌒', name: '渐盈眉月', code: 'U+1F312', category: 'animals', keywords: ['渐盈眉月', '月亮', '夜晚'] },
+    { symbol: '🌑', name: '新月', code: 'U+1F311', category: 'animals', keywords: ['新月', '月亮', '夜晚'] },
+    { symbol: '🌘', name: '渐亏眉月', code: 'U+1F318', category: 'animals', keywords: ['渐亏眉月', '月亮', '夜晚'] },
+    { symbol: '🌗', name: '下弦月', code: 'U+1F317', category: 'animals', keywords: ['下弦月', '月亮', '夜晚'] },
+    { symbol: '🌖', name: '渐亏凸月', code: 'U+1F316', category: 'animals', keywords: ['渐亏凸月', '月亮', '夜晚'] },
+    { symbol: '🌕', name: '满月', code: 'U+1F315', category: 'animals', keywords: ['满月', '月亮', '夜晚'] },
+    { symbol: '🌙', name: '弯月', code: 'U+1F319', category: 'animals', keywords: ['弯月', '月亮', '夜晚'] },
+    { symbol: '🌛', name: '上弦月脸', code: 'U+1F31B', category: 'animals', keywords: ['上弦月脸', '月亮', '脸'] },
+    { symbol: '🌜', name: '下弦月脸', code: 'U+1F31C', category: 'animals', keywords: ['下弦月脸', '月亮', '脸'] },
+    { symbol: '🌚', name: '新月脸', code: 'U+1F31A', category: 'animals', keywords: ['新月脸', '月亮', '脸'] },
+    { symbol: '🌝', name: '满月脸', code: 'U+1F31D', category: 'animals', keywords: ['满月脸', '月亮', '脸'] },
+    { symbol: '🌞', name: '太阳脸', code: 'U+1F31E', category: 'animals', keywords: ['太阳脸', '太阳', '脸'] },
+    { symbol: '🪐', name: '土星', code: 'U+1FA90', category: 'animals', keywords: ['土星', '行星', '宇宙'] },
+    { symbol: '⭐', name: '星星', code: 'U+2B50', category: 'animals', keywords: ['星星', '明星', '夜空'] },
+    { symbol: '🌟', name: '闪亮星星', code: 'U+1F31F', category: 'animals', keywords: ['闪亮星星', '星星', '闪光'] },
+    { symbol: '✨', name: '闪光', code: 'U+2728', category: 'animals', keywords: ['闪光', '闪亮', '魔法'] },
+    { symbol: '☄️', name: '彗星', code: 'U+2604', category: 'animals', keywords: ['彗星', '流星', '宇宙'] },
+    { symbol: '💫', name: '眩晕', code: 'U+1F4AB', category: 'animals', keywords: ['眩晕', '星星', '晕'] },
+
+    // 更多现代 emoji
+    { symbol: '🫧', name: '泡泡', code: 'U+1FAE7', category: 'animals', keywords: ['泡泡', '肥皂泡', '清洁'] },
+    { symbol: '🫐', name: '蓝莓', code: 'U+1FAD0', category: 'food', keywords: ['蓝莓', '浆果', '水果'] },
+    { symbol: '🫒', name: '橄榄', code: 'U+1FAD2', category: 'food', keywords: ['橄榄', '地中海', '健康'] },
+    { symbol: '🫓', name: '薄饼', code: 'U+1FAD3', category: 'food', keywords: ['薄饼', '面包', '印度'] },
+    { symbol: '🫔', name: '玉米粽', code: 'U+1FAD4', category: 'food', keywords: ['玉米粽', '墨西哥', '传统'] },
+    { symbol: '🫕', name: '火锅', code: 'U+1FAD5', category: 'food', keywords: ['火锅', '奶酪', '瑞士'] },
+    { symbol: '🫖', name: '茶壶', code: 'U+1FAD6', category: 'food', keywords: ['茶壶', '茶', '英式'] },
+    { symbol: '🫗', name: '倒液体', code: 'U+1FAD7', category: 'food', keywords: ['倒液体', '倾倒', '饮料'] },
+    { symbol: '🫘', name: '豆子', code: 'U+1FAD8', category: 'food', keywords: ['豆子', '豆类', '蛋白质'] },
+    { symbol: '🫙', name: '罐子', code: 'U+1FAD9', category: 'objects', keywords: ['罐子', '容器', '储存'] },
+    { symbol: '🫚', name: '生姜', code: 'U+1FADA', category: 'food', keywords: ['生姜', '香料', '调料'] },
+    { symbol: '🫛', name: '豌豆荚', code: 'U+1FADB', category: 'food', keywords: ['豌豆荚', '豌豆', '蔬菜'] },
+
+    // 新增人物和职业
+    { symbol: '🧑‍⚕️', name: '医护人员', code: 'U+1F9D1-200D-2695-FE0F', category: 'people', keywords: ['医护人员', '医生', '护士'] },
+    { symbol: '👨‍⚕️', name: '男医生', code: 'U+1F468-200D-2695-FE0F', category: 'people', keywords: ['男医生', '医生', '医疗'] },
+    { symbol: '👩‍⚕️', name: '女医生', code: 'U+1F469-200D-2695-FE0F', category: 'people', keywords: ['女医生', '医生', '医疗'] },
+    { symbol: '🧑‍🎓', name: '学生', code: 'U+1F9D1-200D-1F393', category: 'people', keywords: ['学生', '毕业', '教育'] },
+    { symbol: '👨‍🎓', name: '男学生', code: 'U+1F468-200D-1F393', category: 'people', keywords: ['男学生', '毕业', '教育'] },
+    { symbol: '👩‍🎓', name: '女学生', code: 'U+1F469-200D-1F393', category: 'people', keywords: ['女学生', '毕业', '教育'] },
+    { symbol: '🧑‍🏫', name: '教师', code: 'U+1F9D1-200D-1F3EB', category: 'people', keywords: ['教师', '老师', '教育'] },
+    { symbol: '👨‍🏫', name: '男教师', code: 'U+1F468-200D-1F3EB', category: 'people', keywords: ['男教师', '老师', '教育'] },
+    { symbol: '👩‍🏫', name: '女教师', code: 'U+1F469-200D-1F3EB', category: 'people', keywords: ['女教师', '老师', '教育'] },
+    { symbol: '🧑‍⚖️', name: '法官', code: 'U+1F9D1-200D-2696-FE0F', category: 'people', keywords: ['法官', '法律', '正义'] },
+    { symbol: '👨‍⚖️', name: '男法官', code: 'U+1F468-200D-2696-FE0F', category: 'people', keywords: ['男法官', '法律', '正义'] },
+    { symbol: '👩‍⚖️', name: '女法官', code: 'U+1F469-200D-2696-FE0F', category: 'people', keywords: ['女法官', '法律', '正义'] },
+    { symbol: '🧑‍🌾', name: '农民', code: 'U+1F9D1-200D-1F33E', category: 'people', keywords: ['农民', '农业', '种植'] },
+    { symbol: '👨‍🌾', name: '男农民', code: 'U+1F468-200D-1F33E', category: 'people', keywords: ['男农民', '农业', '种植'] },
+    { symbol: '👩‍🌾', name: '女农民', code: 'U+1F469-200D-1F33E', category: 'people', keywords: ['女农民', '农业', '种植'] },
+    { symbol: '🧑‍🍳', name: '厨师', code: 'U+1F9D1-200D-1F373', category: 'people', keywords: ['厨师', '烹饪', '餐饮'] },
+    { symbol: '👨‍🍳', name: '男厨师', code: 'U+1F468-200D-1F373', category: 'people', keywords: ['男厨师', '烹饪', '餐饮'] },
+    { symbol: '👩‍🍳', name: '女厨师', code: 'U+1F469-200D-1F373', category: 'people', keywords: ['女厨师', '烹饪', '餐饮'] },
+    { symbol: '🧑‍🔧', name: '技工', code: 'U+1F9D1-200D-1F527', category: 'people', keywords: ['技工', '修理', '工具'] },
+    { symbol: '👨‍🔧', name: '男技工', code: 'U+1F468-200D-1F527', category: 'people', keywords: ['男技工', '修理', '工具'] },
+    { symbol: '👩‍🔧', name: '女技工', code: 'U+1F469-200D-1F527', category: 'people', keywords: ['女技工', '修理', '工具'] },
+    { symbol: '🧑‍🏭', name: '工人', code: 'U+1F9D1-200D-1F3ED', category: 'people', keywords: ['工人', '工厂', '制造'] },
+    { symbol: '👨‍🏭', name: '男工人', code: 'U+1F468-200D-1F3ED', category: 'people', keywords: ['男工人', '工厂', '制造'] },
+    { symbol: '👩‍🏭', name: '女工人', code: 'U+1F469-200D-1F3ED', category: 'people', keywords: ['女工人', '工厂', '制造'] },
+    { symbol: '🧑‍💼', name: '办公人员', code: 'U+1F9D1-200D-1F4BC', category: 'people', keywords: ['办公人员', '商务', '工作'] },
+    { symbol: '👨‍💼', name: '男办公人员', code: 'U+1F468-200D-1F4BC', category: 'people', keywords: ['男办公人员', '商务', '工作'] },
+    { symbol: '👩‍💼', name: '女办公人员', code: 'U+1F469-200D-1F4BC', category: 'people', keywords: ['女办公人员', '商务', '工作'] },
+    { symbol: '🧑‍🔬', name: '科学家', code: 'U+1F9D1-200D-1F52C', category: 'people', keywords: ['科学家', '研究', '实验'] },
+    { symbol: '👨‍🔬', name: '男科学家', code: 'U+1F468-200D-1F52C', category: 'people', keywords: ['男科学家', '研究', '实验'] },
+    { symbol: '👩‍🔬', name: '女科学家', code: 'U+1F469-200D-1F52C', category: 'people', keywords: ['女科学家', '研究', '实验'] },
+    { symbol: '🧑‍💻', name: '程序员', code: 'U+1F9D1-200D-1F4BB', category: 'people', keywords: ['程序员', '编程', '技术'] },
+    { symbol: '👨‍💻', name: '男程序员', code: 'U+1F468-200D-1F4BB', category: 'people', keywords: ['男程序员', '编程', '技术'] },
+    { symbol: '👩‍💻', name: '女程序员', code: 'U+1F469-200D-1F4BB', category: 'people', keywords: ['女程序员', '编程', '技术'] },
+    { symbol: '🧑‍🎤', name: '歌手', code: 'U+1F9D1-200D-1F3A4', category: 'people', keywords: ['歌手', '音乐', '表演'] },
+    { symbol: '👨‍🎤', name: '男歌手', code: 'U+1F468-200D-1F3A4', category: 'people', keywords: ['男歌手', '音乐', '表演'] },
+    { symbol: '👩‍🎤', name: '女歌手', code: 'U+1F469-200D-1F3A4', category: 'people', keywords: ['女歌手', '音乐', '表演'] },
+    { symbol: '🧑‍🎨', name: '艺术家', code: 'U+1F9D1-200D-1F3A8', category: 'people', keywords: ['艺术家', '绘画', '创作'] },
+    { symbol: '👨‍🎨', name: '男艺术家', code: 'U+1F468-200D-1F3A8', category: 'people', keywords: ['男艺术家', '绘画', '创作'] },
+    { symbol: '👩‍🎨', name: '女艺术家', code: 'U+1F469-200D-1F3A8', category: 'people', keywords: ['女艺术家', '绘画', '创作'] },
+    { symbol: '🧑‍✈️', name: '飞行员', code: 'U+1F9D1-200D-2708-FE0F', category: 'people', keywords: ['飞行员', '航空', '驾驶'] },
+    { symbol: '👨‍✈️', name: '男飞行员', code: 'U+1F468-200D-2708-FE0F', category: 'people', keywords: ['男飞行员', '航空', '驾驶'] },
+    { symbol: '👩‍✈️', name: '女飞行员', code: 'U+1F469-200D-2708-FE0F', category: 'people', keywords: ['女飞行员', '航空', '驾驶'] },
+    { symbol: '🧑‍🚀', name: '宇航员', code: 'U+1F9D1-200D-1F680', category: 'people', keywords: ['宇航员', '太空', '探索'] },
+    { symbol: '👨‍🚀', name: '男宇航员', code: 'U+1F468-200D-1F680', category: 'people', keywords: ['男宇航员', '太空', '探索'] },
+    { symbol: '👩‍🚀', name: '女宇航员', code: 'U+1F469-200D-1F680', category: 'people', keywords: ['女宇航员', '太空', '探索'] },
+    { symbol: '🧑‍🚒', name: '消防员', code: 'U+1F9D1-200D-1F692', category: 'people', keywords: ['消防员', '救火', '救援'] },
+    { symbol: '👨‍🚒', name: '男消防员', code: 'U+1F468-200D-1F692', category: 'people', keywords: ['男消防员', '救火', '救援'] },
+    { symbol: '👩‍🚒', name: '女消防员', code: 'U+1F469-200D-1F692', category: 'people', keywords: ['女消防员', '救火', '救援'] },
+    { symbol: '👮', name: '警察', code: 'U+1F46E', category: 'people', keywords: ['警察', '执法', '安全'] },
+    { symbol: '👮‍♂️', name: '男警察', code: 'U+1F46E-200D-2642-FE0F', category: 'people', keywords: ['男警察', '执法', '安全'] },
+    { symbol: '👮‍♀️', name: '女警察', code: 'U+1F46E-200D-2640-FE0F', category: 'people', keywords: ['女警察', '执法', '安全'] },
+    { symbol: '🕵️', name: '侦探', code: 'U+1F575', category: 'people', keywords: ['侦探', '调查', '推理'] },
+    { symbol: '🕵️‍♂️', name: '男侦探', code: 'U+1F575-FE0F-200D-2642-FE0F', category: 'people', keywords: ['男侦探', '调查', '推理'] },
+    { symbol: '🕵️‍♀️', name: '女侦探', code: 'U+1F575-FE0F-200D-2640-FE0F', category: 'people', keywords: ['女侦探', '调查', '推理'] },
+    { symbol: '💂', name: '卫兵', code: 'U+1F482', category: 'people', keywords: ['卫兵', '守卫', '军事'] },
+    { symbol: '💂‍♂️', name: '男卫兵', code: 'U+1F482-200D-2642-FE0F', category: 'people', keywords: ['男卫兵', '守卫', '军事'] },
+    { symbol: '💂‍♀️', name: '女卫兵', code: 'U+1F482-200D-2640-FE0F', category: 'people', keywords: ['女卫兵', '守卫', '军事'] },
+    { symbol: '🥷', name: '忍者', code: 'U+1F977', category: 'people', keywords: ['忍者', '隐秘', '武术'] },
+    { symbol: '👷', name: '建筑工人', code: 'U+1F477', category: 'people', keywords: ['建筑工人', '建设', '工地'] },
+    { symbol: '👷‍♂️', name: '男建筑工人', code: 'U+1F477-200D-2642-FE0F', category: 'people', keywords: ['男建筑工人', '建设', '工地'] },
+    { symbol: '👷‍♀️', name: '女建筑工人', code: 'U+1F477-200D-2640-FE0F', category: 'people', keywords: ['女建筑工人', '建设', '工地'] },
+    { symbol: '🫅', name: '戴王冠的人', code: 'U+1FAC5', category: 'people', keywords: ['戴王冠的人', '皇室', '贵族'] },
+    { symbol: '🤴', name: '王子', code: 'U+1F934', category: 'people', keywords: ['王子', '皇室', '贵族'] },
+    { symbol: '👸', name: '公主', code: 'U+1F478', category: 'people', keywords: ['公主', '皇室', '贵族'] },
+    { symbol: '👳', name: '戴头巾的人', code: 'U+1F473', category: 'people', keywords: ['戴头巾的人', '头巾', '文化'] },
+    { symbol: '👳‍♂️', name: '戴头巾的男人', code: 'U+1F473-200D-2642-FE0F', category: 'people', keywords: ['戴头巾的男人', '头巾', '文化'] },
+    { symbol: '👳‍♀️', name: '戴头巾的女人', code: 'U+1F473-200D-2640-FE0F', category: 'people', keywords: ['戴头巾的女人', '头巾', '文化'] },
+    { symbol: '👲', name: '戴瓜皮帽的人', code: 'U+1F472', category: 'people', keywords: ['戴瓜皮帽的人', '帽子', '传统'] },
+    { symbol: '🧕', name: '戴头巾的女人', code: 'U+1F9D5', category: 'people', keywords: ['戴头巾的女人', '头巾', '宗教'] },
+    { symbol: '🤵', name: '穿燕尾服的人', code: 'U+1F935', category: 'people', keywords: ['穿燕尾服的人', '正装', '婚礼'] },
+    { symbol: '🤵‍♂️', name: '穿燕尾服的男人', code: 'U+1F935-200D-2642-FE0F', category: 'people', keywords: ['穿燕尾服的男人', '正装', '婚礼'] },
+    { symbol: '🤵‍♀️', name: '穿燕尾服的女人', code: 'U+1F935-200D-2640-FE0F', category: 'people', keywords: ['穿燕尾服的女人', '正装', '婚礼'] },
+    { symbol: '👰', name: '新娘', code: 'U+1F470', category: 'people', keywords: ['新娘', '婚礼', '结婚'] },
+    { symbol: '👰‍♂️', name: '男新娘', code: 'U+1F470-200D-2642-FE0F', category: 'people', keywords: ['男新娘', '婚礼', '结婚'] },
+    { symbol: '👰‍♀️', name: '女新娘', code: 'U+1F470-200D-2640-FE0F', category: 'people', keywords: ['女新娘', '婚礼', '结婚'] },
+    { symbol: '🤰', name: '孕妇', code: 'U+1F930', category: 'people', keywords: ['孕妇', '怀孕', '母亲'] },
+    { symbol: '🫃', name: '怀孕的男人', code: 'U+1FAC3', category: 'people', keywords: ['怀孕的男人', '怀孕', '父亲'] },
+    { symbol: '🫄', name: '怀孕的人', code: 'U+1FAC4', category: 'people', keywords: ['怀孕的人', '怀孕', '家庭'] },
+    { symbol: '🤱', name: '哺乳', code: 'U+1F931', category: 'people', keywords: ['哺乳', '喂奶', '母亲'] },
+    { symbol: '👨‍🍼', name: '喂奶的男人', code: 'U+1F468-200D-1F37C', category: 'people', keywords: ['喂奶的男人', '喂奶', '父亲'] },
+    { symbol: '👩‍🍼', name: '喂奶的女人', code: 'U+1F469-200D-1F37C', category: 'people', keywords: ['喂奶的女人', '喂奶', '母亲'] }]);
+
+// 计算属性
+const filteredEmojis = computed(() => {
+    let result = emojis.value
+
+    // 按分类筛选
+    if (activeCategory.value !== 'all') {
+        result = result.filter(emoji => emoji.category === activeCategory.value)
+    }
+
+    // 按搜索词筛选
+    if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim()
+        result = result.filter(emoji =>
+            emoji.name.toLowerCase().includes(query) ||
+            emoji.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
+            emoji.symbol.includes(query)
+        )
+    }
+
+    return result
+})
+
+// 方法
+const setActiveCategory = (category: string) => {
+    activeCategory.value = category
+}
+
+const clearSearch = () => {
+    searchQuery.value = ''
+}
+
+const filterEmojis = () => {
+    // 搜索时自动触发计算属性更新
+}
+
+const copyEmoji = async (emoji: Emoji) => {
+    try {
+        await navigator.clipboard.writeText(emoji.symbol)
+        showMessage(`已复制 ${emoji.symbol} ${emoji.name}`)
+    } catch (error) {
+        console.error('复制失败:', error)
+        showMessage('复制失败，请手动选择')
+    }
+}
+
+const copyAllEmojis = async () => {
+    try {
+        const allEmojis = filteredEmojis.value.map(emoji => emoji.symbol).join('')
+        await navigator.clipboard.writeText(allEmojis)
+        showMessage(`已复制 ${filteredEmojis.value.length} 个表情符号`)
+    } catch (error) {
+        console.error('复制失败:', error)
+        showMessage('复制失败，请手动选择')
+    }
+}
+
+const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
+    message.value = msg
+    messageType.value = type
+    setTimeout(() => {
+        message.value = ''
+    }, 3000)
+}
+
+onMounted(() => {
+    // 组件挂载时的初始化
+})
+</script>
+<style scoped>
+.emoji-reference {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+.emoji-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+
+.emoji-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.emoji-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.action-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+
+.emoji-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 0 4rem 0;
+}
+
+.search-section {
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+}
+
+.search-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 0.25rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.category-nav {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: nowrap;
+    max-width: 1000px;
+    margin: 1.5rem auto 2rem auto;
+    padding: 0;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.category-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.category-btn {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.category-btn:hover {
+    background: var(--bg-hover);
+}
+
+.category-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.category-icon {
+    font-size: 0.875rem;
+}
+
+.category-name {
+    font-weight: 500;
+}
+
+.emoji-grid-container {
+    padding: 0 1rem;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+}
+
+.emoji-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.emoji-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.emoji-symbol {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.emoji-name {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.no-results-icon {
+    font-size: 48px;
+    opacity: 0.5;
+}
+
+.no-results p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.message-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    background: var(--success-color);
+    color: white;
+    border-radius: var(--radius-lg);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.message-toast.error {
+    background: var(--error-color);
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .emoji-header {
+        padding: 12px 16px;
+    }
+
+    .emoji-title {
+        font-size: 18px;
+    }
+
+    .search-container {
+        padding: 0 1rem;
+    }
+
+    .category-nav {
+        gap: 0.375rem;
+        padding: 0 0.75rem;
+    }
+
+    .category-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+        gap: 0.375rem;
+    }
+
+    .category-icon {
+        font-size: 0.875rem;
+    }
+
+    .emoji-grid-container {
+        padding: 16px;
+    }
+
+    .emoji-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
+
+    .emoji-item {
+        padding: 12px 6px;
+    }
+
+    .emoji-symbol {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-container {
+        padding: 0 0.75rem;
+    }
+
+    .category-nav {
+        gap: 0.25rem;
+        padding: 0 0.5rem;
+    }
+
+    .category-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .category-icon {
+        font-size: 0.8125rem;
+    }
+
+    .emoji-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+
+    .emoji-symbol {
+        font-size: 24px;
+    }
+
+    .emoji-name {
+        font-size: 11px;
+    }
+}
+</style>

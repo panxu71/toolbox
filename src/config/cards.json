@@ -434,6 +434,18 @@
                     "text": "新功能",
                     "color": "#10b981"
                 }
+            },
+            {
+                "id": "emoji-reference",
+                "title": "Emoji符号大全",
+                "description": "按分类浏览和复制各种Emoji表情符号",
+                "icon": "😀",
+                "action": "emojiReference",
+                "color": "#f59e0b",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "navigation": [

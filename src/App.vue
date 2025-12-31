@@ -51,6 +51,7 @@ import Teleprompter from './components/Teleprompter.vue'
 import ScreenTest from './components/ScreenTest.vue'
 import Settings from './components/Settings.vue'
 import CountriesCapitals from './components/CountriesCapitals.vue'
+import EmojiReference from './components/EmojiReference.vue'
 const activeNav = ref('json')
 const currentTab = ref<any>(null)
 const pageInfo = ref<any>(null)
@@ -124,6 +125,7 @@ const handleToolSelection = (toolId: string, action: string) => {
         'regex-tester': 'query',
         'color-reference': 'query',
         'countries-capitals': 'query',
+        'emoji-reference': 'query',
 
         // 导航工具
         'programming-languages': 'navigation',
@@ -401,6 +403,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'countriesCapitals':
                 openPage('countries-capitals')
+                return // 不需要loading状态
+            case 'emojiReference':
+                openPage('emoji-reference')
                 return // 不需要loading状态
             case 'testRegex':
                 openPage('regex-tester')
@@ -857,6 +862,7 @@ const getToolAction = (toolId: string): string | null => {
         'mime-type-reference': 'mimeTypeReference',
         'dynasty-query': 'dynastyQuery',
         'countries-capitals': 'countriesCapitals',
+        'emoji-reference': 'emojiReference',
 
         // 导航工具
         'programming-languages': 'programmingLanguages',
@@ -961,6 +967,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <ProgrammingLanguages v-if="currentPage === 'programming-languages'" @back="closePage" />
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
                 <CountriesCapitals v-if="currentPage === 'countries-capitals'" @back="closePage" />
+                <EmojiReference v-if="currentPage === 'emoji-reference'" @back="closePage" />
             </template>
         </div>
 
