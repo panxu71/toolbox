@@ -208,7 +208,8 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'mime-type-reference': 'mime-type-reference',
         'dynasty-query': 'dynasty-query',
         'programming-languages': 'programming-languages',
-        'countries-capitals': 'countries-capitals'
+        'countries-capitals': 'countries-capitals',
+        'emoji-reference': 'emoji-reference'
     }
 
     return pageToolMap[pageName] || null

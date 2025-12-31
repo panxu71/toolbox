@@ -304,7 +304,7 @@ const emojis = ref<Emoji[]>([
     { symbol: '🦊', name: '狐狸脸', code: 'U+1F98A', category: 'animals', keywords: ['狐狸', '狡猾', '聪明'] },
     { symbol: '🐻', name: '熊脸', code: 'U+1F43B', category: 'animals', keywords: ['熊', '大熊', '可爱'] },
     { symbol: '🐼', name: '熊猫脸', code: 'U+1F43C', category: 'animals', keywords: ['熊猫', '大熊猫', '中国'] },
-    { symbol: '❄️', name: '北极熊', code: 'U + 1F43B- 200D - 2744 - FE0F', category: 'animals', keywords: ['北极熊', '白熊', '北极'] },
+    { symbol: '🐻‍❄️', name: '北极熊', code: 'U+1F43B-200D-2744-FE0F', category: 'animals', keywords: ['北极熊', '白熊', '北极'] },
     { symbol: '🐨', name: '考拉', code: 'U+1F428', category: 'animals', keywords: ['考拉', '树袋熊', '澳洲'] },
     { symbol: '🐯', name: '老虎脸', code: 'U+1F42F', category: 'animals', keywords: ['老虎', '虎', '威猛'] },
     { symbol: '🦁', name: '狮子脸', code: 'U+1F981', category: 'animals', keywords: ['狮子', '狮', '王者'] },
@@ -326,14 +326,12 @@ const emojis = ref<Emoji[]>([
     { symbol: '🦍', name: '大猩猩', code: 'U+1F98D', category: 'animals', keywords: ['大猩猩', '猩猩', '强壮'] },
     { symbol: '🦧', name: '猩猩', code: 'U+1F9A7', category: 'animals', keywords: ['猩猩', '红毛猩猩', '灵长类'] },
     { symbol: '🐕', name: '狗', code: 'U+1F415', category: 'animals', keywords: ['狗', '犬', '宠物'] },
-    { symbol: '🦺n', name: '导盲犬', code: 'U+1F415-200D-1F9BA', category: 'animals', keywords: ['导盲犬', '服务犬', '工作犬'] },
+    { symbol: '🐕‍🦺', name: '导盲犬', code: 'U+1F415-200D-1F9BA', category: 'animals', keywords: ['导盲犬', '服务犬', '工作犬'] },
     { symbol: '🐩', name: '贵宾犬', code: 'U+1F429', category: 'animals', keywords: ['贵宾犬', '泰迪', '卷毛狗'] },
     { symbol: '🐺', name: '狼', code: 'U+1F43A', category: 'animals', keywords: ['狼', '野狼', '野生'] },
-    { symbol: '�', name: '浣熊', code: 'U+1F99D', category: 'animals', keywords: ['浣熊', '小熊猫', '可爱'] },
-    { symbol: '🐱‍👤', name: '忍者猫', code: 'U+1F431-200D-1F464', category: 'animals', keywords: ['忍者猫', '猫', '忍者'] },
-    { symbol: '🐱‍🏍', name: '骑车猫', code: 'U+1F431-200D-1F3CD', category: 'animals', keywords: ['骑车猫', '猫', '摩托车'] },
-    { symbol: '🐱‍💻', name: '程序员猫', code: 'U+1F431-200D-1F4BB', category: 'animals', keywords: ['程序员猫', '猫', '电脑'] },
-    { symbol: '🐱‍🐉', name: '龙猫', code: 'U+1F431-200D-1F409', category: 'animals', keywords: ['龙猫', '猫', '龙'] },
+    { symbol: '🦝', name: '浣熊', code: 'U+1F99D', category: 'animals', keywords: ['浣熊', '小熊猫', '可爱'] },
+    // 注意：以下复合emoji可能在某些系统上不显示，保留基础emoji
+    { symbol: '🐱', name: '猫脸', code: 'U+1F431', category: 'animals', keywords: ['猫脸', '猫', '可爱'] },
     { symbol: '🐈', name: '猫', code: 'U+1F408', category: 'animals', keywords: ['猫', '家猫', '宠物'] },
     { symbol: '🐈‍⬛', name: '黑猫', code: 'U+1F408-200D-2B1B', category: 'animals', keywords: ['黑猫', '猫', '黑色'] },
     { symbol: '🦌', name: '鹿', code: 'U+1F98C', category: 'animals', keywords: ['鹿', '梅花鹿', '野生'] },
@@ -557,14 +555,14 @@ const emojis = ref<Emoji[]>([
     { symbol: '🛴', name: '滑板车', code: 'U+1F6F4', category: 'travel', keywords: ['滑板车', '踏板车', '交通'] },
     { symbol: '🛹', name: '滑板', code: 'U+1F6F9', category: 'travel', keywords: ['滑板', '运动', '街头'] },
     { symbol: '🛼', name: '旱冰鞋', code: 'U+1F6FC', category: 'travel', keywords: ['旱冰鞋', '滑冰', '运动'] },
-    { symbol: '�', name: '直升机', code: 'U+1F681', category: 'travel', keywords: ['直升机', '飞机', '航空'] },
+    { symbol: '🚁', name: '直升机', code: 'U+1F681', category: 'travel', keywords: ['直升机', '飞机', '航空'] },
     { symbol: '✈️', name: '飞机', code: 'U+2708', category: 'travel', keywords: ['飞机', '航空', '旅行'] },
-    { symbol: '�️', name: '小飞机', code: 'U+1F6E9', category: 'travel', keywords: ['小飞机', '私人飞机', '航空'] },
-    { symbol: '�', name: '起飞', code: 'U+1F6EB', category: 'travel', keywords: ['起飞', '飞机', '出发'] },
-    { symbol: '�', name: '降落', code: 'U+1F6EC', category: 'travel', keywords: ['降落', '飞机', '到达'] },
+    { symbol: '🛩️', name: '小飞机', code: 'U+1F6E9', category: 'travel', keywords: ['小飞机', '私人飞机', '航空'] },
+    { symbol: '🛫', name: '起飞', code: 'U+1F6EB', category: 'travel', keywords: ['起飞', '飞机', '出发'] },
+    { symbol: '🛬', name: '降落', code: 'U+1F6EC', category: 'travel', keywords: ['降落', '飞机', '到达'] },
     { symbol: '🪂', name: '降落伞', code: 'U+1FA82', category: 'travel', keywords: ['降落伞', '跳伞', '极限运动'] },
-    { symbol: '�', name: '座位', code: 'U + 1F4BA', category: 'travel', keywords: ['座位', '飞机', '旅行'] },
-    { symbol: '�', name: '火箭', code: 'U+1F680', category: 'travel', keywords: ['火箭', '太空', '科技'] },
+    { symbol: '💺', name: '座位', code: 'U+1F4BA', category: 'travel', keywords: ['座位', '飞机', '旅行'] },
+    { symbol: '🚀', name: '火箭', code: 'U+1F680', category: 'travel', keywords: ['火箭', '太空', '科技'] },
     { symbol: '🛸', name: 'UFO', code: 'U+1F6F8', category: 'travel', keywords: ['UFO', '飞碟', '外星人'] },
     { symbol: '🚉', name: '车站', code: 'U+1F689', category: 'travel', keywords: ['车站', '火车站', '交通'] },
     { symbol: '🚇', name: '地铁', code: 'U+1F687', category: 'travel', keywords: ['地铁', '地下铁', '交通'] },
@@ -1386,7 +1384,163 @@ const emojis = ref<Emoji[]>([
     { symbol: '🫄', name: '怀孕的人', code: 'U+1FAC4', category: 'people', keywords: ['怀孕的人', '怀孕', '家庭'] },
     { symbol: '🤱', name: '哺乳', code: 'U+1F931', category: 'people', keywords: ['哺乳', '喂奶', '母亲'] },
     { symbol: '👨‍🍼', name: '喂奶的男人', code: 'U+1F468-200D-1F37C', category: 'people', keywords: ['喂奶的男人', '喂奶', '父亲'] },
-    { symbol: '👩‍🍼', name: '喂奶的女人', code: 'U+1F469-200D-1F37C', category: 'people', keywords: ['喂奶的女人', '喂奶', '母亲'] }]);
+    { symbol: '👩‍🍼', name: '喂奶的女人', code: 'U+1F469-200D-1F37C', category: 'people', keywords: ['喂奶的女人', '喂奶', '母亲'] },
+
+    // 更多现代emoji和常用表情
+    // 手势和身体部位补充
+    { symbol: '🫰', name: '手指心', code: 'U+1FAF0', category: 'people', keywords: ['手指心', '爱心', '韩式'] },
+    { symbol: '🫱', name: '右手', code: 'U+1FAF1', category: 'people', keywords: ['右手', '手', '身体'] },
+    { symbol: '🫲', name: '左手', code: 'U+1FAF2', category: 'people', keywords: ['左手', '手', '身体'] },
+    { symbol: '🫳', name: '手心向下', code: 'U+1FAF3', category: 'people', keywords: ['手心向下', '手势', '停止'] },
+    { symbol: '🫴', name: '手心向上', code: 'U+1FAF4', category: 'people', keywords: ['手心向上', '手势', '请求'] },
+    { symbol: '🫵', name: '指向你', code: 'U+1FAF5', category: 'people', keywords: ['指向你', '指', '你'] },
+    { symbol: '🫶', name: '爱心手势', code: 'U+1FAF6', category: 'people', keywords: ['爱心手势', '爱心', '手势'] },
+
+    // 更多笑脸表情
+    { symbol: '🫠', name: '融化脸', code: 'U+1FAE0', category: 'smileys', keywords: ['融化脸', '热', '无奈'] },
+    { symbol: '🫨', name: '摇晃脸', code: 'U+1FAE8', category: 'smileys', keywords: ['摇晃脸', '震惊', '晕'] },
+    { symbol: '🫥', name: '虚线脸', code: 'U+1FAE5', category: 'smileys', keywords: ['虚线脸', '消失', '隐形'] },
+    { symbol: '🫤', name: '斜眼脸', code: 'U+1FAE4', category: 'smileys', keywords: ['斜眼脸', '怀疑', '不确定'] },
+    { symbol: '🫣', name: '偷看脸', code: 'U+1FAE3', category: 'smileys', keywords: ['偷看脸', '害羞', '好奇'] },
+    { symbol: '🫢', name: '捂嘴惊讶脸', code: 'U+1FAE2', category: 'smileys', keywords: ['捂嘴惊讶脸', '惊讶', '震惊'] },
+    { symbol: '🫡', name: '敬礼脸', code: 'U+1FAE1', category: 'smileys', keywords: ['敬礼脸', '敬礼', '尊敬'] },
+
+    // 更多动物
+    { symbol: '🫎', name: '驼鹿', code: 'U+1FACE', category: 'animals', keywords: ['驼鹿', '鹿', '动物'] },
+    { symbol: '🫏', name: '驴', code: 'U+1FACF', category: 'animals', keywords: ['驴', '动物', '农场'] },
+    { symbol: '🐻‍❄️', name: '北极熊', code: 'U+1F43B-200D-2744-FE0F', category: 'animals', keywords: ['北极熊', '白熊', '北极'] },
+    { symbol: '🐨', name: '考拉', code: 'U+1F428', category: 'animals', keywords: ['考拉', '树袋熊', '澳洲'] },
+
+    // 更多食物
+    { symbol: '🫐', name: '蓝莓', code: 'U+1FAD0', category: 'food', keywords: ['蓝莓', '浆果', '水果'] },
+    { symbol: '🫒', name: '橄榄', code: 'U+1FAD2', category: 'food', keywords: ['橄榄', '地中海', '健康'] },
+    { symbol: '🫓', name: '薄饼', code: 'U+1FAD3', category: 'food', keywords: ['薄饼', '面包', '印度'] },
+    { symbol: '🫔', name: '玉米粽', code: 'U+1FAD4', category: 'food', keywords: ['玉米粽', '墨西哥', '传统'] },
+    { symbol: '🫕', name: '火锅', code: 'U+1FAD5', category: 'food', keywords: ['火锅', '奶酪', '瑞士'] },
+    { symbol: '🫖', name: '茶壶', code: 'U+1FAD6', category: 'food', keywords: ['茶壶', '茶', '英式'] },
+    { symbol: '🫗', name: '倒液体', code: 'U+1FAD7', category: 'food', keywords: ['倒液体', '倾倒', '饮料'] },
+    { symbol: '🫘', name: '豆子', code: 'U+1FAD8', category: 'food', keywords: ['豆子', '豆类', '蛋白质'] },
+    { symbol: '🫚', name: '生姜', code: 'U+1FADA', category: 'food', keywords: ['生姜', '香料', '调料'] },
+    { symbol: '🫛', name: '豌豆荚', code: 'U+1FADB', category: 'food', keywords: ['豌豆荚', '豌豆', '蔬菜'] },
+
+    // 更多物品
+    { symbol: '🫙', name: '罐子', code: 'U+1FAD9', category: 'objects', keywords: ['罐子', '容器', '储存'] },
+    { symbol: '🪩', name: '镜球', code: 'U+1FAA9', category: 'objects', keywords: ['镜球', '迪斯科', '派对'] },
+    { symbol: '🪫', name: '低电量电池', code: 'U+1FAAB', category: 'objects', keywords: ['低电量电池', '电池', '电力不足'] },
+    { symbol: '🪬', name: '哈姆萨', code: 'U+1FAAC', category: 'objects', keywords: ['哈姆萨', '护身符', '保护'] },
+    { symbol: '🪭', name: '折扇', code: 'U+1FAAD', category: 'objects', keywords: ['折扇', '扇子', '凉爽'] },
+    { symbol: '🪮', name: '梳子', code: 'U+1FAAE', category: 'objects', keywords: ['梳子', '头发', '美容'] },
+    { symbol: '🪯', name: '发夹', code: 'U+1FAAF', category: 'objects', keywords: ['发夹', '头发', '配饰'] },
+
+    // 更多符号
+    { symbol: '🫧', name: '泡泡', code: 'U+1FAE7', category: 'symbols', keywords: ['泡泡', '肥皂泡', '清洁'] },
+    { symbol: '🩷', name: '粉心', code: 'U+1FA77', category: 'symbols', keywords: ['粉心', '爱', '粉色'] },
+    { symbol: '🩵', name: '浅蓝心', code: 'U+1FA75', category: 'symbols', keywords: ['浅蓝心', '爱', '浅蓝'] },
+    { symbol: '🩶', name: '灰心', code: 'U+1FA76', category: 'symbols', keywords: ['灰心', '爱', '灰色'] },
+
+    // 科技和现代生活（去除重复）
+    { symbol: '📱', name: '智能手机', code: 'U+1F4F1', category: 'objects', keywords: ['智能手机', '手机', '通讯'] },
+    { symbol: '💻', name: '笔记本电脑', code: 'U+1F4BB', category: 'objects', keywords: ['笔记本电脑', '电脑', '工作'] },
+    { symbol: '🖥️', name: '台式电脑', code: 'U+1F5A5', category: 'objects', keywords: ['台式电脑', '电脑', '显示器'] },
+    { symbol: '⌚', name: '智能手表', code: 'U+231A', category: 'objects', keywords: ['智能手表', '手表', '时间'] },
+    { symbol: '🎮', name: '游戏手柄', code: 'U+1F3AE', category: 'objects', keywords: ['游戏手柄', '游戏', '娱乐'] },
+
+    // 更多旅行和交通
+    { symbol: '🛴', name: '滑板车', code: 'U+1F6F4', category: 'travel', keywords: ['滑板车', '踏板车', '交通'] },
+    { symbol: '🛵', name: '踏板摩托', code: 'U+1F6F5', category: 'travel', keywords: ['踏板摩托', '摩托车', '交通'] },
+    { symbol: '🚗', name: '汽车', code: 'U+1F697', category: 'travel', keywords: ['汽车', '车', '交通'] },
+    { symbol: '🚙', name: 'SUV', code: 'U+1F699', category: 'travel', keywords: ['SUV', '越野车', '交通'] },
+    { symbol: '🚐', name: '小巴', code: 'U+1F690', category: 'travel', keywords: ['小巴', '面包车', '交通'] },
+
+    // 更多活动和运动
+    { symbol: '🏃‍♂️', name: '跑步男', code: 'U+1F3C3-200D-2642-FE0F', category: 'activities', keywords: ['跑步男', '跑步', '运动'] },
+    { symbol: '🏃‍♀️', name: '跑步女', code: 'U+1F3C3-200D-2640-FE0F', category: 'activities', keywords: ['跑步女', '跑步', '运动'] },
+    { symbol: '🚶‍♂️', name: '走路男', code: 'U+1F6B6-200D-2642-FE0F', category: 'activities', keywords: ['走路男', '走路', '步行'] },
+    { symbol: '🚶‍♀️', name: '走路女', code: 'U+1F6B6-200D-2640-FE0F', category: 'activities', keywords: ['走路女', '走路', '步行'] },
+    { symbol: '🧘‍♂️', name: '冥想男', code: 'U+1F9D8-200D-2642-FE0F', category: 'activities', keywords: ['冥想男', '瑜伽', '放松'] },
+    { symbol: '🧘‍♀️', name: '冥想女', code: 'U+1F9D8-200D-2640-FE0F', category: 'activities', keywords: ['冥想女', '瑜伽', '放松'] },
+
+    // 更多自然和天气（应该归类到animals分类下的自然子类）
+    { symbol: '🌈', name: '彩虹', code: 'U+1F308', category: 'animals', keywords: ['彩虹', '雨后', '美丽'] },
+    { symbol: '⭐', name: '星星', code: 'U+2B50', category: 'animals', keywords: ['星星', '明星', '夜空'] },
+    { symbol: '🌟', name: '闪亮星星', code: 'U+1F31F', category: 'animals', keywords: ['闪亮星星', '星星', '闪光'] },
+    { symbol: '✨', name: '闪光', code: 'U+2728', category: 'symbols', keywords: ['闪光', '闪亮', '魔法'] },
+    { symbol: '🔥', name: '火', code: 'U+1F525', category: 'symbols', keywords: ['火', '火焰', '热'] },
+    { symbol: '💧', name: '水滴', code: 'U+1F4A7', category: 'animals', keywords: ['水滴', '水', '液体'] },
+    { symbol: '🌊', name: '海浪', code: 'U+1F30A', category: 'animals', keywords: ['海浪', '海洋', '波浪'] },
+
+    // 更多现代流行emoji
+    { symbol: '🥺', name: '可怜巴巴', code: 'U+1F97A', category: 'smileys', keywords: ['可怜巴巴', '恳求', '委屈'] },
+    { symbol: '🥹', name: '含泪微笑', code: 'U+1F979', category: 'smileys', keywords: ['含泪微笑', '感动', '眼泪'] },
+    { symbol: '😮‍💨', name: '叹气', code: 'U+1F62E-200D-1F4A8', category: 'smileys', keywords: ['叹气', '疲惫', '无奈'] },
+    { symbol: '😵‍💫', name: '眼冒金星', code: 'U+1F635-200D-1F4AB', category: 'smileys', keywords: ['眼冒金星', '晕', '眩晕'] },
+    { symbol: '🤌', name: '意大利手势', code: 'U+1F90C', category: 'people', keywords: ['意大利手势', '什么', '疑问'] },
+    { symbol: '🫰', name: '手指心', code: 'U+1FAF0', category: 'people', keywords: ['手指心', '爱心', '韩式'] },
+
+    // 更多职业emoji
+    { symbol: '🧑‍💻', name: '程序员', code: 'U+1F9D1-200D-1F4BB', category: 'people', keywords: ['程序员', '编程', '技术'] },
+    { symbol: '🧑‍🎨', name: '艺术家', code: 'U+1F9D1-200D-1F3A8', category: 'people', keywords: ['艺术家', '绘画', '创作'] },
+    { symbol: '🧑‍🍳', name: '厨师', code: 'U+1F9D1-200D-1F373', category: 'people', keywords: ['厨师', '烹饪', '餐饮'] },
+    { symbol: '🧑‍⚕️', name: '医护人员', code: 'U+1F9D1-200D-2695-FE0F', category: 'people', keywords: ['医护人员', '医生', '护士'] },
+    { symbol: '🧑‍🏫', name: '教师', code: 'U+1F9D1-200D-1F3EB', category: 'people', keywords: ['教师', '老师', '教育'] },
+
+    // 更多动物emoji
+    { symbol: '🦄', name: '独角兽', code: 'U+1F984', category: 'animals', keywords: ['独角兽', '神话', '魔法'] },
+    { symbol: '🐉', name: '龙', code: 'U+1F409', category: 'animals', keywords: ['龙', '中国龙', '神话'] },
+    { symbol: '🦋', name: '蝴蝶', code: 'U+1F98B', category: 'animals', keywords: ['蝴蝶', '美丽', '飞舞'] },
+    { symbol: '🐝', name: '蜜蜂', code: 'U+1F41D', category: 'animals', keywords: ['蜜蜂', '蜂蜜', '勤劳'] },
+    { symbol: '🐞', name: '瓢虫', code: 'U+1F41E', category: 'animals', keywords: ['瓢虫', '红色', '斑点'] },
+
+    // 更多食物emoji
+    { symbol: '🧋', name: '珍珠奶茶', code: 'U+1F9CB', category: 'food', keywords: ['珍珠奶茶', '奶茶', '台式'] },
+    { symbol: '🍱', name: '便当', code: 'U+1F371', category: 'food', keywords: ['便当', '日式', '盒饭'] },
+    { symbol: '🍜', name: '拉面', code: 'U+1F35C', category: 'food', keywords: ['拉面', '日式', '面条'] },
+    { symbol: '🍣', name: '寿司', code: 'U+1F363', category: 'food', keywords: ['寿司', '日式', '生鱼'] },
+    { symbol: '🥟', name: '饺子', code: 'U+1F95F', category: 'food', keywords: ['饺子', '中式', '包子'] },
+
+    // 更多物品emoji
+    { symbol: '🎧', name: '耳机', code: 'U+1F3A7', category: 'objects', keywords: ['耳机', '音乐', '听歌'] },
+    { symbol: '📷', name: '相机', code: 'U+1F4F7', category: 'objects', keywords: ['相机', '拍照', '摄影'] },
+    { symbol: '💡', name: '灯泡', code: 'U+1F4A1', category: 'objects', keywords: ['灯泡', '想法', '创意'] },
+    { symbol: '🔋', name: '电池', code: 'U+1F50B', category: 'objects', keywords: ['电池', '电力', '能源'] },
+    { symbol: '🎮', name: '游戏手柄', code: 'U+1F3AE', category: 'objects', keywords: ['游戏手柄', '游戏', '娱乐'] },
+
+    // 更多基础常用emoji
+    { symbol: '👍', name: '点赞', code: 'U+1F44D', category: 'people', keywords: ['点赞', '好', '赞同'] },
+    { symbol: '👎', name: '踩', code: 'U+1F44E', category: 'people', keywords: ['踩', '不好', '反对'] },
+    { symbol: '👏', name: '鼓掌', code: 'U+1F44F', category: 'people', keywords: ['鼓掌', '赞扬', '庆祝'] },
+    { symbol: '🙏', name: '祈祷', code: 'U+1F64F', category: 'people', keywords: ['祈祷', '感谢', '请求'] },
+    { symbol: '💪', name: '肌肉', code: 'U+1F4AA', category: 'people', keywords: ['肌肉', '力量', '强壮'] },
+    { symbol: '👋', name: '挥手', code: 'U+1F44B', category: 'people', keywords: ['挥手', '再见', '你好'] },
+    { symbol: '✌️', name: '胜利手势', code: 'U+270C', category: 'people', keywords: ['胜利', 'V', '和平'] },
+    { symbol: '🤝', name: '握手', code: 'U+1F91D', category: 'people', keywords: ['握手', '合作', '协议'] },
+
+    // 更多符号
+    { symbol: '❤️', name: '红心', code: 'U+2764', category: 'symbols', keywords: ['红心', '爱', '喜欢'] },
+    { symbol: '💙', name: '蓝心', code: 'U+1F499', category: 'symbols', keywords: ['蓝心', '爱', '平静'] },
+    { symbol: '💚', name: '绿心', code: 'U+1F49A', category: 'symbols', keywords: ['绿心', '爱', '自然'] },
+    { symbol: '💛', name: '黄心', code: 'U+1F49B', category: 'symbols', keywords: ['黄心', '爱', '友谊'] },
+    { symbol: '💜', name: '紫心', code: 'U+1F49C', category: 'symbols', keywords: ['紫心', '爱', '神秘'] },
+    { symbol: '🖤', name: '黑心', code: 'U+1F5A4', category: 'symbols', keywords: ['黑心', '爱', '酷'] },
+    { symbol: '🤍', name: '白心', code: 'U+1F90D', category: 'symbols', keywords: ['白心', '爱', '纯洁'] },
+    { symbol: '💔', name: '心碎', code: 'U+1F494', category: 'symbols', keywords: ['心碎', '伤心', '分手'] },
+    { symbol: '✨', name: '闪光', code: 'U+2728', category: 'symbols', keywords: ['闪光', '闪亮', '魔法'] },
+    { symbol: '⭐', name: '星星', code: 'U+2B50', category: 'symbols', keywords: ['星星', '明星', '夜空'] },
+    { symbol: '🌟', name: '闪亮星星', code: 'U+1F31F', category: 'symbols', keywords: ['闪亮星星', '星星', '闪光'] },
+    { symbol: '💯', name: '一百分', code: 'U+1F4AF', category: 'symbols', keywords: ['一百分', '完美', '满分'] },
+    { symbol: '🔥', name: '火', code: 'U+1F525', category: 'symbols', keywords: ['火', '火焰', '热'] },
+    { symbol: '💧', name: '水滴', code: 'U+1F4A7', category: 'symbols', keywords: ['水滴', '水', '液体'] },
+
+    // 更多表情
+    { symbol: '😭', name: '大哭', code: 'U+1F62D', category: 'smileys', keywords: ['大哭', '痛哭', '伤心'] },
+    { symbol: '😱', name: '尖叫', code: 'U+1F631', category: 'smileys', keywords: ['尖叫', '恐惧', '惊恐'] },
+    { symbol: '😨', name: '恐惧', code: 'U+1F628', category: 'smileys', keywords: ['恐惧', '害怕', '惊恐'] },
+    { symbol: '😰', name: '焦虑出汗', code: 'U+1F630', category: 'smileys', keywords: ['焦虑', '出汗', '紧张'] },
+    { symbol: '😓', name: '冷汗', code: 'U+1F613', category: 'smileys', keywords: ['冷汗', '紧张', '尴尬'] },
+    { symbol: '🤗', name: '拥抱', code: 'U+1F917', category: 'smileys', keywords: ['拥抱', '温暖', '友好'] },
+    { symbol: '🤔', name: '思考', code: 'U+1F914', category: 'smileys', keywords: ['思考', '疑惑', '考虑'] },
+    { symbol: '😴', name: '睡觉', code: 'U+1F634', category: 'smileys', keywords: ['睡觉', '困', 'ZZZ'] },
+    { symbol: '🤤', name: '流口水', code: 'U+1F924', category: 'smileys', keywords: ['流口水', '想要', '睡觉'] }]);
 
 // 计算属性
 const filteredEmojis = computed(() => {
