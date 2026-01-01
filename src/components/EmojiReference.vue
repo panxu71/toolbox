@@ -71,10 +71,17 @@
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
+
+        <!-- 回到顶部按钮 -->
+        <button v-if="showBackToTop" class="back-to-top-btn" @click="scrollToTop" title="回到顶部">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m18 15-6-6-6 6" />
+            </svg>
+        </button>
     </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 defineEmits<{
     back: []
@@ -85,6 +92,7 @@ const searchQuery = ref('')
 const activeCategory = ref('all')
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
+const showBackToTop = ref(false)
 
 // 表情符号接口
 interface Emoji {
@@ -1606,8 +1614,37 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     }, 3000)
 }
 
+// 回到顶部相关方法
+const scrollToTop = () => {
+    const emojiContent = document.querySelector('.emoji-content')
+    if (emojiContent) {
+        emojiContent.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
+    }
+}
+
+const handleScroll = () => {
+    const emojiContent = document.querySelector('.emoji-content')
+    if (emojiContent) {
+        showBackToTop.value = emojiContent.scrollTop > 300
+    }
+}
+
 onMounted(() => {
     // 组件挂载时的初始化
+    const emojiContent = document.querySelector('.emoji-content')
+    if (emojiContent) {
+        emojiContent.addEventListener('scroll', handleScroll)
+    }
+})
+
+onUnmounted(() => {
+    const emojiContent = document.querySelector('.emoji-content')
+    if (emojiContent) {
+        emojiContent.removeEventListener('scroll', handleScroll)
+    }
 })
 </script>
 <style scoped>
@@ -1903,6 +1940,37 @@ onMounted(() => {
     }
 }
 
+/* 回到顶部按钮 */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    z-index: 999;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.back-to-top-btn:hover {
+    background: var(--primary-color-hover, #0056b3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.back-to-top-btn:active {
+    transform: translateY(0);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .emoji-header {
@@ -1948,6 +2016,14 @@ onMounted(() => {
     .emoji-symbol {
         font-size: 28px;
     }
+
+    /* 移动端回到顶部按钮调整 */
+    .back-to-top-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1980,6 +2056,19 @@ onMounted(() => {
 
     .emoji-name {
         font-size: 11px;
+    }
+
+    /* 小屏幕回到顶部按钮调整 */
+    .back-to-top-btn {
+        bottom: 16px;
+        right: 16px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .back-to-top-btn svg {
+        width: 18px;
+        height: 18px;
     }
 }
 </style>
