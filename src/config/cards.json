@@ -446,6 +446,18 @@
                     "text": "新功能",
                     "color": "#10b981"
                 }
+            },
+            {
+                "id": "ip-lookup",
+                "title": "IP地址查询",
+                "description": "查询IP地址的地理位置、ISP等详细信息",
+                "icon": "🌐",
+                "action": "lookupIP",
+                "color": "#06b6d4",
+                "badge": {
+                    "text": "新功能",
+                    "color": "#10b981"
+                }
             }
         ],
         "navigation": [

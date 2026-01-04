@@ -52,6 +52,7 @@ import ScreenTest from './components/ScreenTest.vue'
 import Settings from './components/Settings.vue'
 import CountriesCapitals from './components/CountriesCapitals.vue'
 import EmojiReference from './components/EmojiReference.vue'
+import IpLookup from './components/IpLookup.vue'
 const activeNav = ref('json')
 const currentTab = ref<any>(null)
 const pageInfo = ref<any>(null)
@@ -209,7 +210,8 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'dynasty-query': 'dynasty-query',
         'programming-languages': 'programming-languages',
         'countries-capitals': 'countries-capitals',
-        'emoji-reference': 'emoji-reference'
+        'emoji-reference': 'emoji-reference',
+        'ip-lookup': 'ip-lookup'
     }
 
     return pageToolMap[pageName] || null
@@ -385,8 +387,8 @@ const executeFunction = async (action: string) => {
                 openPage('surname-lookup')
                 return // 不需要loading状态
             case 'lookupIP':
-                await lookupIP()
-                break
+                openPage('ip-lookup')
+                return // 不需要loading状态
             case 'whoisDomain':
                 await whoisDomain()
                 break
@@ -564,7 +566,7 @@ const generateGradient = async () => {
 
 // 查询工具函数
 const lookupIP = async () => {
-    showMessage('IP查询功能开发中...')
+    openPage('ip-lookup')
 }
 
 const whoisDomain = async () => {
@@ -864,6 +866,7 @@ const getToolAction = (toolId: string): string | null => {
         'dynasty-query': 'dynastyQuery',
         'countries-capitals': 'countriesCapitals',
         'emoji-reference': 'emojiReference',
+        'ip-lookup': 'lookupIP',
 
         // 导航工具
         'programming-languages': 'programmingLanguages',
@@ -969,6 +972,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <ImageBase64Converter v-if="currentPage === 'image-base64-converter'" @back="closePage" />
                 <CountriesCapitals v-if="currentPage === 'countries-capitals'" @back="closePage" />
                 <EmojiReference v-if="currentPage === 'emoji-reference'" @back="closePage" />
+                <IpLookup v-if="currentPage === 'ip-lookup'" @back="closePage" />
             </template>
         </div>
 

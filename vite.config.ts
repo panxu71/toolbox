@@ -47,7 +47,6 @@ const emptyDirExcept = (dir: string, keepFiles: string[] = []) => {
   }
 }
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
@@ -178,6 +177,90 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
+    }
+  },
+  server: {
+    proxy: {
+      '/api/ip-me': {
+        target: 'https://ip.me',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ip-me/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/ip-api': {
+        target: 'https://ip-api.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ip-api/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/ifconfig': {
+        target: 'https://ifconfig.me',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ifconfig/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/myip-ipip': {
+        target: 'https://myip.ipip.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/myip-ipip/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/cip': {
+        target: 'http://cip.cc',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cip/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/ipinfo': {
+        target: 'https://ipinfo.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ipinfo/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/ip-cn': {
+        target: 'https://ip.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ip-cn/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      },
+      '/api/3322': {
+        target: 'http://members.3322.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/3322/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+          });
+        }
+      }
     }
   }
 })
