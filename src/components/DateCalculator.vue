@@ -269,7 +269,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -316,6 +317,7 @@ const messageType = ref<'success' | 'error'>('success')
 
 // 组件挂载时设置默认值
 onMounted(() => {
+    setPageTitle('date-calculator')
     const now = new Date()
     const today = formatDate(now)
     const currentTime = formatTime(now)
@@ -326,6 +328,10 @@ onMounted(() => {
     startTime.value = currentTime
     endTime.value = currentTime
     baseTime.value = currentTime
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 
 // 格式化日期

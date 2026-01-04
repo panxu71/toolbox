@@ -232,7 +232,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import {  ref, watch, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -810,6 +811,15 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 监听输入变化
 watch(inputNumber, convertNumber)
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('number-converter')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

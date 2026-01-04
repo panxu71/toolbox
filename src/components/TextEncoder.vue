@@ -155,7 +155,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -345,6 +346,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 初始化
 convertText()
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('text-encoder')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

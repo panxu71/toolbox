@@ -285,7 +285,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -539,6 +540,15 @@ const initCurrentTime = () => {
 
 // 初始化
 initCurrentTime()
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('jwt-generator')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

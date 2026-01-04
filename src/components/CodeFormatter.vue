@@ -182,7 +182,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
 import parserHtml from 'prettier/parser-html'
@@ -494,6 +495,15 @@ const downloadOutput = () => {
 }
 
 updateStats()
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('code-formatter')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

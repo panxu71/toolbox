@@ -258,7 +258,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 // 动态导入 OpenCC
 let Converter: any = null
@@ -628,6 +629,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         message.value = ''
     }, 3000)
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('chinese-converter')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 <style scoped>
 .chinese-converter {

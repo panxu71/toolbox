@@ -39,7 +39,6 @@
                         <!-- 正常内容 -->
                         <div v-else-if="!info.error" class="ip-main">
                             <div class="ip-address">{{ info.ip }}</div>
-                            <div class="ip-location">{{ info.location }}</div>
                         </div>
 
                         <!-- 错误状态 -->
@@ -51,31 +50,34 @@
                         </div>
 
                         <!-- 详细信息 -->
-                        <div v-if="!info.error && !info.loading && (info.country || info.region || info.city || info.isp || info.timezone)"
-                            class="ip-details">
-                            <div class="detail-item" v-if="info.country">
+                        <div v-if="!info.error && !info.loading" class="ip-details">
+                            <div class="detail-item">
                                 <span class="label">国家/地区:</span>
-                                <span class="value">{{ info.country }}</span>
+                                <span class="value">{{ info.country || '-' }}</span>
                             </div>
-                            <div class="detail-item" v-if="info.region">
+                            <div class="detail-item">
                                 <span class="label">省份/州:</span>
-                                <span class="value">{{ info.region }}</span>
+                                <span class="value">{{ info.region || '-' }}</span>
                             </div>
-                            <div class="detail-item" v-if="info.city">
+                            <div class="detail-item">
                                 <span class="label">城市:</span>
-                                <span class="value">{{ info.city }}</span>
+                                <span class="value">{{ info.city || '-' }}</span>
                             </div>
-                            <div class="detail-item" v-if="info.isp">
+                            <div class="detail-item">
                                 <span class="label">ISP:</span>
-                                <span class="value">{{ info.isp }}</span>
+                                <span class="value">{{ info.isp || '-' }}</span>
                             </div>
-                            <div class="detail-item" v-if="info.timezone">
+                            <div class="detail-item">
                                 <span class="label">时区:</span>
-                                <span class="value">{{ info.timezone }}</span>
+                                <span class="value">{{ info.timezone || '-' }}</span>
                             </div>
-                            <div class="detail-item" v-if="info.lat && info.lon">
+                            <div class="detail-item">
                                 <span class="label">经纬度:</span>
-                                <span class="value">{{ info.lat }}, {{ info.lon }}</span>
+                                <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">ASN:</span>
+                                <span class="value">{{ info.asn || '-' }}</span>
                             </div>
                         </div>
                     </div>
@@ -123,38 +125,40 @@
 
                             <div v-if="!info.error" class="ip-main">
                                 <div class="ip-address">{{ info.ip }}</div>
-                                <div class="ip-location">{{ info.location }}</div>
                             </div>
 
                             <div v-if="info.error" class="error-info">
                                 <div class="error-message">{{ info.error }}</div>
                             </div>
 
-                            <div v-if="!info.error && (info.country || info.region || info.city || info.isp || info.timezone)"
-                                class="ip-details">
-                                <div class="detail-item" v-if="info.country">
+                            <div v-if="!info.error" class="ip-details">
+                                <div class="detail-item">
                                     <span class="label">国家/地区:</span>
-                                    <span class="value">{{ info.country }}</span>
+                                    <span class="value">{{ info.country || '-' }}</span>
                                 </div>
-                                <div class="detail-item" v-if="info.region">
+                                <div class="detail-item">
                                     <span class="label">省份/州:</span>
-                                    <span class="value">{{ info.region }}</span>
+                                    <span class="value">{{ info.region || '-' }}</span>
                                 </div>
-                                <div class="detail-item" v-if="info.city">
+                                <div class="detail-item">
                                     <span class="label">城市:</span>
-                                    <span class="value">{{ info.city }}</span>
+                                    <span class="value">{{ info.city || '-' }}</span>
                                 </div>
-                                <div class="detail-item" v-if="info.isp">
+                                <div class="detail-item">
                                     <span class="label">ISP:</span>
-                                    <span class="value">{{ info.isp }}</span>
+                                    <span class="value">{{ info.isp || '-' }}</span>
                                 </div>
-                                <div class="detail-item" v-if="info.timezone">
+                                <div class="detail-item">
                                     <span class="label">时区:</span>
-                                    <span class="value">{{ info.timezone }}</span>
+                                    <span class="value">{{ info.timezone || '-' }}</span>
                                 </div>
-                                <div class="detail-item" v-if="info.lat && info.lon">
+                                <div class="detail-item">
                                     <span class="label">经纬度:</span>
-                                    <span class="value">{{ info.lat }}, {{ info.lon }}</span>
+                                    <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">ASN:</span>
+                                    <span class="value">{{ info.asn || '-' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -184,7 +188,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+
+// 立即执行的调试信息已移除
 
 interface IpInfo {
     ip: string
@@ -200,6 +207,11 @@ interface IpInfo {
     source?: string
     error?: string
     loading?: boolean
+    // IP.me额外字段
+    countryCode?: string
+    postalCode?: string
+    organization?: string
+    asn?: string
 }
 
 const currentIpInfo = ref<IpInfo[]>([])
@@ -263,24 +275,86 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
 
             const html = await response.text();
+            
             // 从HTML中提取IP地址
             const ipMatch = html.match(/<input[^>]*name="ip"[^>]*value="([^"]*)"[^>]*>/);
-
-            if (ipMatch && ipMatch[1]) {
-                return {
-                    ip: ipMatch[1],
-                    location: '来自IP.me页面',
-                    source: 'IP.me'
-                };
+            
+            // 查找表格并从中提取数据
+            const tableSection = html.match(/<table[\s\S]*?<\/table>/);
+            let city = '', country = '', countryCode = '', lat = '', lon = '', postalCode = '', organization = '', asn = '', ispName = '';
+            
+            if (tableSection) {
+                const tableHtml = tableSection[0];
+                
+                // 使用更宽松的正则，允许中间有其他内容
+                const cityMatch = tableHtml.match(/<th>City:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const countryMatch = tableHtml.match(/<th>Country:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const countryCodeMatch = tableHtml.match(/<th>Country Code:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const latMatch = tableHtml.match(/<th>Latitude:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const lonMatch = tableHtml.match(/<th>Longitude:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const postalMatch = tableHtml.match(/<th>Postal Code:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const orgMatch = tableHtml.match(/<th>Organization:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const asnMatch = tableHtml.match(/<th>ASN:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                const ispMatch = tableHtml.match(/<th>ISP Name:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
+                
+                city = cityMatch?.[1] || '';
+                country = countryMatch?.[1] || '';
+                countryCode = countryCodeMatch?.[1] || '';
+                lat = latMatch?.[1] || '';
+                lon = lonMatch?.[1] || '';
+                postalCode = (postalMatch?.[1] && postalMatch[1] !== 'None') ? postalMatch[1] : '';
+                organization = orgMatch?.[1] || '';
+                asn = asnMatch?.[1] || '';
+                ispName = ispMatch?.[1] || '';
+                
+                
             } else {
-                throw new Error('无法从页面提取IP地址');
             }
+
+            // 简单的城市到省份映射（中国主要城市）
+            const getCityProvince = (city: string, country: string): string => {
+                if (country !== 'China') return '';
+                
+                const cityProvinceMap: { [key: string]: string } = {
+                    'Beijing': '北京',
+                    'Shanghai': '上海',
+                    'Shenzhen': '广东',
+                    'Guangzhou': '广东',
+                    'Hangzhou': '浙江',
+                    'Nanjing': '江苏',
+                    'Chengdu': '四川',
+                    'Wuhan': '湖北',
+                    'Xi\'an': '陕西',
+                    'Tianjin': '天津',
+                    'Chongqing': '重庆'
+                };
+                
+                return cityProvinceMap[city] || '';
+            };
+
+            const result = {
+                ip: ipMatch ? ipMatch[1] : '未知',
+                city: city,
+                country: country,
+                region: getCityProvince(city, country), // 根据城市推断省份
+                location: `${city} ${country}`.trim() || '来自IP.me',
+                isp: ispName || organization,
+                timezone: '',
+                lat: lat ? parseFloat(lat) : undefined,
+                lon: lon ? parseFloat(lon) : undefined,
+                source: 'IP.me',
+                countryCode: countryCode,
+                postalCode: postalCode,
+                organization: organization,
+                asn: asn
+            } as IpInfo;
+            
+            return result;
         } else {
             // 生产环境使用background script
             return await fetchIpMeFromBackground();
         }
     } catch (error) {
-        console.error('获取IP.me数据失败:', error);
         return {
             ip: '获取失败',
             location: 'IP.me (请求失败)',
@@ -290,11 +364,806 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
     }
 }
 
+// 获取whatismyipaddress.com数据
+const fetchWhatIsMyIpData = async (): Promise<IpInfo> => {
+    try {
+        // 直接使用固定token，跳过主页获取
+        const token = '4c9dd22613e14d8d6717f16874731d5e';
+        
+        // 直接调用API
+        const apiUrl = import.meta.env.DEV 
+            ? `/api/whatismyip-api/ds3?token=${token}&v=4`
+            : `https://whatismyipaddress.com/api/ds3?token=${token}&v=4`;
+        
+        const apiResponse = await fetch(apiUrl);
+        
+        if (!apiResponse.ok) {
+            throw new Error(`API请求失败: HTTP ${apiResponse.status}`);
+        }
+        
+        const data = await apiResponse.json();
+        
+        // 数据在data字段中
+        const ipData = data.data || data;
+        
+        const result = {
+            ip: ipData.ipv4 || ipData.ip || '未知',
+            country: ipData.country || '',
+            region: ipData.region || ipData.state || '',
+            city: ipData.city || '',
+            location: `${ipData.city || ''} ${ipData.region || ipData.state || ''} ${ipData.country || ''}`.trim() || '未知位置',
+            isp: ipData.isp || '',
+            timezone: ipData.timezone || '',
+            lat: ipData.latitude ? parseFloat(ipData.latitude) : undefined,
+            lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
+            source: 'WhatIsMyIP'
+        };
+        
+        return result;
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'WhatIsMyIP',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取IPIP.net JSON数据
+const fetchIpipJsonData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/ipip-json' : 'https://myip.ipip.net/json';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.ret === 'ok' && data.data) {
+            const ipData = data.data;
+            const location = ipData.location || [];
+            
+            const result = {
+                ip: ipData.ip || '未知',
+                country: location[0] || '',
+                region: location[1] || '',
+                city: location[2] || '',
+                location: location.filter(item => item).join(' ') || '未知位置',
+                isp: location[4] || '',
+                timezone: '',
+                source: 'IPIP.net'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'IPIP.net',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取ITDog数据
+const fetchItDogData = async (): Promise<IpInfo> => {
+    try {
+        // 生成时间戳参数
+        const timestamp = Date.now();
+        const url = import.meta.env.DEV 
+            ? `/api/itdog?_t=${timestamp}` 
+            : `https://ipv4_cu.itdog.cn/?_t=${timestamp}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.type === 'success' && data.ip) {
+            // 解析地址信息，格式：中国/广东/深圳/联通
+            const addressParts = data.address ? data.address.split('/') : [];
+            
+            const result = {
+                ip: data.ip || '未知',
+                country: addressParts[0] || '',
+                region: addressParts[1] || '',
+                city: addressParts[2] || '',
+                location: data.address || '未知位置',
+                isp: addressParts[3] || '',
+                timezone: '',
+                source: 'ITDog'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'ITDog',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取又拍云数据
+const fetchUpYunData = async (): Promise<IpInfo> => {
+    try {
+        // 生成时间戳参数
+        const timestamp = Date.now();
+        const url = import.meta.env.DEV 
+            ? `/api/upyun?_upnode&_t=${timestamp}` 
+            : `https://pubstatic.b0.upaiyun.com/?_upnode&_t=${timestamp}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.remote_addr && data.remote_addr_location) {
+            // 使用用户的真实IP和位置信息
+            const ip = data.remote_addr;
+            const location = data.remote_addr_location;
+            
+            const result = {
+                ip: ip || '未知',
+                country: location?.country || '',
+                region: location?.province || '',
+                city: location?.city || '',
+                location: `${location?.city || ''} ${location?.province || ''} ${location?.country || ''}`.trim() || '未知位置',
+                isp: location?.isp || '',
+                timezone: '',
+                source: 'UpYun'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'UpYun',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取AAPQ数据
+const fetchAapqData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/aapq' : 'https://fcd09628a76x.aapq.net/ip';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.ip) {
+            // 国家代码转换为中文名称
+            const countryMap: { [key: string]: string } = {
+                'CN': '中国',
+                'US': '美国',
+                'JP': '日本',
+                'KR': '韩国',
+                'GB': '英国',
+                'DE': '德国',
+                'FR': '法国',
+                'CA': '加拿大',
+                'AU': '澳大利亚',
+                'SG': '新加坡',
+                'HK': '香港',
+                'TW': '台湾',
+                'MO': '澳门'
+            };
+            
+            const country = countryMap[data.country] || data.country || '';
+            
+            const result = {
+                ip: data.ip || '未知',
+                country: country,
+                region: '',
+                city: data.city || '',
+                location: `${data.city || ''} ${country}`.trim() || '未知位置',
+                isp: '',
+                timezone: '',
+                source: 'AAPQ'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'AAPQ',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取IPDataCloud数据
+const fetchIpDataCloudData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/ipdatacloud' : 'https://app.ipdatacloud.com/v1/ip_self_search';
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.code === 200 && data.data) {
+            const ipData = data.data;
+            
+            const result = {
+                ip: ipData.ip || '未知',
+                country: ipData.country || '',
+                region: ipData.province || '',
+                city: ipData.city || '',
+                location: `${ipData.city || ''} ${ipData.province || ''} ${ipData.country || ''}`.trim() || '未知位置',
+                isp: '',
+                timezone: '',
+                lat: ipData.latitude ? parseFloat(ipData.latitude) : undefined,
+                lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
+                source: 'IPDataCloud'
+            };
+            
+            return result;
+        } else {
+            throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'IPDataCloud',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取IPNews数据
+const fetchIpNewsData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/ipnews' : 'https://api.ipnews.io/v1/ip_self_search';
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.code === 200 && data.data) {
+            const ipData = data.data;
+            
+            // 国家名称转换（如果是英文则转为中文）
+            const countryMap: { [key: string]: string } = {
+                'China': '中国',
+                'United States': '美国',
+                'Japan': '日本',
+                'South Korea': '韩国',
+                'United Kingdom': '英国',
+                'Germany': '德国',
+                'France': '法国',
+                'Canada': '加拿大',
+                'Australia': '澳大利亚',
+                'Singapore': '新加坡'
+            };
+            
+            const country = countryMap[ipData.country] || ipData.country || '';
+            
+            const result = {
+                ip: ipData.ip || '未知',
+                country: country,
+                region: ipData.region || '',
+                city: ipData.city || '',
+                location: `${ipData.city || ''} ${ipData.region || ''} ${country}`.trim() || '未知位置',
+                isp: ipData.isp || ipData.carrier_name || '',
+                timezone: ipData.time_zone || '',
+                lat: ipData.latitude ? parseFloat(ipData.latitude) : undefined,
+                lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
+                asn: ipData.asn || '',
+                source: 'IPNews'
+            };
+            
+            return result;
+        } else {
+            throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'IPNews',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取MaxMind数据
+const fetchMaxMindData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/maxmind' : 'https://geoip.maxmind.com/geoip/v2.1/city/me';
+        
+        const response = await fetch(url, {
+            headers: {
+                'Accept': '*/*',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Referer': 'https://www.maxmind.com/'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.traits && data.traits.ip_address) {
+            // 优先使用中文名称，如果没有则使用英文
+            const getLocalizedName = (names: any) => {
+                return names?.['zh-CN'] || names?.['en'] || '';
+            };
+            
+            const country = getLocalizedName(data.country?.names);
+            const region = getLocalizedName(data.subdivisions?.[0]?.names);
+            const city = getLocalizedName(data.city?.names);
+            
+            const result = {
+                ip: data.traits.ip_address || '未知',
+                country: country,
+                region: region,
+                city: city,
+                location: `${city} ${region} ${country}`.trim() || '未知位置',
+                isp: data.traits.isp || '',
+                timezone: data.location?.time_zone || '',
+                lat: data.location?.latitude ? parseFloat(data.location.latitude) : undefined,
+                lon: data.location?.longitude ? parseFloat(data.location.longitude) : undefined,
+                asn: data.traits.autonomous_system_number ? `AS${data.traits.autonomous_system_number}` : '',
+                source: 'MaxMind'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'MaxMind',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取XXIR数据
+const fetchXxirData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/xxir' : 'https://ip.xxir.com/ip/mtip.php';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.ip && data.data) {
+            const ipData = data.data;
+            
+            // 解析详细地址，格式：中国/广东省/深圳市/南山区/南方科技大学九华精舍
+            const addressParts = ipData.detail ? ipData.detail.split('/') : [];
+            
+            const result = {
+                ip: data.ip || '未知',
+                country: addressParts[0] || '',
+                region: addressParts[1] || '',
+                city: addressParts[2] || '',
+                location: ipData.detail || '未知位置',
+                isp: '',
+                timezone: '',
+                lat: ipData.lat ? parseFloat(ipData.lat) : undefined,
+                lon: ipData.lng ? parseFloat(ipData.lng) : undefined,
+                source: 'XXIR'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'XXIR',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取IPLark数据
+const fetchIpLarkData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/iplark' : 'https://iplark.com/ipapi/public/ipinfo?db=moon';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.code === 0 && data.data) {
+            const ipData = data.data;
+            
+            const result = {
+                ip: ipData.ip || '未知',
+                country: ipData.country || '',
+                region: ipData.province || '',
+                city: ipData.city || '',
+                location: `${ipData.city || ''} ${ipData.province || ''} ${ipData.country || ''}`.trim() || '未知位置',
+                isp: ipData.as || '',
+                timezone: '',
+                lat: ipData.latitude ? parseFloat(ipData.latitude) : undefined,
+                lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
+                source: 'IPLark'
+            };
+            
+            return result;
+        } else {
+            throw new Error(`API返回错误: ${data.message || '未知错误'}`);
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'IPLark',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取淘宝数据
+const fetchTaobaoData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/taobao' : 'https://www.taobao.com/help/getip.php';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        // 淘宝返回的是JSONP格式，需要解析
+        // 格式通常是：ipCallback({"data":{"ip":"xxx","country":"xxx"}})
+        const jsonpMatch = text.match(/ipCallback\((.+)\)/);
+        if (jsonpMatch) {
+            const data = JSON.parse(jsonpMatch[1]);
+            
+            if (data.data) {
+                const ipData = data.data;
+                
+                const result = {
+                    ip: ipData.ip || '未知',
+                    country: ipData.country || '',
+                    region: ipData.region || '',
+                    city: ipData.city || '',
+                    location: `${ipData.city || ''} ${ipData.region || ''} ${ipData.country || ''}`.trim() || '未知位置',
+                    isp: ipData.isp || '',
+                    timezone: '',
+                    source: 'Taobao'
+                };
+                
+                return result;
+            }
+        }
+        
+        throw new Error('无法解析淘宝API响应');
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'Taobao',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取BrowserScan数据
+const fetchBrowserScanData = async (): Promise<IpInfo> => {
+    try {
+        // 生成时间戳
+        const timestamp = Math.floor(Date.now() / 1000);
+        // 这里使用示例中的签名，实际可能需要动态生成
+        const sign = 'b0d247da09f5a53af1f7b72fed3abcff';
+        
+        const url = import.meta.env.DEV 
+            ? `/api/browserscan?_t=${timestamp}&_from=browserscan&_sign=${sign}&type=ip-api`
+            : `https://ip-scan.browserscan.net/sys/config/ip/get-visitor-ip?_t=${timestamp}&_from=browserscan&_sign=${sign}&type=ip-api`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.code === 0 && data.data && data.data.ip_data) {
+            const ipData = data.data.ip_data;
+            
+            // 国家代码转换
+            const countryMap: { [key: string]: string } = {
+                'cn': '中国',
+                'us': '美国',
+                'jp': '日本',
+                'kr': '韩国',
+                'gb': '英国',
+                'de': '德国',
+                'fr': '法国',
+                'ca': '加拿大',
+                'au': '澳大利亚',
+                'sg': '新加坡',
+                'hk': '香港',
+                'tw': '台湾'
+            };
+            
+            // 省份代码转换
+            const regionMap: { [key: string]: string } = {
+                'gd': '广东',
+                'bj': '北京',
+                'sh': '上海',
+                'js': '江苏',
+                'zj': '浙江',
+                'sd': '山东',
+                'hn': '河南',
+                'sc': '四川',
+                'hb': '湖北',
+                'hl': '湖南'
+            };
+            
+            const country = countryMap[ipData.country] || ipData.country || '';
+            const region = regionMap[ipData.region] || ipData.region || '';
+            
+            const result = {
+                ip: data.data.ip || '未知',
+                country: country,
+                region: region,
+                city: ipData.city || '',
+                location: `${ipData.city || ''} ${region} ${country}`.trim() || '未知位置',
+                isp: ipData.isp || '',
+                timezone: ipData.timezone || '',
+                lat: ipData.latitude ? parseFloat(ipData.latitude) : undefined,
+                lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
+                source: 'BrowserScan'
+            };
+            
+            return result;
+        } else {
+            throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'BrowserScan',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取MyIP.com.tw数据
+const fetchMyIpTwData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/myip-tw' : 'https://myip.com.tw/';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const html = await response.text();
+        
+        // 提取IP地址
+        const ipMatch = html.match(/data-ip="([^"]+)"/);
+        const ip = ipMatch ? ipMatch[1] : '';
+        
+        // 提取各个信息字段 - 优化正则表达式以更好地匹配HTML结构
+        const extractInfoValue = (label: string): string => {
+            // 更精确的正则表达式，处理HTML标签和图标
+            const regex = new RegExp(`<div class="info-label">.*?${label}.*?</div>\\s*<div class="info-value">([^<]+)</div>`, 'is');
+            const match = html.match(regex);
+            const result = match ? match[1].trim() : '';
+            return result;
+        };
+        
+        const country = extractInfoValue('國家/地區');
+        const region = extractInfoValue('地區');
+        const city = extractInfoValue('城市');
+        const isp = extractInfoValue('網路提供商');
+        const timezone = extractInfoValue('時區');
+        const coordinates = extractInfoValue('座標');
+        
+        // 解析坐标
+        let lat: number | undefined, lon: number | undefined;
+        if (coordinates) {
+            const coordMatch = coordinates.match(/([0-9.-]+),([0-9.-]+)/);
+            if (coordMatch) {
+                lat = parseFloat(coordMatch[1]);
+                lon = parseFloat(coordMatch[2]);
+            }
+        }
+        
+        // 国家代码转换
+        const countryMap: { [key: string]: string } = {
+            'CN': '中国',
+            'US': '美国',
+            'JP': '日本',
+            'KR': '韩国',
+            'GB': '英国',
+            'DE': '德国',
+            'FR': '法国',
+            'CA': '加拿大',
+            'AU': '澳大利亚',
+            'SG': '新加坡',
+            'HK': '香港',
+            'TW': '台湾'
+        };
+        
+        const countryName = countryMap[country] || country || '';
+        
+        const result = {
+            ip: ip || '未知',
+            country: countryName,
+            region: region,
+            city: city,
+            location: `${city} ${region} ${countryName}`.trim() || '未知位置',
+            isp: isp,
+            timezone: timezone,
+            lat: lat,
+            lon: lon,
+            source: 'MyIP.com.tw'
+        };
+        
+        return result;
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'MyIP.com.tw',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取Coding.tools数据
+const fetchCodingToolsData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? '/api/coding-tools' : 'https://coding.tools/cn/my-ip-address';
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json, text/plain, */*',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache'
+            },
+            body: 'queryIp=' // 空值，表示查询当前IP
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        // 尝试解析JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (parseError) {
+            throw new Error('服务器返回HTML而不是JSON，可能需要特殊认证');
+        }
+        
+        if (data.ip) {
+            // 国家名称转换
+            const countryMap: { [key: string]: string } = {
+                'China': '中国',
+                'United States': '美国',
+                'Japan': '日本',
+                'South Korea': '韩国',
+                'United Kingdom': '英国',
+                'Germany': '德国',
+                'France': '法国',
+                'Canada': '加拿大',
+                'Australia': '澳大利亚',
+                'Singapore': '新加坡'
+            };
+            
+            const country = countryMap[data.country_name] || data.country_name || '';
+            
+            const result = {
+                ip: data.ip || '未知',
+                country: country,
+                region: data.region_name || '',
+                city: data.city_name || '',
+                location: `${data.city_name || ''} ${data.region_name || ''} ${country}`.trim() || '未知位置',
+                isp: '',
+                timezone: data.time_zone || '',
+                lat: data.latitude ? parseFloat(data.latitude) : undefined,
+                lon: data.longitude ? parseFloat(data.longitude) : undefined,
+                source: 'Coding.tools'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+    } catch (error) {
+        return {
+            ip: '获取失败',
+            location: '请求失败',
+            source: 'Coding.tools',
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
 // 获取IP-API数据
 const fetchIpApiData = async (): Promise<IpInfo> => {
     try {
-        const url = import.meta.env.DEV ? '/api/ip-api/json/?fields=66842623&lang=zh-CN' : 'https://ip-api.com/json/?fields=66842623&lang=zh-CN';
-        const response = await fetch(url);
+        const url = import.meta.env.DEV ? '/api/ip-api/json/?fields=66842623&lang=en' : 'http://demo.ip-api.com/json/?fields=66842623&lang=en';
+        const response = await fetch(url, {
+            headers: {
+                'Referer': 'https://ip-api.com/'
+            }
+        });
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -324,7 +1193,8 @@ const fetchIpApiData = async (): Promise<IpInfo> => {
 // 获取IPapi.co数据
 const fetchIpapiData = async (): Promise<IpInfo> => {
     try {
-        const response = await fetch('https://ipapi.co/json/');
+        // 使用IPv4专用的API端点
+        const response = await fetch('https://ipapi.co/json/?force=ipv4');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -383,14 +1253,15 @@ const fetchIfconfigData = async (): Promise<IpInfo> => {
             throw new Error(`HTTP ${response.status}`);
         }
         const data = await response.json();
+        
         return {
             ip: data.ip_addr || '未知',
-            country: data.country || '',
-            region: data.region || '',
-            city: data.city || '',
-            location: `${data.city || ''} ${data.region || ''} ${data.country || ''}`.trim() || '来自ifconfig.me',
-            isp: data.connection?.isp || '',
-            timezone: data.time_zone || '',
+            country: '', // ifconfig.me不提供地理位置信息
+            region: '',
+            city: '',
+            location: '来自ifconfig.me',
+            isp: '',
+            timezone: '',
             source: 'ifconfig.me'
         };
     } catch (error) {
@@ -403,31 +1274,58 @@ const fetchIfconfigData = async (): Promise<IpInfo> => {
     }
 }
 
-// 获取IPIP.net数据
-const fetchIpipData = async (): Promise<IpInfo> => {
+// 获取CIP.cc数据
+const fetchCipCcData = async (): Promise<IpInfo> => {
     try {
-        const url = import.meta.env.DEV ? '/api/myip-ipip' : 'https://myip.ipip.net';
+        const url = import.meta.env.DEV ? '/api/cip-cc' : 'https://cip.cc/';
+        
         const response = await fetch(url);
+        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        const text = await response.text();
-        // 解析IPIP.net的文本响应
-        const match = text.match(/当前 IP：([0-9.]+)\s+来自于：(.+)/);
-        if (match && match[1] && match[2]) {
-            return {
-                ip: match[1],
-                location: match[2],
-                source: 'IPIP.net'
+        
+        const html = await response.text();
+        
+        // 查找包含IP信息的pre标签
+        const preMatch = html.match(/<pre>([\s\S]*?)<\/pre>/);
+        if (preMatch) {
+            const preContent = preMatch[1];
+            
+            // 解析各个字段
+            const extractField = (fieldName: string): string => {
+                const regex = new RegExp(`${fieldName}\\s*[:：]\\s*([^\\n\\r]+)`, 'i');
+                const match = preContent.match(regex);
+                return match ? match[1].trim() : '';
             };
+            
+            const ip = extractField('IP');
+            const address = extractField('地址');
+            const isp = extractField('运营商');
+            
+            // 解析地址信息，格式：中国 广东 深圳
+            const addressParts = address ? address.split(/\s+/) : [];
+            
+            const result = {
+                ip: ip || '未知',
+                country: addressParts[0] || '',
+                region: addressParts[1] || '',
+                city: addressParts[2] || '',
+                location: address || '未知位置',
+                isp: isp || '',
+                timezone: '',
+                source: 'CIP.cc'
+            };
+            
+            return result;
         } else {
-            throw new Error('无法解析响应');
+            throw new Error('无法找到IP信息');
         }
     } catch (error) {
         return {
             ip: '获取失败',
-            location: 'IPIP.net (请求失败)',
-            source: 'IPIP.net',
+            location: '请求失败',
+            source: 'CIP.cc',
             error: error instanceof Error ? error.message : '网络错误'
         };
     }
@@ -454,43 +1352,127 @@ const fetchCipData = async (): Promise<IpInfo> => {
     }
 }
 
-// 获取IPinfo.io数据 (占位符)
+// 获取IPinfo.io数据
 const fetchIpinfoData = async (): Promise<IpInfo> => {
     try {
-        // TODO: 实现IPinfo.io数据获取
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟请求
-        return {
-            ip: '待实现',
-            location: 'IPinfo.io (待实现)',
-            source: 'IPinfo.io',
-            error: '功能待实现'
-        };
+        const url = import.meta.env.DEV ? '/api/ipinfo' : 'https://ipinfo.io/lookup-data';
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.userIp) {
+            const result = {
+                ip: data.userIp || '未知',
+                country: '',
+                region: '',
+                city: '',
+                location: '来自IPinfo.io',
+                isp: '',
+                timezone: '',
+                asn: data.asn || '',
+                source: 'IPinfo.io'
+            };
+            
+            return result;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
     } catch (error) {
         return {
             ip: '获取失败',
-            location: 'IPinfo.io (请求失败)',
+            location: '请求失败',
             source: 'IPinfo.io',
             error: error instanceof Error ? error.message : '网络错误'
         };
     }
 }
 
-// 获取IP.cn数据 (占位符)
+// 获取IP.cn数据
 const fetchIpCnData = async (): Promise<IpInfo> => {
     try {
-        // TODO: 实现IP.cn数据获取
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟请求
+        // 生成类似的ticket格式：32位十六进制字符串 + 时间戳
+        const randomHex = Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        const timestamp = Date.now().toString();
+        const ticket = randomHex + timestamp;
+        
+        const url = import.meta.env.DEV 
+            ? `/api/ip-cn?ticket=${ticket}`
+            : `https://my.ip.cn/json/?ticket=${ticket}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        // 检查是否返回"ticket expire"
+        if (text.includes('ticket expire')) {
+            throw new Error('ticket已过期，需要重新生成');
+        }
+        
+        // 尝试解析JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (parseError) {
+            throw new Error('响应不是有效的JSON格式');
+        }
+        
+        if (data.status && data.code === 0 && data.data) {
+            const ipData = data.data;
+            
+            const result = {
+                ip: ipData.ip || '未知',
+                country: ipData.country || '',
+                region: ipData.province || '',
+                city: ipData.city || '',
+                location: `${ipData.city || ''} ${ipData.province || ''} ${ipData.country || ''}`.trim() || '未知位置',
+                isp: ipData.isp || '',
+                timezone: '',
+                source: 'IP.cn'
+            };
+            
+            return result;
+        } else {
+            throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
+        }
+    } catch (error) {
         return {
-            ip: '待实现',
-            location: 'IP.cn (待实现)',
+            ip: '获取失败',
+            location: '请求失败',
             source: 'IP.cn',
-            error: '功能待实现'
+            error: error instanceof Error ? error.message : '网络错误'
+        };
+    }
+}
+
+// 获取USTC数据
+const fetchUstcData = async (): Promise<IpInfo> => {
+    try {
+        const url = import.meta.env.DEV ? `/api/ustc/backend/getIP.php?&r=${Math.random()}` : `https://test.ustc.edu.cn/backend/getIP.php?&r=${Math.random()}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        return {
+            ip: data.processedString || '未知',
+            location: '来自中科大',
+            source: 'USTC',
+            isp: data.rawIspInfo || ''
         };
     } catch (error) {
         return {
             ip: '获取失败',
-            location: 'IP.cn (请求失败)',
-            source: 'IP.cn',
+            location: 'USTC (请求失败)',
+            source: 'USTC',
             error: error instanceof Error ? error.message : '网络错误'
         };
     }
@@ -519,72 +1501,72 @@ const fetch3322Data = async (): Promise<IpInfo> => {
 
 // 获取当前IP信息
 const getCurrentIpInfo = async () => {
-    console.log('开始获取IP信息，显示骨架屏')
     loadingCurrent.value = false // 不显示全局loading
     currentError.value = ''
 
-    // 先创建骨架屏卡片
-    const skeletonCards: IpInfo[] = [
-        { ip: '', location: '', source: 'IP.me', loading: true },
-        { ip: '', location: '', source: 'IP-API', loading: true },
-        { ip: '', location: '', source: 'IPapi.co', loading: true },
-        { ip: '', location: '', source: 'HTTPBin', loading: true },
-        { ip: '', location: '', source: 'ifconfig.me', loading: true },
-        { ip: '', location: '', source: 'IPIP.net', loading: true },
-        { ip: '', location: '', source: 'CIP.cc', loading: true },
-        { ip: '', location: '', source: 'IPinfo.io', loading: true },
-        { ip: '', location: '', source: 'IP.cn', loading: true },
-        { ip: '', location: '', source: '3322.org', loading: true }
+    // 配置所有API源 - 调整这里的顺序就能改变显示顺序
+    const apiConfigs = [
+        // { name: 'IP.me', fetcher: fetchIpMeData },
+        // { name: 'WhatIsMyIP', fetcher: fetchWhatIsMyIpData },
+        // { name: 'IPIP.net', fetcher: fetchIpipJsonData },
+        // { name: 'ITDog', fetcher: fetchItDogData },
+        // { name: 'UpYun', fetcher: fetchUpYunData },
+        // { name: 'AAPQ', fetcher: fetchAapqData },
+        // { name: 'IPDataCloud', fetcher: fetchIpDataCloudData },
+        // { name: 'IPNews', fetcher: fetchIpNewsData },
+        // { name: 'MaxMind', fetcher: fetchMaxMindData },
+        // { name: 'XXIR', fetcher: fetchXxirData },
+        // { name: 'IPLark', fetcher: fetchIpLarkData },
+        // { name: 'BrowserScan', fetcher: fetchBrowserScanData },
+        // { name: 'MyIP.com.tw', fetcher: fetchMyIpTwData },
+        // { name: 'IPapi.co', fetcher: fetchIpapiData },
+        // { name: 'HTTPBin', fetcher: fetchHttpbinData },
+        // { name: 'ifconfig.me', fetcher: fetchIfconfigData },
+        // { name: 'USTC', fetcher: fetchUstcData },
+        { name: 'Coding.tools', fetcher: fetchCodingToolsData },
+        // { name: 'IP-API', fetcher: fetchIpApiData },  
+        // { name: 'CIP.cc', fetcher: fetchCipCcData },
+        // { name: 'IPinfo.io', fetcher: fetchIpinfoData },
     ]
+    
+    // 根据配置创建骨架屏卡片
+    const skeletonCards: IpInfo[] = apiConfigs.map(config => ({
+        ip: '',
+        location: '',
+        source: config.name,
+        loading: true
+    }))
     currentIpInfo.value = skeletonCards
-    console.log('骨架屏卡片已设置:', skeletonCards)
 
     try {
-        // 定义所有API源
-        const apis = [
-            { name: 'IP.me', index: 0, fetcher: fetchIpMeData },
-            { name: 'IP-API', index: 1, fetcher: fetchIpApiData },
-            { name: 'IPapi.co', index: 2, fetcher: fetchIpapiData },
-            { name: 'HTTPBin', index: 3, fetcher: fetchHttpbinData },
-            { name: 'ifconfig.me', index: 4, fetcher: fetchIfconfigData },
-            { name: 'IPIP.net', index: 5, fetcher: fetchIpipData },
-            { name: 'CIP.cc', index: 6, fetcher: fetchCipData },
-            { name: 'IPinfo.io', index: 7, fetcher: fetchIpinfoData },
-            { name: 'IP.cn', index: 8, fetcher: fetchIpCnData },
-            { name: '3322.org', index: 9, fetcher: fetch3322Data }
-        ]
-
         // 异步并发请求所有API，每个完成后立即更新对应卡片
-        apis.forEach(async (api) => {
+        apiConfigs.forEach(async (config, index) => {
             try {
                 let result: IpInfo
 
                 // 添加最小延迟以便看到骨架屏效果
                 await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
 
-                if (api.fetcher) {
-                    result = await api.fetcher()
+                if (config.fetcher) {
+                    result = await config.fetcher()
                 } else {
                     throw new Error('API配置错误')
                 }
 
                 // 更新对应位置的卡片
-                console.log(`${api.name} 数据加载完成:`, result)
-                currentIpInfo.value[api.index] = result
+                currentIpInfo.value[index] = result
             } catch (error) {
                 // 更新对应位置的卡片为错误状态
-                console.log(`${api.name} 加载失败:`, error)
-                currentIpInfo.value[api.index] = {
+                currentIpInfo.value[index] = {
                     ip: '',
                     location: '请求失败',
-                    source: api.name,
+                    source: config.name,
                     error: error instanceof Error ? error.message : '网络错误'
                 } as IpInfo
             }
         })
 
     } catch (error) {
-        console.error('获取当前IP信息失败:', error)
         currentError.value = '获取IP信息失败，请检查网络连接'
     }
 }
@@ -627,7 +1609,7 @@ const queryIpInfo = async () => {
             },
             {
                 name: 'IP-API',
-                url: `https://ip-api.com/json/${ip}?lang=zh-CN`,
+                url: `http://demo.ip-api.com/json/${ip}?fields=66842623&lang=en`,
                 parser: (data: any): IpInfo => ({
                     ip: data.query || ip,
                     country: data.country || '',
@@ -639,6 +1621,19 @@ const queryIpInfo = async () => {
                     lat: data.lat,
                     lon: data.lon,
                     source: 'IP-API'
+                }),
+                headers: {
+                    'Referer': 'https://ip-api.com/'
+                }
+            },
+            {
+                name: 'USTC',
+                url: import.meta.env.DEV ? `/api/ustc/backend/getIP.php?ip=${ip}&r=${Math.random()}` : `https://test.ustc.edu.cn/backend/getIP.php?ip=${ip}&r=${Math.random()}`,
+                parser: (data: any): IpInfo => ({
+                    ip: data.processedString || ip,
+                    location: '来自中科大',
+                    source: 'USTC',
+                    isp: data.rawIspInfo || ''
                 })
             }
         ]
@@ -646,7 +1641,12 @@ const queryIpInfo = async () => {
         // 并发请求所有API
         const promises = apis.map(async (api) => {
             try {
-                const response = await fetch(api.url)
+                const fetchOptions: RequestInit = {}
+                if (api.headers) {
+                    fetchOptions.headers = api.headers
+                }
+                
+                const response = await fetch(api.url, fetchOptions)
                 if (response.ok) {
                     const data = await response.json()
                     return api.parser(data)
@@ -697,7 +1697,6 @@ const queryIpInfo = async () => {
         }
 
     } catch (error) {
-        console.error('查询IP信息失败:', error)
         queryError.value = '查询失败，请稍后重试'
     } finally {
         loadingQuery.value = false
@@ -740,13 +1739,20 @@ const loadHistory = () => {
             queryHistory.value = JSON.parse(saved)
         }
     } catch (error) {
-        console.error('加载历史记录失败:', error)
     }
 }
 
 onMounted(() => {
+    // 更新页面标题
+    setPageTitle('ip-lookup')
     getCurrentIpInfo()
     loadHistory()
+})
+
+// 组件卸载时恢复原标题
+onUnmounted(() => {
+    // 恢复原标题
+    restoreDefaultTitle()
 })
 </script>
 <style scoped>
@@ -801,7 +1807,7 @@ onMounted(() => {
     max-width: 1000px;
     margin: 0 auto;
     padding: 24px;
-    padding-bottom: 80px;
+    padding-bottom: 120px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -865,7 +1871,7 @@ onMounted(() => {
 
 .source-name {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     font-size: 14px;
 }
 
@@ -900,7 +1906,7 @@ onMounted(() => {
 
 .ip-location {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
 }
 
 .error-info {
@@ -912,7 +1918,7 @@ onMounted(() => {
 
 .error-message {
     font-size: 14px;
-    color: var(--text-error);
+    color: var(--text-error) !important;
     margin-bottom: 8px;
 }
 
@@ -952,13 +1958,13 @@ onMounted(() => {
 
 .label {
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     font-weight: 500;
 }
 
 .value {
     font-size: 13px;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     font-weight: 500;
     text-align: right;
 }
@@ -969,7 +1975,7 @@ onMounted(() => {
     gap: 12px;
     padding: 40px 20px;
     justify-content: center;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
 }
 
 .error {
@@ -980,7 +1986,7 @@ onMounted(() => {
     background: var(--bg-error);
     border: 1px solid var(--border-error);
     border-radius: var(--radius-md);
-    color: var(--text-error);
+    color: var(--text-error) !important;
 }
 
 .retry-btn {
@@ -1064,7 +2070,7 @@ onMounted(() => {
 
 .ip-examples span {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
 }
 
 .example-btn {
@@ -1119,13 +2125,13 @@ onMounted(() => {
 
 .history-location {
     flex: 1;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     font-size: 14px;
 }
 
 .history-time {
     font-size: 12px;
-    color: var(--text-tertiary);
+    color: var(--text-tertiary) !important;
 }
 
 .clear-history-btn {
@@ -1242,7 +2248,7 @@ onMounted(() => {
 @media (max-width: 768px) {
     .content {
         padding: 16px;
-        padding-bottom: 60px;
+        padding-bottom: 100px;
         gap: 24px;
     }
 

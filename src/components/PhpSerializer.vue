@@ -249,7 +249,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -902,6 +903,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         message.value = ''
     }, 3000)
 }
+
+// 生命周期钩子
+onMounted(() => {
+    setPageTitle('php-serializer')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 <style scoped>
 .php-serializer {

@@ -226,8 +226,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import * as XLSX from 'xlsx'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -623,6 +624,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         message.value = ''
     }, 3000)
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('json-to-excel')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

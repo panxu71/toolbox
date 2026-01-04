@@ -293,7 +293,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import {  ref, watch, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -611,6 +612,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         message.value = ''
     }, 3000)
 }
+
+// 生命周期钩子
+onMounted(() => {
+    setPageTitle('text-replacer')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 
 // 监听变化
 watch([searchText, replaceText, originalText, useRegex, caseSensitive, globalReplace, multiline], () => {

@@ -117,7 +117,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { Solar } from 'lunar-javascript'
 import { useWakeLock } from '../composables/useWakeLock'
 
@@ -412,6 +413,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 生命周期
 onMounted(() => {
+    setPageTitle('clock')
     // 开始时间更新
     updateTime()
     intervalId.value = window.setInterval(updateTime, 1) // 1ms更新一次以显示完整毫秒
@@ -424,6 +426,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    restoreDefaultTitle()
     if (intervalId.value) {
         clearInterval(intervalId.value)
     }

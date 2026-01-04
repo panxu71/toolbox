@@ -261,7 +261,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -364,6 +365,7 @@ const timeUpdateTrigger = ref(0)
 
 // 组件挂载时初始化
 onMounted(() => {
+    setPageTitle('timezone-converter')
     const now = new Date()
     convertDate.value = now.toISOString().split('T')[0] || ''
     convertTime.value = (now.toTimeString().split(' ')[0] || '12:00:00').substring(0, 8)

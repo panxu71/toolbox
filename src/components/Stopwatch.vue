@@ -165,7 +165,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
@@ -433,12 +434,14 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 // 生命周期
 onMounted(() => {
+    setPageTitle('stopwatch')
     document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     showMessage('快捷键：空格键 开始/暂停，L键 计次，R键 重置，F键/F11键 全屏', 'success')
 })
 
 onUnmounted(() => {
+    restoreDefaultTitle()
     document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
     if (intervalId.value) {

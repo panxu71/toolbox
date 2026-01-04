@@ -143,7 +143,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 
@@ -614,6 +615,15 @@ const clearAll = () => {
     jsonInputError.value = ''
     postmanInputError.value = ''
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('json-postman-converter')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

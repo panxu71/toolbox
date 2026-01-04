@@ -119,7 +119,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -323,7 +324,12 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 onMounted(() => {
+    setPageTitle('mime-type-reference')
     // 组件挂载时的初始化逻辑
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 

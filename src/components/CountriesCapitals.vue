@@ -186,7 +186,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{ back: [] }>()
 
@@ -592,6 +593,15 @@ const handleFlagError = (event: Event) => {
     // 如果国旗图片加载失败，显示默认图片或隐藏
     img.style.display = 'none'
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('countries-capitals')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 <style scoped>
 .countries-capitals {

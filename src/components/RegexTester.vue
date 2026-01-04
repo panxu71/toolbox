@@ -248,7 +248,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -566,6 +567,15 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
         message.value = ''
     }, 3000)
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('regex-tester')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 <style scoped>
 .regex-tester {

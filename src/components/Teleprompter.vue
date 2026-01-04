@@ -243,7 +243,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import {  ref, computed, onMounted, onUnmounted, nextTick, watch  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
@@ -581,6 +582,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 生命周期
 onMounted(() => {
+    setPageTitle('teleprompter')
     document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     
@@ -636,6 +638,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    restoreDefaultTitle()
     stopScrolling()
     releaseWakeLock() // 组件卸载时释放防息屏，不需要显示消息
     document.removeEventListener('keydown', handleKeyPress)

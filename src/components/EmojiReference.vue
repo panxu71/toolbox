@@ -81,7 +81,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -1633,6 +1634,7 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
+    setPageTitle('emoji-reference')
     // 组件挂载时的初始化
     const emojiContent = document.querySelector('.emoji-content')
     if (emojiContent) {
@@ -1641,6 +1643,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    restoreDefaultTitle()
     const emojiContent = document.querySelector('.emoji-content')
     if (emojiContent) {
         emojiContent.removeEventListener('scroll', handleScroll)

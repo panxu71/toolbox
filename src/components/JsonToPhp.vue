@@ -143,7 +143,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import hljs from 'highlight.js/lib/core'
 import php from 'highlight.js/lib/languages/php'
 import json from 'highlight.js/lib/languages/json'
@@ -603,7 +604,12 @@ const clearAll = () => {
 }
 
 onMounted(() => {
+    setPageTitle('json-to-php')
     loadJsonExample()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 

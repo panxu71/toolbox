@@ -325,7 +325,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -664,7 +665,12 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 组件挂载时生成初始密码
 onMounted(() => {
+    setPageTitle('password-generator')
     generatePassword()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 <style scoped>

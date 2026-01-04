@@ -310,7 +310,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import {  ref, computed, onMounted, onUnmounted, watch  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { marked } from 'marked'
 
 const emit = defineEmits<{ back: [] }>()
@@ -1197,7 +1198,12 @@ document.addEventListener('click', handleClickOutside)
 
 // 组件挂载时初始化行号
 onMounted(() => {
+    setPageTitle('markdown-editor')
     updateLineNumbers()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 
 // 监听内容变化，更新行号

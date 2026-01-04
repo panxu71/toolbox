@@ -505,7 +505,8 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import {  ref, reactive, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -1030,6 +1031,15 @@ const copyResponse = async () => {
         showMessage('复制失败，请手动选择复制', 'error')
     }
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('api-tester')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

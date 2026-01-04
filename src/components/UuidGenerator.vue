@@ -244,7 +244,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -570,6 +571,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 初始化生成一些UUID
 generateUuid()
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('uuid-generator')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

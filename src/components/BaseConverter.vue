@@ -249,7 +249,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -411,6 +412,15 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 初始化
 convertNumber()
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('base-converter')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 <style scoped>
 .base-converter {

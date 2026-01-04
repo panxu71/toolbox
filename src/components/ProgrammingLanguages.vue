@@ -290,7 +290,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 defineEmits<{
     back: []
@@ -911,6 +911,15 @@ const getDifficultyText = (difficulty: number): string => {
     const texts = ['入门', '简单', '中等', '困难', '专家']
     return texts[difficulty - 1] || '未知'
 }
+
+// 页面标题管理
+onMounted(() => {
+    setPageTitle('programming-languages')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
+})
 </script>
 
 <style scoped>

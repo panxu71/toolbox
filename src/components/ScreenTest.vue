@@ -457,7 +457,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
@@ -1191,12 +1192,14 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 onMounted(() => {
+    setPageTitle('screen-test')
     document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     showMessage('屏幕测试已就绪，空格键或点击切换测试', 'success')
 })
 
 onUnmounted(() => {
+    restoreDefaultTitle()
     document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
     releaseWakeLock()

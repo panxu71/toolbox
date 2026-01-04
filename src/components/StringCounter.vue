@@ -237,7 +237,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -410,7 +411,12 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 初始化
 onMounted(() => {
+    setPageTitle('string-counter')
     updateStats()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 <style scoped>

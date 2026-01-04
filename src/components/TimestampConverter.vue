@@ -214,6 +214,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -277,12 +278,14 @@ const timezoneConfig = [
 
 // 组件挂载时开始实时更新时间
 onMounted(() => {
+    setPageTitle('timestamp-converter')
     updateCurrentTime()
     timeInterval = setInterval(updateCurrentTime, 1000)
 })
 
 // 组件卸载时清除定时器
 onUnmounted(() => {
+    restoreDefaultTitle()
     if (timeInterval) {
         clearInterval(timeInterval)
     }

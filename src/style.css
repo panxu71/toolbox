@@ -8,6 +8,9 @@
   --primary-color-alpha: rgba(99, 102, 241, 0.1);
   --primary-hover: #4f46e5;
   --primary-light: #818cf8;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-alpha: rgba(99, 102, 241, 0.1);
 
   /* 背景色 */
   --bg-primary: #0f172a;
@@ -16,15 +19,19 @@
   --bg-quaternary: #475569;
   --bg-card: #1e293b;
   --bg-hover: #475569;
+  --bg-error: #1e1b1b;
 
   /* 文字色 */
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-error: #fca5a5;
 
   /* 边框色 */
   --border-color: #334155;
   --border-hover: #475569;
+  --border-error: #7f1d1d;
 
   /* 状态色 */
   --success-color: #10b981;
@@ -36,6 +43,7 @@
   --error-color: #ef4444;
   --error-color-dark: #dc2626;
   --error-color-alpha: rgba(239, 68, 68, 0.1);
+  --color-error: #ef4444;
 
   /* 阴影 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -53,6 +61,9 @@
   --primary-color-alpha: rgba(99, 102, 241, 0.1);
   --primary-hover: #4f46e5;
   --primary-light: #818cf8;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-alpha: rgba(99, 102, 241, 0.1);
 
   /* 背景色 */
   --bg-primary: #ffffff;
@@ -61,15 +72,19 @@
   --bg-quaternary: #e2e8f0;
   --bg-card: #ffffff;
   --bg-hover: #e2e8f0;
+  --bg-error: #fef2f2;
 
   /* 文字色 */
   --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;
+  --text-tertiary: #94a3b8;
+  --text-error: #dc2626;
 
   /* 边框色 */
   --border-color: #e2e8f0;
   --border-hover: #cbd5e1;
+  --border-error: #fecaca;
 
   /* 状态色 */
   --success-color: #10b981;
@@ -81,6 +96,7 @@
   --error-color: #ef4444;
   --error-color-dark: #dc2626;
   --error-color-alpha: rgba(239, 68, 68, 0.1);
+  --color-error: #ef4444;
 
   /* 阴影 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);

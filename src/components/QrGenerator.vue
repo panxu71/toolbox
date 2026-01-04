@@ -292,8 +292,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import QRCode from 'qrcode'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -553,9 +554,14 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 初始化
 onMounted(() => {
+    setPageTitle('qr-generator')
     // 加载示例内容
     textContent.value = '欢迎使用二维码生成器！'
     generateQR()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 

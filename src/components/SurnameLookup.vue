@@ -176,7 +176,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import surnameConfig from '../config/surnames.json'
 
 defineEmits<{
@@ -316,8 +317,13 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 onMounted(() => {
+    setPageTitle('surname-lookup')
     const version = surnameConfig.metadata.version
     showMessage(`百家姓查询已加载，当前版本 v${version}，收录 ${allSurnames.value.length} 个姓氏`, 'success')
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 

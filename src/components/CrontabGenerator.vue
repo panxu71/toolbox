@@ -308,7 +308,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 
 defineEmits<{
     back: []
@@ -822,7 +823,12 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 初始化
 onMounted(() => {
+    setPageTitle('crontab-generator')
     updateCron()
+})
+
+onUnmounted(() => {
+    restoreDefaultTitle()
 })
 </script>
 

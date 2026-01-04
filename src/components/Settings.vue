@@ -159,7 +159,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted   } from 'vue'
+import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
 import { useTheme } from '../composables/useTheme'
 
 const { setTheme } = useTheme()
@@ -250,6 +251,7 @@ const clearData = () => {
 }
 
 onMounted(() => {
+    setPageTitle('settings')
     loadSettings()
 })
 </script>

@@ -188,16 +188,259 @@ export default defineConfig({
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8');
+            proxyReq.setHeader('Accept-Language', 'en-US,en;q=0.5');
+          });
+        }
+      },
+      '/api/whatismyip-api': {
+        target: 'https://whatismyipaddress.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/whatismyip-api/, '/api'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Accept-Language', 'zh-TW,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
+            proxyReq.setHeader('Referer', 'https://whatismyipaddress.com/zh-tw/index');
+            proxyReq.setHeader('Origin', 'https://whatismyipaddress.com');
+            proxyReq.setHeader('Sec-Ch-Ua', '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+            proxyReq.setHeader('Sec-Ch-Ua-Mobile', '?0');
+            proxyReq.setHeader('Sec-Ch-Ua-Platform', '"Windows"');
+            proxyReq.setHeader('Sec-Fetch-Dest', 'empty');
+            proxyReq.setHeader('Sec-Fetch-Mode', 'cors');
+            proxyReq.setHeader('Sec-Fetch-Site', 'same-origin');
+          });
+        }
+      },
+      '/api/whatismyip': {
+        target: 'https://whatismyipaddress.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/whatismyip/, '/zh-tw/index'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
+            proxyReq.setHeader('Accept-Language', 'zh-TW,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
+            proxyReq.setHeader('Cache-Control', 'no-cache');
+            proxyReq.setHeader('Pragma', 'no-cache');
+            proxyReq.setHeader('Sec-Ch-Ua', '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+            proxyReq.setHeader('Sec-Ch-Ua-Mobile', '?0');
+            proxyReq.setHeader('Sec-Ch-Ua-Platform', '"Windows"');
+            proxyReq.setHeader('Sec-Fetch-Dest', 'document');
+            proxyReq.setHeader('Sec-Fetch-Mode', 'navigate');
+            proxyReq.setHeader('Sec-Fetch-Site', 'none');
+            proxyReq.setHeader('Sec-Fetch-User', '?1');
+            proxyReq.setHeader('Upgrade-Insecure-Requests', '1');
+          });
+        }
+      },
+      '/api/cip-cc': {
+        target: 'https://cip.cc',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cip-cc/, '/'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Referer', 'https://cip.cc/');
+          });
+        }
+      },
+      '/api/coding-tools': {
+        target: 'https://coding.tools',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/coding-tools/, '/cn/my-ip-address'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('X-Requested-With', 'XMLHttpRequest');
+            proxyReq.setHeader('Cache-Control', 'no-cache');
+            proxyReq.setHeader('Referer', 'https://coding.tools/cn/my-ip-address');
+            proxyReq.setHeader('Origin', 'https://coding.tools');
+            proxyReq.setHeader('Sec-Fetch-Dest', 'empty');
+            proxyReq.setHeader('Sec-Fetch-Mode', 'cors');
+            proxyReq.setHeader('Sec-Fetch-Site', 'same-origin');
+          });
+        }
+      },
+      '/api/myip-tw': {
+        target: 'https://myip.com.tw',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/myip-tw/, '/'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
+            proxyReq.setHeader('Accept-Language', 'zh-TW,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
+            proxyReq.setHeader('Referer', 'https://myip.com.tw/');
+          });
+        }
+      },
+      '/api/browserscan': {
+        target: 'https://ip-scan.browserscan.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/browserscan/, '/sys/config/ip/get-visitor-ip'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9');
+            proxyReq.setHeader('Referer', 'https://browserscan.net/');
+            proxyReq.setHeader('Origin', 'https://browserscan.net');
+          });
+        }
+      },
+      '/api/taobao': {
+        target: 'https://www.taobao.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/taobao/, '/help/getip.php'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
+            proxyReq.setHeader('Referer', 'https://www.taobao.com/');
+            proxyReq.setHeader('Origin', 'https://www.taobao.com');
+            proxyReq.setHeader('Sec-Ch-Ua', '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+            proxyReq.setHeader('Sec-Ch-Ua-Mobile', '?0');
+            proxyReq.setHeader('Sec-Ch-Ua-Platform', '"Windows"');
+            proxyReq.setHeader('Sec-Fetch-Dest', 'script');
+            proxyReq.setHeader('Sec-Fetch-Mode', 'no-cors');
+            proxyReq.setHeader('Sec-Fetch-Site', 'same-origin');
+            proxyReq.setHeader('Cache-Control', 'no-cache');
+            proxyReq.setHeader('Pragma', 'no-cache');
+          });
+        }
+      },
+      '/api/iplark': {
+        target: 'https://iplark.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/iplark/, '/ipapi/public/ipinfo?db=moon'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Referer', 'https://iplark.com/');
+          });
+        }
+      },
+      '/api/xxir': {
+        target: 'https://ip.xxir.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/xxir/, '/ip/mtip.php'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Referer', 'https://ip.xxir.com/');
+          });
+        }
+      },
+      '/api/maxmind': {
+        target: 'https://geoip.maxmind.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/maxmind/, '/geoip/v2.1/city/me'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', '*/*');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9');
+            proxyReq.setHeader('Cache-Control', 'no-cache');
+            proxyReq.setHeader('Pragma', 'no-cache');
+            proxyReq.setHeader('Referer', 'https://www.maxmind.com/');
+            proxyReq.setHeader('Origin', 'https://www.maxmind.com');
+          });
+        }
+      },
+      '/api/ipnews': {
+        target: 'https://api.ipnews.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ipnews/, '/v1/ip_self_search'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Referer', 'https://api.ipnews.io/');
+          });
+        }
+      },
+      '/api/ipdatacloud': {
+        target: 'https://app.ipdatacloud.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ipdatacloud/, '/v1/ip_self_search'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Referer', 'https://app.ipdatacloud.com/');
+          });
+        }
+      },
+      '/api/aapq': {
+        target: 'https://fcd09628a76x.aapq.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/aapq/, '/ip'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+          });
+        }
+      },
+      '/api/upyun': {
+        target: 'https://pubstatic.b0.upaiyun.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/upyun/, '/'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Referer', 'https://www.upyun.com/');
+          });
+        }
+      },
+      '/api/itdog': {
+        target: 'https://ipv4_cu.itdog.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/itdog/, '/'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Referer', 'https://www.itdog.cn/');
+          });
+        }
+      },
+      '/api/ipip-json': {
+        target: 'https://myip.ipip.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ipip-json/, '/json'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
           });
         }
       },
       '/api/ip-api': {
-        target: 'https://ip-api.com',
+        target: 'http://demo.ip-api.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ip-api/, ''),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            proxyReq.setHeader('Referer', 'https://ip-api.com/');
           });
         }
       },
@@ -234,17 +477,44 @@ export default defineConfig({
       '/api/ipinfo': {
         target: 'https://ipinfo.io',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/ipinfo/, ''),
+        rewrite: (path) => path.replace(/^\/api\/ipinfo/, '/lookup-data'),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
+            proxyReq.setHeader('Referer', 'https://ipinfo.io/');
           });
         }
       },
       '/api/ip-cn': {
-        target: 'https://ip.cn',
+        target: 'https://my.ip.cn',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/ip-cn/, ''),
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/ip-cn/, '/json/'),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            proxyReq.setHeader('Accept', '*/*');
+            proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br, zstd');
+            proxyReq.setHeader('Accept-Language', 'zh-CN,zh;q=0.9');
+            proxyReq.setHeader('Cache-Control', 'no-cache');
+            proxyReq.setHeader('Connection', 'keep-alive');
+            proxyReq.setHeader('DNT', '1');
+            proxyReq.setHeader('Pragma', 'no-cache');
+            proxyReq.setHeader('Referer', 'https://ip.cn/');
+            proxyReq.setHeader('Sec-Ch-Ua', '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+            proxyReq.setHeader('Sec-Ch-Ua-Mobile', '?0');
+            proxyReq.setHeader('Sec-Ch-Ua-Platform', '"Windows"');
+            proxyReq.setHeader('Sec-Fetch-Dest', 'empty');
+            proxyReq.setHeader('Sec-Fetch-Mode', 'cors');
+            proxyReq.setHeader('Sec-Fetch-Site', 'cross-site');
+          });
+        }
+      },
+      '/api/ustc': {
+        target: 'https://test.ustc.edu.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ustc/, ''),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
