@@ -245,13 +245,16 @@
 
 <script setup lang="ts">
 import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('uuid-generator')
+
 const selectedVersion = ref<'v1' | 'v4' | 'v7'>('v4')
 const quantity = ref(10)
 const uuids = ref<string[]>([])
@@ -572,14 +575,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 // 初始化生成一些UUID
 generateUuid()
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('uuid-generator')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

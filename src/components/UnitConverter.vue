@@ -118,14 +118,17 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 当前选择的类别
+// 使用页面标题管理
+usePageTitle('unit-convert')
+
 const selectedCategory = ref('length')
 const inputValue = ref('')
 const fromUnit = ref('')
@@ -456,13 +459,9 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 
 // 初始化
 onMounted(() => {
-    setPageTitle('unit-converter')
     selectCategory('length')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

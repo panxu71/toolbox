@@ -160,12 +160,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted   } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import { useTheme } from '../composables/useTheme'
 
 const { setTheme } = useTheme()
 
 // 设置数据
+// 使用页面标题管理
+usePageTitle('settings')
+
 const settings = ref({
     theme: 'auto',
     language: 'zh-CN',
@@ -250,9 +253,7 @@ const clearData = () => {
     }
 }
 
-onMounted(() => {
-    setPageTitle('settings')
-    loadSettings()
+onMounted(() => {loadSettings()
 })
 </script>
 

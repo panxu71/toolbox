@@ -259,7 +259,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 // 动态导入 OpenCC
 let Converter: any = null
@@ -281,6 +281,9 @@ defineEmits<{
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('chinese-converter')
+
 const conversionMode = ref<'toTraditional' | 'toSimplified' | 'auto'>('toTraditional')
 const traditionalStandard = ref<'tw' | 'hk'>('tw') // 繁体标准：台湾或香港
 const inputText = ref('')
@@ -630,14 +633,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('chinese-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .chinese-converter {

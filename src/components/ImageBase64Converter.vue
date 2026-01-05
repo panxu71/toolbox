@@ -229,14 +229,17 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 模式
+// 使用页面标题管理
+usePageTitle('image-base64')
+
 const mode = ref<'toBase64' | 'fromBase64'>('toBase64')
 
 // 图片转Base64
@@ -477,14 +480,6 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('image-base64-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

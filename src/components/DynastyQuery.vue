@@ -238,13 +238,16 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted, nextTick  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('dynasty-query')
+
 const searchQuery = ref('')
 const activePeriod = ref('all')
 const selectedDynasty = ref<Dynasty | null>(null)
@@ -1392,18 +1395,13 @@ const scrollToTop = () => {
     }
 }
 
-onMounted(() => {
-    setPageTitle('dynasty-query')
-    // 组件挂载时的初始化逻辑
+onMounted(() => {// 组件挂载时的初始化逻辑
     const scrollContainer = document.querySelector('.query-content')
     if (scrollContainer) {
         scrollContainer.addEventListener('scroll', handleScroll)
     }
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

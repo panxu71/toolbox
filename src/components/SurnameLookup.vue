@@ -177,7 +177,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import surnameConfig from '../config/surnames.json'
 
 defineEmits<{
@@ -197,6 +197,9 @@ interface SurnameInfo {
 }
 
 // 搜索相关
+// 使用页面标题管理
+usePageTitle('surname-lookup')
+
 const searchQuery = ref('')
 const selectedSurname = ref<SurnameInfo | null>(null)
 
@@ -316,15 +319,10 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     }, 3000)
 }
 
-onMounted(() => {
-    setPageTitle('surname-lookup')
-    const version = surnameConfig.metadata.version
+onMounted(() => {const version = surnameConfig.metadata.version
     showMessage(`百家姓查询已加载，当前版本 v${version}，收录 ${allSurnames.value.length} 个姓氏`, 'success')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

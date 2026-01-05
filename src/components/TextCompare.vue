@@ -238,13 +238,16 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('text-compare')
+
 const textA = ref('')
 const textB = ref('')
 const fileInputA = ref<HTMLInputElement>()
@@ -625,12 +628,9 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 生命周期钩子
 onMounted(() => {
-    setPageTitle('text-compare')
+    // 页面初始化逻辑
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

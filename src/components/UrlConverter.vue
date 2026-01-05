@@ -35,45 +35,48 @@
                                 <span>原始文本/URL</span>
                                 <div class="section-actions">
                                     <button class="action-btn-small" @click="pasteText" title="粘贴">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                            <path
+                                                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                                         </svg>
                                     </button>
                                     <button class="action-btn-small" @click="clearInput" title="清空">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <line x1="18" y1="6" x2="6" y2="18" />
                                             <line x1="6" y1="6" x2="18" y2="18" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
-                            <textarea 
-                                v-model="inputText" 
-                                placeholder="请输入要编码的URL或文本..."
-                                class="text-input"
-                                @input="autoEncode"
-                            ></textarea>
+                            <textarea v-model="inputText" placeholder="请输入要编码的URL或文本..." class="text-input"
+                                @input="autoEncode"></textarea>
                             <div class="input-info">
                                 <span class="char-count">字符数: {{ inputText.length }}</span>
-                                <span class="url-valid" :class="{ valid: isValidUrl(inputText), invalid: inputText && !isValidUrl(inputText) }">
+                                <span class="url-valid"
+                                    :class="{ valid: isValidUrl(inputText), invalid: inputText && !isValidUrl(inputText) }">
                                     {{ getUrlStatus(inputText) }}
                                 </span>
                             </div>
                         </div>
-                        
+
                         <div class="output-section">
                             <div class="section-title">
                                 <span>编码结果</span>
                                 <div class="section-actions">
                                     <button class="action-btn-small" @click="copyEncoded" title="复制">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
                                     </button>
-                                    <button class="action-btn-small" @click="openUrl" title="打开URL" :disabled="!isValidUrl(encodedText)">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <button class="action-btn-small" @click="openUrl" title="打开URL"
+                                        :disabled="!isValidUrl(encodedText)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                                             <polyline points="15,3 21,3 21,9" />
                                             <line x1="10" y1="14" x2="21" y2="3" />
@@ -81,38 +84,38 @@
                                     </button>
                                 </div>
                             </div>
-                            <textarea 
-                                v-model="encodedText" 
-                                placeholder="编码结果将显示在这里..."
-                                class="text-output"
-                                readonly
-                            ></textarea>
+                            <textarea v-model="encodedText" placeholder="编码结果将显示在这里..." class="text-output"
+                                readonly></textarea>
                             <div class="output-info">
                                 <span class="char-count">字符数: {{ encodedText.length }}</span>
-                                <span class="url-valid" :class="{ valid: isValidUrl(encodedText), invalid: encodedText && !isValidUrl(encodedText) }">
+                                <span class="url-valid"
+                                    :class="{ valid: isValidUrl(encodedText), invalid: encodedText && !isValidUrl(encodedText) }">
                                     {{ getUrlStatus(encodedText) }}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="converter-actions">
                         <button class="convert-btn encode" @click="encodeUrl">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M7 16.5L12 12l5 4.5" />
                                 <path d="M7 7.5L12 12l5-4.5" />
                             </svg>
                             编码
                         </button>
                         <button class="convert-btn decode" @click="decodeUrl">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M17 7.5L12 12l-5-4.5" />
                                 <path d="M17 16.5L12 12l-5 4.5" />
                             </svg>
                             解码
                         </button>
                         <button class="swap-btn" @click="swapContent">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M8 3L4 7l4 4" />
                                 <path d="M4 7h16" />
                                 <path d="M16 21l4-4-4-4" />
@@ -136,15 +139,12 @@
                     <div class="url-input-section">
                         <label>输入URL</label>
                         <div class="url-input-wrapper">
-                            <input 
-                                v-model="parseUrl" 
-                                type="text" 
-                                placeholder="https://example.com/path?param1=value1&param2=value2"
-                                class="url-input"
-                                @input="parseUrlComponents"
-                            />
+                            <input v-model="parseUrl" type="text"
+                                placeholder="https://example.com/path?param1=value1&param2=value2" class="url-input"
+                                @input="parseUrlComponents" />
                             <button class="parse-btn" @click="parseUrlComponents">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <circle cx="11" cy="11" r="8" />
                                     <path d="M21 21l-4.35-4.35" />
                                 </svg>
@@ -152,7 +152,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div v-if="urlComponents" class="url-components">
                         <div class="component-grid">
                             <div class="component-item">
@@ -180,12 +180,13 @@
                                 <div class="component-value">{{ urlComponents.hash || '-' }}</div>
                             </div>
                         </div>
-                        
+
                         <div v-if="urlParams.length > 0" class="url-params">
                             <div class="params-header">
                                 <h4>URL参数</h4>
                                 <button class="copy-params-btn" @click="copyParams" title="复制参数">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -202,7 +203,8 @@
                                     <div class="param-value">{{ param.value }}</div>
                                     <div class="param-actions">
                                         <button class="copy-param-btn" @click="copyParam(param)" title="复制">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                             </svg>
@@ -225,7 +227,8 @@
                 </div>
                 <div class="encoding-reference">
                     <div class="reference-grid">
-                        <div v-for="char in commonChars" :key="char.original" class="char-item" @click="insertChar(char)">
+                        <div v-for="char in commonChars" :key="char.original" class="char-item"
+                            @click="insertChar(char)">
                             <div class="char-original">{{ char.original }}</div>
                             <div class="char-encoded">{{ char.encoded }}</div>
                             <div class="char-description">{{ char.description }}</div>
@@ -243,13 +246,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本编码解码状态
+// 使用页面标题管理
+usePageTitle('url-encode')
+
 const inputText = ref('')
 const encodedText = ref('')
 
@@ -320,7 +326,7 @@ const encodeUrl = () => {
         encodedText.value = ''
         return
     }
-    
+
     try {
         encodedText.value = encodeURIComponent(inputText.value)
         showMessage('URL编码成功', 'success')
@@ -335,7 +341,7 @@ const decodeUrl = () => {
         encodedText.value = ''
         return
     }
-    
+
     try {
         encodedText.value = decodeURIComponent(inputText.value)
         showMessage('URL解码成功', 'success')
@@ -377,7 +383,7 @@ const copyEncoded = async () => {
         showMessage('没有可复制的内容', 'error')
         return
     }
-    
+
     try {
         await navigator.clipboard.writeText(encodedText.value)
         showMessage('编码结果已复制到剪贴板', 'success')
@@ -392,7 +398,7 @@ const openUrl = () => {
         showMessage('不是有效的URL', 'error')
         return
     }
-    
+
     window.open(encodedText.value, '_blank')
     showMessage('已在新窗口打开URL', 'success')
 }
@@ -421,10 +427,10 @@ const parseUrlComponents = () => {
         urlParams.value = []
         return
     }
-    
+
     try {
         const url = new URL(parseUrl.value)
-        
+
         urlComponents.value = {
             protocol: url.protocol,
             host: url.host,
@@ -433,13 +439,13 @@ const parseUrlComponents = () => {
             search: url.search,
             hash: url.hash
         }
-        
+
         // 解析URL参数
         urlParams.value = []
         url.searchParams.forEach((value, key) => {
             urlParams.value.push({ key, value })
         })
-        
+
         showMessage('URL解析完成', 'success')
     } catch (error) {
         showMessage('URL解析失败，请检查URL格式', 'error')
@@ -451,11 +457,11 @@ const parseUrlComponents = () => {
 // 复制参数
 const copyParams = async () => {
     if (urlParams.value.length === 0) return
-    
+
     const paramsText = urlParams.value
         .map(param => `${param.key}=${param.value}`)
         .join('\n')
-    
+
     try {
         await navigator.clipboard.writeText(paramsText)
         showMessage('参数已复制到剪贴板', 'success')
@@ -500,14 +506,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('url-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .url-converter {
@@ -1081,6 +1079,7 @@ onUnmounted(() => {
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -1093,41 +1092,41 @@ onUnmounted(() => {
         padding: 1rem;
         gap: 1.5rem;
     }
-    
+
     .converter-section {
         padding: 1rem;
     }
-    
+
     .input-output-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .converter-actions {
         flex-direction: column;
     }
-    
+
     .url-input-wrapper {
         flex-direction: column;
     }
-    
+
     .component-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .params-header-row,
     .param-row {
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
-    
+
     .param-actions {
         justify-content: flex-start;
     }
-    
+
     .reference-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
-    
+
     .text-input,
     .text-output {
         height: 150px;

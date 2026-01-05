@@ -187,9 +187,12 @@
 </template>
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{ back: [] }>()
+
+// 使用页面标题管理
+usePageTitle('countries-capitals')
 
 const searchQuery = ref('')
 const activeContinent = ref('all')
@@ -594,14 +597,6 @@ const handleFlagError = (event: Event) => {
     img.style.display = 'none'
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('countries-capitals')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .countries-capitals {

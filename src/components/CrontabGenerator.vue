@@ -309,13 +309,16 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 模式
+// 使用页面标题管理
+usePageTitle('crontab-generator')
+
 const mode = ref<'visual' | 'manual'>('visual')
 
 // Cron配置
@@ -822,14 +825,9 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 初始化
-onMounted(() => {
-    setPageTitle('crontab-generator')
-    updateCron()
+onMounted(() => {updateCron()
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

@@ -156,13 +156,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 文本编码转换
+// 使用页面标题管理
+usePageTitle('text-encoder')
+
 const textInput = ref('')
 const textOutput = ref('')
 const selectedEncoding = ref('base64')
@@ -347,14 +350,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 // 初始化
 convertText()
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('text-encoder')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

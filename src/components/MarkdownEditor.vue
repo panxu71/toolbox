@@ -311,10 +311,13 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted, watch  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import { marked } from 'marked'
 
 const emit = defineEmits<{ back: [] }>()
+
+// 使用页面标题管理
+usePageTitle('markdown-editor')
 
 const editorRef = ref<HTMLTextAreaElement>()
 const imageInput = ref<HTMLInputElement>()
@@ -1197,13 +1200,7 @@ function handleClickOutside(event: Event) {
 document.addEventListener('click', handleClickOutside)
 
 // 组件挂载时初始化行号
-onMounted(() => {
-    setPageTitle('markdown-editor')
-    updateLineNumbers()
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
+onMounted(() => {updateLineNumbers()
 })
 
 // 监听内容变化，更新行号

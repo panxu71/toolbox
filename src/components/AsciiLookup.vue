@@ -235,7 +235,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
@@ -250,6 +250,9 @@ interface AsciiInfo {
 }
 
 // 查询模式
+// 使用页面标题管理
+usePageTitle('ascii-lookup')
+
 const queryMode = ref<'char' | 'code'>('char')
 
 // 输入值
@@ -490,15 +493,10 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 初始化
-onMounted(() => {
-    setPageTitle('ascii-lookup')
-    asciiTable.value = generateAsciiTable()
+onMounted(() => {asciiTable.value = generateAsciiTable()
     showMessage('ASCII编码查询工具已加载', 'success')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .ascii-lookup {

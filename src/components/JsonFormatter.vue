@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 
@@ -106,6 +106,9 @@ hljs.registerLanguage('json', json)
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('json-format')
 
 const inputJson = ref('')
 const formattedJson = ref('')
@@ -481,13 +484,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
 onMounted(() => {
-    setPageTitle('json-formatter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
+    // 页面初始化逻辑
 })
 </script>
 

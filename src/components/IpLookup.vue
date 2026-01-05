@@ -73,7 +73,8 @@
                             </div>
                             <div class="detail-item">
                                 <span class="label">经纬度:</span>
-                                <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-' }}</span>
+                                <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
+                                }}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="label">ASN:</span>
@@ -154,7 +155,8 @@
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
-                                    <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-' }}</span>
+                                    <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
+                                    }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -188,8 +190,8 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, onMounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 // 立即执行的调试信息已移除
 
@@ -224,6 +226,9 @@ const loadingQuery = ref(false)
 const queryError = ref('')
 
 const queryHistory = ref<IpInfo[]>([])
+
+// 使用页面标题管理
+usePageTitle('ip-lookup')
 
 // 从background script获取IP.me的IP信息（生产环境使用）
 const fetchIpMeFromBackground = async (): Promise<IpInfo> => {
@@ -275,17 +280,17 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
 
             const html = await response.text();
-            
+
             // 从HTML中提取IP地址
             const ipMatch = html.match(/<input[^>]*name="ip"[^>]*value="([^"]*)"[^>]*>/);
-            
+
             // 查找表格并从中提取数据
             const tableSection = html.match(/<table[\s\S]*?<\/table>/);
             let city = '', country = '', countryCode = '', lat = '', lon = '', postalCode = '', organization = '', asn = '', ispName = '';
-            
+
             if (tableSection) {
                 const tableHtml = tableSection[0];
-                
+
                 // 使用更宽松的正则，允许中间有其他内容
                 const cityMatch = tableHtml.match(/<th>City:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
                 const countryMatch = tableHtml.match(/<th>Country:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
@@ -296,7 +301,7 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
                 const orgMatch = tableHtml.match(/<th>Organization:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
                 const asnMatch = tableHtml.match(/<th>ASN:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
                 const ispMatch = tableHtml.match(/<th>ISP Name:<\/th>[\s\S]*?<code>([^<]*)<\/code>/);
-                
+
                 city = cityMatch?.[1] || '';
                 country = countryMatch?.[1] || '';
                 countryCode = countryCodeMatch?.[1] || '';
@@ -306,15 +311,15 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
                 organization = orgMatch?.[1] || '';
                 asn = asnMatch?.[1] || '';
                 ispName = ispMatch?.[1] || '';
-                
-                
+
+
             } else {
             }
 
             // 简单的城市到省份映射（中国主要城市）
             const getCityProvince = (city: string, country: string): string => {
                 if (country !== 'China') return '';
-                
+
                 const cityProvinceMap: { [key: string]: string } = {
                     'Beijing': '北京',
                     'Shanghai': '上海',
@@ -328,7 +333,7 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
                     'Tianjin': '天津',
                     'Chongqing': '重庆'
                 };
-                
+
                 return cityProvinceMap[city] || '';
             };
 
@@ -348,7 +353,7 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
                 organization: organization,
                 asn: asn
             } as IpInfo;
-            
+
             return result;
         } else {
             // 生产环境使用background script
@@ -369,23 +374,23 @@ const fetchWhatIsMyIpData = async (): Promise<IpInfo> => {
     try {
         // 直接使用固定token，跳过主页获取
         const token = '4c9dd22613e14d8d6717f16874731d5e';
-        
+
         // 直接调用API
-        const apiUrl = import.meta.env.DEV 
+        const apiUrl = import.meta.env.DEV
             ? `/api/whatismyip-api/ds3?token=${token}&v=4`
             : `https://whatismyipaddress.com/api/ds3?token=${token}&v=4`;
-        
+
         const apiResponse = await fetch(apiUrl);
-        
+
         if (!apiResponse.ok) {
             throw new Error(`API请求失败: HTTP ${apiResponse.status}`);
         }
-        
+
         const data = await apiResponse.json();
-        
+
         // 数据在data字段中
         const ipData = data.data || data;
-        
+
         const result = {
             ip: ipData.ipv4 || ipData.ip || '未知',
             country: ipData.country || '',
@@ -398,7 +403,7 @@ const fetchWhatIsMyIpData = async (): Promise<IpInfo> => {
             lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
             source: 'WhatIsMyIP'
         };
-        
+
         return result;
     } catch (error) {
         return {
@@ -414,19 +419,19 @@ const fetchWhatIsMyIpData = async (): Promise<IpInfo> => {
 const fetchIpipJsonData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/ipip-json' : 'https://myip.ipip.net/json';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.ret === 'ok' && data.data) {
             const ipData = data.data;
             const location = ipData.location || [];
-            
+
             const result = {
                 ip: ipData.ip || '未知',
                 country: location[0] || '',
@@ -437,7 +442,7 @@ const fetchIpipJsonData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'IPIP.net'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回格式错误');
@@ -457,22 +462,22 @@ const fetchItDogData = async (): Promise<IpInfo> => {
     try {
         // 生成时间戳参数
         const timestamp = Date.now();
-        const url = import.meta.env.DEV 
-            ? `/api/itdog?_t=${timestamp}` 
+        const url = import.meta.env.DEV
+            ? `/api/itdog?_t=${timestamp}`
             : `https://ipv4_cu.itdog.cn/?_t=${timestamp}`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.type === 'success' && data.ip) {
             // 解析地址信息，格式：中国/广东/深圳/联通
             const addressParts = data.address ? data.address.split('/') : [];
-            
+
             const result = {
                 ip: data.ip || '未知',
                 country: addressParts[0] || '',
@@ -483,7 +488,7 @@ const fetchItDogData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'ITDog'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回格式错误');
@@ -503,23 +508,23 @@ const fetchUpYunData = async (): Promise<IpInfo> => {
     try {
         // 生成时间戳参数
         const timestamp = Date.now();
-        const url = import.meta.env.DEV 
-            ? `/api/upyun?_upnode&_t=${timestamp}` 
+        const url = import.meta.env.DEV
+            ? `/api/upyun?_upnode&_t=${timestamp}`
             : `https://pubstatic.b0.upaiyun.com/?_upnode&_t=${timestamp}`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.remote_addr && data.remote_addr_location) {
             // 使用用户的真实IP和位置信息
             const ip = data.remote_addr;
             const location = data.remote_addr_location;
-            
+
             const result = {
                 ip: ip || '未知',
                 country: location?.country || '',
@@ -530,7 +535,7 @@ const fetchUpYunData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'UpYun'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -549,15 +554,15 @@ const fetchUpYunData = async (): Promise<IpInfo> => {
 const fetchAapqData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/aapq' : 'https://fcd09628a76x.aapq.net/ip';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.ip) {
             // 国家代码转换为中文名称
             const countryMap: { [key: string]: string } = {
@@ -575,9 +580,9 @@ const fetchAapqData = async (): Promise<IpInfo> => {
                 'TW': '台湾',
                 'MO': '澳门'
             };
-            
+
             const country = countryMap[data.country] || data.country || '';
-            
+
             const result = {
                 ip: data.ip || '未知',
                 country: country,
@@ -588,7 +593,7 @@ const fetchAapqData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'AAPQ'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -607,7 +612,7 @@ const fetchAapqData = async (): Promise<IpInfo> => {
 const fetchIpDataCloudData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/ipdatacloud' : 'https://app.ipdatacloud.com/v1/ip_self_search';
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -615,16 +620,16 @@ const fetchIpDataCloudData = async (): Promise<IpInfo> => {
                 'Accept': 'application/json'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.code === 200 && data.data) {
             const ipData = data.data;
-            
+
             const result = {
                 ip: ipData.ip || '未知',
                 country: ipData.country || '',
@@ -637,7 +642,7 @@ const fetchIpDataCloudData = async (): Promise<IpInfo> => {
                 lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
                 source: 'IPDataCloud'
             };
-            
+
             return result;
         } else {
             throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
@@ -656,7 +661,7 @@ const fetchIpDataCloudData = async (): Promise<IpInfo> => {
 const fetchIpNewsData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/ipnews' : 'https://api.ipnews.io/v1/ip_self_search';
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -664,16 +669,16 @@ const fetchIpNewsData = async (): Promise<IpInfo> => {
                 'Accept': 'application/json'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.code === 200 && data.data) {
             const ipData = data.data;
-            
+
             // 国家名称转换（如果是英文则转为中文）
             const countryMap: { [key: string]: string } = {
                 'China': '中国',
@@ -687,9 +692,9 @@ const fetchIpNewsData = async (): Promise<IpInfo> => {
                 'Australia': '澳大利亚',
                 'Singapore': '新加坡'
             };
-            
+
             const country = countryMap[ipData.country] || ipData.country || '';
-            
+
             const result = {
                 ip: ipData.ip || '未知',
                 country: country,
@@ -703,7 +708,7 @@ const fetchIpNewsData = async (): Promise<IpInfo> => {
                 asn: ipData.asn || '',
                 source: 'IPNews'
             };
-            
+
             return result;
         } else {
             throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
@@ -722,7 +727,7 @@ const fetchIpNewsData = async (): Promise<IpInfo> => {
 const fetchMaxMindData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/maxmind' : 'https://geoip.maxmind.com/geoip/v2.1/city/me';
-        
+
         const response = await fetch(url, {
             headers: {
                 'Accept': '*/*',
@@ -731,23 +736,23 @@ const fetchMaxMindData = async (): Promise<IpInfo> => {
                 'Referer': 'https://www.maxmind.com/'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.traits && data.traits.ip_address) {
             // 优先使用中文名称，如果没有则使用英文
             const getLocalizedName = (names: any) => {
                 return names?.['zh-CN'] || names?.['en'] || '';
             };
-            
+
             const country = getLocalizedName(data.country?.names);
             const region = getLocalizedName(data.subdivisions?.[0]?.names);
             const city = getLocalizedName(data.city?.names);
-            
+
             const result = {
                 ip: data.traits.ip_address || '未知',
                 country: country,
@@ -761,7 +766,7 @@ const fetchMaxMindData = async (): Promise<IpInfo> => {
                 asn: data.traits.autonomous_system_number ? `AS${data.traits.autonomous_system_number}` : '',
                 source: 'MaxMind'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -780,21 +785,21 @@ const fetchMaxMindData = async (): Promise<IpInfo> => {
 const fetchXxirData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/xxir' : 'https://ip.xxir.com/ip/mtip.php';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.ip && data.data) {
             const ipData = data.data;
-            
+
             // 解析详细地址，格式：中国/广东省/深圳市/南山区/南方科技大学九华精舍
             const addressParts = ipData.detail ? ipData.detail.split('/') : [];
-            
+
             const result = {
                 ip: data.ip || '未知',
                 country: addressParts[0] || '',
@@ -807,7 +812,7 @@ const fetchXxirData = async (): Promise<IpInfo> => {
                 lon: ipData.lng ? parseFloat(ipData.lng) : undefined,
                 source: 'XXIR'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -826,18 +831,18 @@ const fetchXxirData = async (): Promise<IpInfo> => {
 const fetchIpLarkData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/iplark' : 'https://iplark.com/ipapi/public/ipinfo?db=moon';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.code === 0 && data.data) {
             const ipData = data.data;
-            
+
             const result = {
                 ip: ipData.ip || '未知',
                 country: ipData.country || '',
@@ -850,7 +855,7 @@ const fetchIpLarkData = async (): Promise<IpInfo> => {
                 lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
                 source: 'IPLark'
             };
-            
+
             return result;
         } else {
             throw new Error(`API返回错误: ${data.message || '未知错误'}`);
@@ -869,24 +874,24 @@ const fetchIpLarkData = async (): Promise<IpInfo> => {
 const fetchTaobaoData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/taobao' : 'https://www.taobao.com/help/getip.php';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const text = await response.text();
-        
+
         // 淘宝返回的是JSONP格式，需要解析
         // 格式通常是：ipCallback({"data":{"ip":"xxx","country":"xxx"}})
         const jsonpMatch = text.match(/ipCallback\((.+)\)/);
         if (jsonpMatch) {
             const data = JSON.parse(jsonpMatch[1]);
-            
+
             if (data.data) {
                 const ipData = data.data;
-                
+
                 const result = {
                     ip: ipData.ip || '未知',
                     country: ipData.country || '',
@@ -897,11 +902,11 @@ const fetchTaobaoData = async (): Promise<IpInfo> => {
                     timezone: '',
                     source: 'Taobao'
                 };
-                
+
                 return result;
             }
         }
-        
+
         throw new Error('无法解析淘宝API响应');
     } catch (error) {
         return {
@@ -920,22 +925,22 @@ const fetchBrowserScanData = async (): Promise<IpInfo> => {
         const timestamp = Math.floor(Date.now() / 1000);
         // 这里使用示例中的签名，实际可能需要动态生成
         const sign = 'b0d247da09f5a53af1f7b72fed3abcff';
-        
-        const url = import.meta.env.DEV 
+
+        const url = import.meta.env.DEV
             ? `/api/browserscan?_t=${timestamp}&_from=browserscan&_sign=${sign}&type=ip-api`
             : `https://ip-scan.browserscan.net/sys/config/ip/get-visitor-ip?_t=${timestamp}&_from=browserscan&_sign=${sign}&type=ip-api`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.code === 0 && data.data && data.data.ip_data) {
             const ipData = data.data.ip_data;
-            
+
             // 国家代码转换
             const countryMap: { [key: string]: string } = {
                 'cn': '中国',
@@ -951,7 +956,7 @@ const fetchBrowserScanData = async (): Promise<IpInfo> => {
                 'hk': '香港',
                 'tw': '台湾'
             };
-            
+
             // 省份代码转换
             const regionMap: { [key: string]: string } = {
                 'gd': '广东',
@@ -965,10 +970,10 @@ const fetchBrowserScanData = async (): Promise<IpInfo> => {
                 'hb': '湖北',
                 'hl': '湖南'
             };
-            
+
             const country = countryMap[ipData.country] || ipData.country || '';
             const region = regionMap[ipData.region] || ipData.region || '';
-            
+
             const result = {
                 ip: data.data.ip || '未知',
                 country: country,
@@ -981,7 +986,7 @@ const fetchBrowserScanData = async (): Promise<IpInfo> => {
                 lon: ipData.longitude ? parseFloat(ipData.longitude) : undefined,
                 source: 'BrowserScan'
             };
-            
+
             return result;
         } else {
             throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
@@ -1000,19 +1005,19 @@ const fetchBrowserScanData = async (): Promise<IpInfo> => {
 const fetchMyIpTwData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/myip-tw' : 'https://myip.com.tw/';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const html = await response.text();
-        
+
         // 提取IP地址
         const ipMatch = html.match(/data-ip="([^"]+)"/);
         const ip = ipMatch ? ipMatch[1] : '';
-        
+
         // 提取各个信息字段 - 优化正则表达式以更好地匹配HTML结构
         const extractInfoValue = (label: string): string => {
             // 更精确的正则表达式，处理HTML标签和图标
@@ -1021,14 +1026,14 @@ const fetchMyIpTwData = async (): Promise<IpInfo> => {
             const result = match ? match[1].trim() : '';
             return result;
         };
-        
+
         const country = extractInfoValue('國家/地區');
         const region = extractInfoValue('地區');
         const city = extractInfoValue('城市');
         const isp = extractInfoValue('網路提供商');
         const timezone = extractInfoValue('時區');
         const coordinates = extractInfoValue('座標');
-        
+
         // 解析坐标
         let lat: number | undefined, lon: number | undefined;
         if (coordinates) {
@@ -1038,7 +1043,7 @@ const fetchMyIpTwData = async (): Promise<IpInfo> => {
                 lon = parseFloat(coordMatch[2]);
             }
         }
-        
+
         // 国家代码转换
         const countryMap: { [key: string]: string } = {
             'CN': '中国',
@@ -1054,9 +1059,9 @@ const fetchMyIpTwData = async (): Promise<IpInfo> => {
             'HK': '香港',
             'TW': '台湾'
         };
-        
+
         const countryName = countryMap[country] || country || '';
-        
+
         const result = {
             ip: ip || '未知',
             country: countryName,
@@ -1069,7 +1074,7 @@ const fetchMyIpTwData = async (): Promise<IpInfo> => {
             lon: lon,
             source: 'MyIP.com.tw'
         };
-        
+
         return result;
     } catch (error) {
         return {
@@ -1085,7 +1090,7 @@ const fetchMyIpTwData = async (): Promise<IpInfo> => {
 const fetchCodingToolsData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/coding-tools' : 'https://coding.tools/cn/my-ip-address';
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -1096,13 +1101,13 @@ const fetchCodingToolsData = async (): Promise<IpInfo> => {
             },
             body: 'queryIp=' // 空值，表示查询当前IP
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const text = await response.text();
-        
+
         // 尝试解析JSON
         let data;
         try {
@@ -1110,7 +1115,7 @@ const fetchCodingToolsData = async (): Promise<IpInfo> => {
         } catch (parseError) {
             throw new Error('服务器返回HTML而不是JSON，可能需要特殊认证');
         }
-        
+
         if (data.ip) {
             // 国家名称转换
             const countryMap: { [key: string]: string } = {
@@ -1125,9 +1130,9 @@ const fetchCodingToolsData = async (): Promise<IpInfo> => {
                 'Australia': '澳大利亚',
                 'Singapore': '新加坡'
             };
-            
+
             const country = countryMap[data.country_name] || data.country_name || '';
-            
+
             const result = {
                 ip: data.ip || '未知',
                 country: country,
@@ -1140,7 +1145,7 @@ const fetchCodingToolsData = async (): Promise<IpInfo> => {
                 lon: data.longitude ? parseFloat(data.longitude) : undefined,
                 source: 'Coding.tools'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -1253,7 +1258,7 @@ const fetchIfconfigData = async (): Promise<IpInfo> => {
             throw new Error(`HTTP ${response.status}`);
         }
         const data = await response.json();
-        
+
         return {
             ip: data.ip_addr || '未知',
             country: '', // ifconfig.me不提供地理位置信息
@@ -1278,34 +1283,34 @@ const fetchIfconfigData = async (): Promise<IpInfo> => {
 const fetchCipCcData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/cip-cc' : 'https://cip.cc/';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const html = await response.text();
-        
+
         // 查找包含IP信息的pre标签
         const preMatch = html.match(/<pre>([\s\S]*?)<\/pre>/);
         if (preMatch) {
             const preContent = preMatch[1];
-            
+
             // 解析各个字段
             const extractField = (fieldName: string): string => {
                 const regex = new RegExp(`${fieldName}\\s*[:：]\\s*([^\\n\\r]+)`, 'i');
                 const match = preContent.match(regex);
                 return match ? match[1].trim() : '';
             };
-            
+
             const ip = extractField('IP');
             const address = extractField('地址');
             const isp = extractField('运营商');
-            
+
             // 解析地址信息，格式：中国 广东 深圳
             const addressParts = address ? address.split(/\s+/) : [];
-            
+
             const result = {
                 ip: ip || '未知',
                 country: addressParts[0] || '',
@@ -1316,7 +1321,7 @@ const fetchCipCcData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'CIP.cc'
             };
-            
+
             return result;
         } else {
             throw new Error('无法找到IP信息');
@@ -1356,15 +1361,15 @@ const fetchCipData = async (): Promise<IpInfo> => {
 const fetchIpinfoData = async (): Promise<IpInfo> => {
     try {
         const url = import.meta.env.DEV ? '/api/ipinfo' : 'https://ipinfo.io/lookup-data';
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.userIp) {
             const result = {
                 ip: data.userIp || '未知',
@@ -1377,7 +1382,7 @@ const fetchIpinfoData = async (): Promise<IpInfo> => {
                 asn: data.asn || '',
                 source: 'IPinfo.io'
             };
-            
+
             return result;
         } else {
             throw new Error('API返回数据格式错误');
@@ -1396,27 +1401,27 @@ const fetchIpinfoData = async (): Promise<IpInfo> => {
 const fetchIpCnData = async (): Promise<IpInfo> => {
     try {
         // 生成类似的ticket格式：32位十六进制字符串 + 时间戳
-        const randomHex = Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        const randomHex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
         const timestamp = Date.now().toString();
         const ticket = randomHex + timestamp;
-        
-        const url = import.meta.env.DEV 
+
+        const url = import.meta.env.DEV
             ? `/api/ip-cn?ticket=${ticket}`
             : `https://my.ip.cn/json/?ticket=${ticket}`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const text = await response.text();
-        
+
         // 检查是否返回"ticket expire"
         if (text.includes('ticket expire')) {
             throw new Error('ticket已过期，需要重新生成');
         }
-        
+
         // 尝试解析JSON
         let data;
         try {
@@ -1424,10 +1429,10 @@ const fetchIpCnData = async (): Promise<IpInfo> => {
         } catch (parseError) {
             throw new Error('响应不是有效的JSON格式');
         }
-        
+
         if (data.status && data.code === 0 && data.data) {
             const ipData = data.data;
-            
+
             const result = {
                 ip: ipData.ip || '未知',
                 country: ipData.country || '',
@@ -1438,7 +1443,7 @@ const fetchIpCnData = async (): Promise<IpInfo> => {
                 timezone: '',
                 source: 'IP.cn'
             };
-            
+
             return result;
         } else {
             throw new Error(`API返回错误: ${data.msg || '未知错误'}`);
@@ -1528,7 +1533,7 @@ const getCurrentIpInfo = async () => {
         // { name: 'CIP.cc', fetcher: fetchCipCcData },
         // { name: 'IPinfo.io', fetcher: fetchIpinfoData },
     ]
-    
+
     // 根据配置创建骨架屏卡片
     const skeletonCards: IpInfo[] = apiConfigs.map(config => ({
         ip: '',
@@ -1645,7 +1650,7 @@ const queryIpInfo = async () => {
                 if (api.headers) {
                     fetchOptions.headers = api.headers
                 }
-                
+
                 const response = await fetch(api.url, fetchOptions)
                 if (response.ok) {
                     const data = await response.json()
@@ -1743,17 +1748,12 @@ const loadHistory = () => {
 }
 
 onMounted(() => {
-    // 更新页面标题
-    setPageTitle('ip-lookup')
     getCurrentIpInfo()
     loadHistory()
 })
 
 // 组件卸载时恢复原标题
-onUnmounted(() => {
-    // 恢复原标题
-    restoreDefaultTitle()
-})
+
 </script>
 <style scoped>
 .ip-lookup-container {

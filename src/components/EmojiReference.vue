@@ -82,13 +82,16 @@
 </template>
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('emoji-reference')
+
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const message = ref('')
@@ -1633,18 +1636,14 @@ const handleScroll = () => {
     }
 }
 
-onMounted(() => {
-    setPageTitle('emoji-reference')
-    // 组件挂载时的初始化
+onMounted(() => {// 组件挂载时的初始化
     const emojiContent = document.querySelector('.emoji-content')
     if (emojiContent) {
         emojiContent.addEventListener('scroll', handleScroll)
     }
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-    const emojiContent = document.querySelector('.emoji-content')
+onUnmounted(() => {const emojiContent = document.querySelector('.emoji-content')
     if (emojiContent) {
         emojiContent.removeEventListener('scroll', handleScroll)
     }

@@ -10,7 +10,8 @@
             <h2 class="languages-title">编程语言大全</h2>
             <div class="languages-actions">
                 <button class="action-btn" @click="toggleView" :title="viewMode === 'grid' ? '切换到列表视图' : '切换到网格视图'">
-                    <svg v-if="viewMode === 'grid'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-if="viewMode === 'grid'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
                         <line x1="8" y1="6" x2="21" y2="6" />
                         <line x1="8" y1="12" x2="21" y2="12" />
                         <line x1="8" y1="18" x2="21" y2="18" />
@@ -18,7 +19,8 @@
                         <line x1="3" y1="12" x2="3.01" y2="12" />
                         <line x1="3" y1="18" x2="3.01" y2="18" />
                     </svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
                         <rect x="3" y="3" width="7" height="7" />
                         <rect x="14" y="3" width="7" height="7" />
                         <rect x="14" y="14" width="7" height="7" />
@@ -42,16 +44,19 @@
                     <button class="filter-tab" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')">
                         全部 ({{ languages.length }})
                     </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'popular' }" @click="setFilter('popular')">
+                    <button class="filter-tab" :class="{ active: activeFilter === 'popular' }"
+                        @click="setFilter('popular')">
                         热门 ({{ popularLanguages.length }})
                     </button>
                     <button class="filter-tab" :class="{ active: activeFilter === 'web' }" @click="setFilter('web')">
                         Web开发 ({{ webLanguages.length }})
                     </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'mobile' }" @click="setFilter('mobile')">
+                    <button class="filter-tab" :class="{ active: activeFilter === 'mobile' }"
+                        @click="setFilter('mobile')">
                         移动开发 ({{ mobileLanguages.length }})
                     </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'system' }" @click="setFilter('system')">
+                    <button class="filter-tab" :class="{ active: activeFilter === 'system' }"
+                        @click="setFilter('system')">
                         系统编程 ({{ systemLanguages.length }})
                     </button>
                 </div>
@@ -59,7 +64,8 @@
 
             <!-- 语言列表 -->
             <div class="languages-list" :class="viewMode">
-                <div v-for="language in filteredLanguages" :key="language.id" class="language-card" @click="selectLanguage(language)">
+                <div v-for="language in filteredLanguages" :key="language.id" class="language-card"
+                    @click="selectLanguage(language)">
                     <div class="language-header">
                         <div class="language-icon" :style="{ backgroundColor: language.color }">
                             {{ language.icon }}
@@ -79,14 +85,17 @@
                         <div class="stat-item">
                             <span class="stat-label">难度:</span>
                             <div class="difficulty-bar">
-                                <div class="difficulty-fill" :style="{ width: language.difficulty * 20 + '%', backgroundColor: getDifficultyColor(language.difficulty) }"></div>
+                                <div class="difficulty-fill"
+                                    :style="{ width: language.difficulty * 20 + '%', backgroundColor: getDifficultyColor(language.difficulty) }">
+                                </div>
                             </div>
                             <span class="stat-value">{{ getDifficultyText(language.difficulty) }}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">流行度:</span>
                             <div class="popularity-bar">
-                                <div class="popularity-fill" :style="{ width: language.popularity + '%', backgroundColor: '#10b981' }"></div>
+                                <div class="popularity-fill"
+                                    :style="{ width: language.popularity + '%', backgroundColor: '#10b981' }"></div>
                             </div>
                             <span class="stat-value">{{ language.popularity }}%</span>
                         </div>
@@ -108,7 +117,8 @@
                             </div>
                         </div>
                         <button class="close-btn" @click="closeLanguageModal">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
@@ -147,17 +157,20 @@
                         <div class="modal-section">
                             <h3>主要用途</h3>
                             <div class="use-cases">
-                                <span v-for="useCase in selectedLanguage.useCases" :key="useCase" class="use-case-tag">{{ useCase }}</span>
+                                <span v-for="useCase in selectedLanguage.useCases" :key="useCase"
+                                    class="use-case-tag">{{ useCase }}</span>
                             </div>
                         </div>
 
                         <div class="modal-section">
                             <h3>学习资源</h3>
                             <div class="resources-grid">
-                                <a v-for="resource in selectedLanguage.resources" :key="resource.name" :href="resource.url" target="_blank" class="resource-link">
+                                <a v-for="resource in selectedLanguage.resources" :key="resource.name"
+                                    :href="resource.url" target="_blank" class="resource-link">
                                     <span class="resource-icon">{{ resource.icon }}</span>
                                     <span class="resource-name">{{ resource.name }}</span>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                                         <polyline points="15,3 21,3 21,9" />
                                         <line x1="10" y1="14" x2="21" y2="3" />
@@ -206,7 +219,8 @@
                         </div>
                     </a>
 
-                    <a href="https://redmonk.com/sogrady/category/programming-languages/" target="_blank" class="ranking-source-card">
+                    <a href="https://redmonk.com/sogrady/category/programming-languages/" target="_blank"
+                        class="ranking-source-card">
                         <div class="source-header">
                             <div class="source-icon" style="background: #e74c3c;">🔍</div>
                             <div class="source-info">
@@ -266,7 +280,8 @@
                         </div>
                     </a>
 
-                    <a href="https://www.hackerrank.com/research/developer-skills" target="_blank" class="ranking-source-card">
+                    <a href="https://www.hackerrank.com/research/developer-skills" target="_blank"
+                        class="ranking-source-card">
                         <div class="source-header">
                             <div class="source-icon" style="background: #00ea64;">🎯</div>
                             <div class="source-info">
@@ -291,10 +306,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('programming-languages')
 
 // 视图模式
 const viewMode = ref<'grid' | 'list'>('grid')
@@ -874,7 +893,7 @@ const filteredLanguages = computed(() => {
     // 按搜索关键词筛选
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
-        filtered = filtered.filter(lang => 
+        filtered = filtered.filter(lang =>
             lang.name.toLowerCase().includes(query) ||
             lang.description.toLowerCase().includes(query) ||
             lang.creator.toLowerCase().includes(query) ||
@@ -912,13 +931,8 @@ const getDifficultyText = (difficulty: number): string => {
     return texts[difficulty - 1] || '未知'
 }
 
-// 页面标题管理
 onMounted(() => {
-    setPageTitle('programming-languages')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
+    // 页面初始化逻辑
 })
 </script>
 

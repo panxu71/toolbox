@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted, nextTick  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
@@ -149,6 +149,9 @@ interface Color {
 }
 
 // 搜索和筛选
+// 使用页面标题管理
+usePageTitle('color-reference')
+
 const searchQuery = ref('')
 const selectedCategory = ref('all')
 const selectedColor = ref<Color | null>(null)
@@ -382,9 +385,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 初始化
-onMounted(() => {
-    setPageTitle('color-reference')
-    // 默认选择第一个颜色
+onMounted(() => {// 默认选择第一个颜色
     if (colors.value.length > 0) {
         selectedColor.value = colors.value[0] || null
     }
@@ -400,9 +401,7 @@ onMounted(() => {
 })
 
 // 清理
-onUnmounted(() => {
-    restoreDefaultTitle()
-    if (converterContentRef.value) {
+onUnmounted(() => {if (converterContentRef.value) {
         converterContentRef.value.removeEventListener('scroll', handleScroll)
     } else {
         window.removeEventListener('scroll', handleScroll)

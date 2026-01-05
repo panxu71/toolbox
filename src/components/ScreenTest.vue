@@ -458,7 +458,7 @@
 
 <script setup lang="ts">
 import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
@@ -466,6 +466,9 @@ defineEmits<{
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('screen-test')
+
 const isFullscreen = ref(false)
 const currentTest = ref('solid-colors')
 const currentColor = ref('#000000')
@@ -1191,16 +1194,12 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     }, 3000)
 }
 
-onMounted(() => {
-    setPageTitle('screen-test')
-    document.addEventListener('keydown', handleKeyPress)
+onMounted(() => {document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     showMessage('屏幕测试已就绪，空格键或点击切换测试', 'success')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-    document.removeEventListener('keydown', handleKeyPress)
+onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
     releaseWakeLock()
     stopFlicker()

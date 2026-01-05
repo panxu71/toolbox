@@ -286,13 +286,16 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 模式
+// 使用页面标题管理
+usePageTitle('jwt-generator')
+
 const mode = ref<'generate' | 'decode'>('generate')
 
 // 生成模式数据
@@ -541,14 +544,6 @@ const initCurrentTime = () => {
 // 初始化
 initCurrentTime()
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('jwt-generator')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

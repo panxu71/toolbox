@@ -294,13 +294,16 @@
 
 <script setup lang="ts">
 import {  ref, watch, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('text-replacer')
+
 const searchText = ref('')
 const replaceText = ref('')
 const originalText = ref('')
@@ -615,11 +618,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 生命周期钩子
 onMounted(() => {
-    setPageTitle('text-replacer')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
+    // 页面初始化逻辑
 })
 
 // 监听变化

@@ -296,13 +296,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('md5-hash')
+
 const inputText = ref('')
 const isUpperCase = ref(false)
 const selectedFile = ref<File | null>(null)
@@ -848,14 +851,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('hash-generator')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

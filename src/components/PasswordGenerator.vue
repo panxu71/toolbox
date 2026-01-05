@@ -326,11 +326,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('password-generator')
 
 // 密码设置
 const passwordLength = ref(16)
@@ -665,13 +668,10 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 组件挂载时生成初始密码
 onMounted(() => {
-    setPageTitle('password-generator')
     generatePassword()
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
+
 </script>
 <style scoped>
 .password-generator {

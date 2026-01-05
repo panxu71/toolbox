@@ -249,14 +249,17 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 数字进制转换
+// 使用页面标题管理
+usePageTitle('number-base')
+
 const inputValue = ref('')
 const inputBase = ref('10')
 const results = ref({
@@ -413,14 +416,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 // 初始化
 convertNumber()
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('base-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .base-converter {

@@ -506,7 +506,7 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
 
 <script setup lang="ts">
 import {  ref, reactive, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
@@ -526,6 +526,9 @@ interface FormField {
     key: string
     value: string
 }
+
+// 使用页面标题管理
+usePageTitle('api-tester')
 
 const loading = ref(false)
 const activeTab = ref('body')
@@ -1032,14 +1035,6 @@ const copyResponse = async () => {
     }
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('api-tester')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

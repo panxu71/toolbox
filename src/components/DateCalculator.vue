@@ -270,13 +270,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 日期间隔计算
+// 使用页面标题管理
+usePageTitle('date-calculator')
+
 const startDate = ref('')
 const startTime = ref('00:00:00')
 const endDate = ref('')
@@ -316,9 +319,7 @@ const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 
 // 组件挂载时设置默认值
-onMounted(() => {
-    setPageTitle('date-calculator')
-    const now = new Date()
+onMounted(() => {const now = new Date()
     const today = formatDate(now)
     const currentTime = formatTime(now)
     
@@ -328,10 +329,6 @@ onMounted(() => {
     startTime.value = currentTime
     endTime.value = currentTime
     baseTime.value = currentTime
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
 })
 
 // 格式化日期

@@ -249,13 +249,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 正则表达式和标志
+// 使用页面标题管理
+usePageTitle('regex-tester')
+
 const regexPattern = ref('')
 const regexFlags = ref('g')
 const testText = ref('')
@@ -568,14 +571,6 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('regex-tester')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .regex-tester {

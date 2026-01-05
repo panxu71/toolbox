@@ -214,13 +214,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 响应式数据
+// 使用页面标题管理
+usePageTitle('timestamp-convert')
+
 const timestampInput = ref('')
 const timestampUnit = ref('seconds')
 const timestampResult = ref<{
@@ -278,14 +281,12 @@ const timezoneConfig = [
 
 // 组件挂载时开始实时更新时间
 onMounted(() => {
-    setPageTitle('timestamp-converter')
     updateCurrentTime()
     timeInterval = setInterval(updateCurrentTime, 1000)
 })
 
 // 组件卸载时清除定时器
 onUnmounted(() => {
-    restoreDefaultTitle()
     if (timeInterval) {
         clearInterval(timeInterval)
     }

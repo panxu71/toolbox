@@ -35,43 +35,44 @@
                                 <span>原始文本</span>
                                 <div class="section-actions">
                                     <button class="action-btn-small" @click="pasteText" title="粘贴">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                            <path
+                                                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                                         </svg>
                                     </button>
                                     <button class="action-btn-small" @click="clearInput" title="清空">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <line x1="18" y1="6" x2="6" y2="18" />
                                             <line x1="6" y1="6" x2="18" y2="18" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
-                            <textarea 
-                                v-model="inputText" 
-                                placeholder="请输入要编码的文本..."
-                                class="text-input"
-                                @input="encodeText"
-                            ></textarea>
+                            <textarea v-model="inputText" placeholder="请输入要编码的文本..." class="text-input"
+                                @input="encodeText"></textarea>
                             <div class="input-info">
                                 <span class="char-count">字符数: {{ inputText.length }}</span>
                                 <span class="byte-count">字节数: {{ getByteLength(inputText) }}</span>
                             </div>
                         </div>
-                        
+
                         <div class="output-section">
                             <div class="section-title">
                                 <span>Base64编码结果</span>
                                 <div class="section-actions">
                                     <button class="action-btn-small" @click="copyEncoded" title="复制">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
                                     </button>
                                     <button class="action-btn-small" @click="downloadEncoded" title="下载">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="7,10 12,15 17,10" />
                                             <line x1="12" y1="15" x2="12" y2="3" />
@@ -79,12 +80,8 @@
                                     </button>
                                 </div>
                             </div>
-                            <textarea 
-                                v-model="encodedText" 
-                                placeholder="编码结果将显示在这里..."
-                                class="text-output"
-                                readonly
-                            ></textarea>
+                            <textarea v-model="encodedText" placeholder="编码结果将显示在这里..." class="text-output"
+                                readonly></textarea>
                             <div class="output-info">
                                 <span class="char-count">字符数: {{ encodedText.length }}</span>
                                 <span class="compression-ratio" v-if="inputText && encodedText">
@@ -93,24 +90,27 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="converter-actions">
                         <button class="convert-btn encode" @click="encodeText">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M7 16.5L12 12l5 4.5" />
                                 <path d="M7 7.5L12 12l5-4.5" />
                             </svg>
                             编码
                         </button>
                         <button class="convert-btn decode" @click="decodeText">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M17 7.5L12 12l-5-4.5" />
                                 <path d="M17 16.5L12 12l-5 4.5" />
                             </svg>
                             解码
                         </button>
                         <button class="swap-btn" @click="swapContent">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M8 3L4 7l4 4" />
                                 <path d="M4 7h16" />
                                 <path d="M16 21l4-4-4-4" />
@@ -132,15 +132,10 @@
                 </div>
                 <div class="file-converter-container">
                     <div class="file-upload-area" @drop="handleFileDrop" @dragover.prevent @dragenter.prevent>
-                        <input 
-                            ref="fileInput" 
-                            type="file" 
-                            @change="handleFileSelect" 
-                            class="file-input"
-                            accept="*/*"
-                        />
+                        <input ref="fileInput" type="file" @change="handleFileSelect" class="file-input" accept="*/*" />
                         <div class="upload-content" @click="fileInput?.click()">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                 <polyline points="17,8 12,3 7,8" />
                                 <line x1="12" y1="3" x2="12" y2="15" />
@@ -149,11 +144,12 @@
                             <p class="upload-hint">支持所有文件类型，最大10MB</p>
                         </div>
                     </div>
-                    
+
                     <div v-if="selectedFile" class="file-info">
                         <div class="file-details">
                             <div class="file-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                     <polyline points="14,2 14,8 20,8" />
                                 </svg>
@@ -164,16 +160,18 @@
                                 <div class="file-type">{{ selectedFile.type || '未知类型' }}</div>
                             </div>
                             <button class="remove-file-btn" @click="removeFile">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="18" y1="6" x2="6" y2="18" />
                                     <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </div>
-                        
+
                         <div class="file-actions">
                             <button class="file-action-btn" @click="encodeFile" :disabled="isProcessing">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M7 16.5L12 12l5 4.5" />
                                     <path d="M7 7.5L12 12l5-4.5" />
                                 </svg>
@@ -181,19 +179,21 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div v-if="fileEncodedResult" class="file-result">
                         <div class="result-header">
                             <h4>编码结果</h4>
                             <div class="result-actions">
                                 <button class="action-btn-small" @click="copyFileResult" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
                                 </button>
                                 <button class="action-btn-small" @click="downloadFileResult" title="下载">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                         <polyline points="7,10 12,15 17,10" />
                                         <line x1="12" y1="15" x2="12" y2="3" />
@@ -201,11 +201,7 @@
                                 </button>
                             </div>
                         </div>
-                        <textarea 
-                            v-model="fileEncodedResult" 
-                            class="file-result-text"
-                            readonly
-                        ></textarea>
+                        <textarea v-model="fileEncodedResult" class="file-result-text" readonly></textarea>
                         <div class="result-info">
                             <span>原始大小: {{ formatFileSize(selectedFile?.size || 0) }}</span>
                             <span>编码后大小: {{ formatFileSize(getByteLength(fileEncodedResult)) }}</span>
@@ -226,23 +222,16 @@
                     <div class="url-safe-grid">
                         <div class="input-group">
                             <label>输入文本</label>
-                            <textarea 
-                                v-model="urlSafeInput" 
-                                placeholder="请输入要进行URL安全编码的文本..."
-                                class="url-safe-input"
-                                @input="encodeUrlSafe"
-                            ></textarea>
+                            <textarea v-model="urlSafeInput" placeholder="请输入要进行URL安全编码的文本..." class="url-safe-input"
+                                @input="encodeUrlSafe"></textarea>
                         </div>
                         <div class="output-group">
                             <label>URL安全Base64结果</label>
-                            <textarea 
-                                v-model="urlSafeOutput" 
-                                placeholder="URL安全编码结果..."
-                                class="url-safe-output"
-                                readonly
-                            ></textarea>
+                            <textarea v-model="urlSafeOutput" placeholder="URL安全编码结果..." class="url-safe-output"
+                                readonly></textarea>
                             <button class="copy-url-safe-btn" @click="copyUrlSafe" title="复制结果">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
@@ -264,12 +253,15 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('base64-encode')
 
 // 文本编码解码状态
 const inputText = ref('')
@@ -309,7 +301,7 @@ const encodeText = () => {
         encodedText.value = ''
         return
     }
-    
+
     try {
         encodedText.value = btoa(unescape(encodeURIComponent(inputText.value)))
         showMessage('编码成功', 'success')
@@ -324,7 +316,7 @@ const decodeText = () => {
         encodedText.value = ''
         return
     }
-    
+
     try {
         encodedText.value = decodeURIComponent(escape(atob(inputText.value)))
         showMessage('解码成功', 'success')
@@ -366,7 +358,7 @@ const copyEncoded = async () => {
         showMessage('没有可复制的内容', 'error')
         return
     }
-    
+
     try {
         await navigator.clipboard.writeText(encodedText.value)
         showMessage('编码结果已复制到剪贴板', 'success')
@@ -381,7 +373,7 @@ const downloadEncoded = () => {
         showMessage('没有可下载的内容', 'error')
         return
     }
-    
+
     const blob = new Blob([encodedText.value], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -435,10 +427,10 @@ const removeFile = () => {
 // 编码文件
 const encodeFile = () => {
     if (!selectedFile.value) return
-    
+
     isProcessing.value = true
     const reader = new FileReader()
-    
+
     reader.onload = (e) => {
         try {
             const result = e.target?.result as string
@@ -451,19 +443,19 @@ const encodeFile = () => {
             isProcessing.value = false
         }
     }
-    
+
     reader.onerror = () => {
         showMessage('文件读取失败', 'error')
         isProcessing.value = false
     }
-    
+
     reader.readAsDataURL(selectedFile.value)
 }
 
 // 复制文件编码结果
 const copyFileResult = async () => {
     if (!fileEncodedResult.value) return
-    
+
     try {
         await navigator.clipboard.writeText(fileEncodedResult.value)
         showMessage('文件编码结果已复制', 'success')
@@ -475,7 +467,7 @@ const copyFileResult = async () => {
 // 下载文件编码结果
 const downloadFileResult = () => {
     if (!fileEncodedResult.value) return
-    
+
     const blob = new Blob([fileEncodedResult.value], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -501,7 +493,7 @@ const encodeUrlSafe = () => {
         urlSafeOutput.value = ''
         return
     }
-    
+
     try {
         const base64 = btoa(unescape(encodeURIComponent(urlSafeInput.value)))
         urlSafeOutput.value = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
@@ -517,7 +509,7 @@ const decodeUrlSafe = () => {
         urlSafeOutput.value = ''
         return
     }
-    
+
     try {
         let base64 = urlSafeInput.value.replace(/-/g, '+').replace(/_/g, '/')
         // 补充padding
@@ -534,7 +526,7 @@ const decodeUrlSafe = () => {
 // 复制URL安全编码结果
 const copyUrlSafe = async () => {
     if (!urlSafeOutput.value) return
-    
+
     try {
         await navigator.clipboard.writeText(urlSafeOutput.value)
         showMessage('URL安全编码结果已复制', 'success')
@@ -566,13 +558,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
 onMounted(() => {
-    setPageTitle('base64-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
+    // 页面初始化逻辑
 })
 </script>
 
@@ -1190,6 +1177,7 @@ onUnmounted(() => {
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -1202,37 +1190,37 @@ onUnmounted(() => {
         padding: 1rem;
         gap: 1.5rem;
     }
-    
+
     .converter-section {
         padding: 1rem;
     }
-    
+
     .input-output-grid,
     .url-safe-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .converter-actions,
     .url-safe-actions {
         flex-direction: column;
     }
-    
+
     .file-details {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
     }
-    
+
     .file-actions {
         flex-direction: column;
     }
-    
+
     .text-input,
     .text-output,
     .file-result-text {
         height: 150px;
     }
-    
+
     .url-safe-input,
     .url-safe-output {
         height: 100px;

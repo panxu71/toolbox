@@ -19,10 +19,12 @@
 
                     <!-- 输入类型选择 -->
                     <div class="input-type-selector">
-                        <button :class="['type-btn', { active: inputType === 'number' }]" @click="setInputType('number')">
+                        <button :class="['type-btn', { active: inputType === 'number' }]"
+                            @click="setInputType('number')">
                             阿拉伯数字
                         </button>
-                        <button :class="['type-btn', { active: inputType === 'chinese' }]" @click="setInputType('chinese')">
+                        <button :class="['type-btn', { active: inputType === 'chinese' }]"
+                            @click="setInputType('chinese')">
                             中文数字
                         </button>
                         <button :class="['type-btn', { active: inputType === 'roman' }]" @click="setInputType('roman')">
@@ -124,7 +126,8 @@
                                 </button>
                             </div>
                             <div class="result-body">
-                                <div :class="['result-value', getSecondResultClass()]">{{ getSecondResultValue() || '-' }}
+                                <div :class="['result-value', getSecondResultClass()]">{{ getSecondResultValue() || '-'
+                                    }}
                                 </div>
                                 <div class="result-desc">{{ getSecondResultDesc() }}</div>
                             </div>
@@ -232,14 +235,17 @@
 </template>
 
 <script setup lang="ts">
-import {  ref, watch, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 输入数字
+// 使用页面标题管理
+usePageTitle('number-format')
+
 const inputNumber = ref('')
 
 // 输入类型
@@ -812,14 +818,6 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 // 监听输入变化
 watch(inputNumber, convertNumber)
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('number-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

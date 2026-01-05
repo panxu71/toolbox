@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import hljs from 'highlight.js/lib/core'
 import php from 'highlight.js/lib/languages/php'
 import json from 'highlight.js/lib/languages/json'
@@ -158,6 +158,9 @@ defineEmits<{
 }>()
 
 // 模式切换
+// 使用页面标题管理
+usePageTitle('json-to-php')
+
 const mode = ref<'json-to-php' | 'php-to-json'>('json-to-php')
 
 // JSON转PHP相关
@@ -603,14 +606,9 @@ const clearAll = () => {
     phpInputError.value = ''
 }
 
-onMounted(() => {
-    setPageTitle('json-to-php')
-    loadJsonExample()
+onMounted(() => {loadJsonExample()
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

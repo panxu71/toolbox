@@ -303,13 +303,16 @@
 
 <script setup lang="ts">
 import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 目标日期倒计时
+// 使用页面标题管理
+usePageTitle('countdown-timer')
+
 const targetDate = ref('')
 const targetTime = ref('')
 const targetTitle = ref('')
@@ -366,9 +369,7 @@ let simpleInterval: number | null = null
 let multipleInterval: number | null = null
 
 // 组件挂载时设置默认值
-onMounted(() => {
-    setPageTitle('countdown-timer')
-    const now = new Date()
+onMounted(() => {const now = new Date()
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
     
     targetDate.value = tomorrow.toISOString().split('T')[0] || ''
@@ -381,9 +382,7 @@ onMounted(() => {
 })
 
 // 组件卸载时清除定时器
-onUnmounted(() => {
-    restoreDefaultTitle()
-    if (targetInterval) clearInterval(targetInterval)
+onUnmounted(() => {if (targetInterval) clearInterval(targetInterval)
     if (simpleInterval) clearInterval(simpleInterval)
     if (multipleInterval) clearInterval(multipleInterval)
 })

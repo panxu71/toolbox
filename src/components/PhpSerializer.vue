@@ -250,13 +250,16 @@
 
 <script setup lang="ts">
 import {  ref, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('php-serializer')
+
 const activeMode = ref<'serialize' | 'unserialize'>('serialize')
 const inputFormat = ref<'array' | 'json' | 'xml'>('json')
 const outputFormat = ref<'array' | 'json' | 'xml'>('json')
@@ -906,12 +909,9 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 // 生命周期钩子
 onMounted(() => {
-    setPageTitle('php-serializer')
+    // 页面初始化逻辑
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .php-serializer {

@@ -228,13 +228,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import * as XLSX from 'xlsx'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 模式切换
+// 使用页面标题管理
+usePageTitle('json-to-excel')
+
 const mode = ref<'json-to-excel' | 'excel-to-json'>('json-to-excel')
 
 // JSON转Excel相关
@@ -625,14 +628,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('json-to-excel')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

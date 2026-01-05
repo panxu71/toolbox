@@ -120,13 +120,16 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
 
 // 基本状态
+// 使用页面标题管理
+usePageTitle('mime-type-reference')
+
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const currentPage = ref(1)
@@ -323,14 +326,9 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }, 3000)
 }
 
-onMounted(() => {
-    setPageTitle('mime-type-reference')
-    // 组件挂载时的初始化逻辑
+onMounted(() => {// 组件挂载时的初始化逻辑
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

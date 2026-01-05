@@ -118,7 +118,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import { Solar } from 'lunar-javascript'
 import { useWakeLock } from '../composables/useWakeLock'
 
@@ -127,6 +127,9 @@ defineEmits<{
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('clock')
+
 const isFullscreen = ref(false)
 const showSeconds = ref(true)
 const showMilliseconds = ref(true)
@@ -412,9 +415,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 生命周期
-onMounted(() => {
-    setPageTitle('clock')
-    // 开始时间更新
+onMounted(() => {// 开始时间更新
     updateTime()
     intervalId.value = window.setInterval(updateTime, 1) // 1ms更新一次以显示完整毫秒
     
@@ -425,9 +426,7 @@ onMounted(() => {
     showMessage('双击时钟进入全屏模式', 'success')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-    if (intervalId.value) {
+onUnmounted(() => {if (intervalId.value) {
         clearInterval(intervalId.value)
     }
     // 组件卸载时释放防息屏

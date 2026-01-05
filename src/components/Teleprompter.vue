@@ -244,7 +244,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted, nextTick, watch  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import { useWakeLock } from '../composables/useWakeLock'
 
 defineEmits<{
@@ -252,6 +252,9 @@ defineEmits<{
 }>()
 
 // 状态管理
+// 使用页面标题管理
+usePageTitle('teleprompter')
+
 const isFullscreen = ref(false)  // 默认不全屏
 const isPlaying = ref(false)
 const isMirrored = ref(false)
@@ -581,9 +584,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 }
 
 // 生命周期
-onMounted(() => {
-    setPageTitle('teleprompter')
-    document.addEventListener('keydown', handleKeyPress)
+onMounted(() => {document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     
     // 监听窗口大小变化
@@ -637,9 +638,7 @@ onMounted(() => {
     showMessage('提词器已就绪，空格播放，方向键调节', 'success')
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-    stopScrolling()
+onUnmounted(() => {stopScrolling()
     releaseWakeLock() // 组件卸载时释放防息屏，不需要显示消息
     document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)

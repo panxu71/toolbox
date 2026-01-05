@@ -238,11 +238,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('string-counter')
 
 const inputText = ref('')
 const message = ref('')
@@ -410,14 +413,9 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 // 初始化
-onMounted(() => {
-    setPageTitle('string-counter')
-    updateStats()
+onMounted(() => {updateStats()
 })
 
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 <style scoped>
 .string-counter {

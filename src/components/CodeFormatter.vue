@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 import {  ref, computed, onMounted, onUnmounted  } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
 import parserHtml from 'prettier/parser-html'
@@ -193,6 +193,9 @@ import { html as beautifyHtml } from 'js-beautify'
 defineEmits<{
     back: []
 }>()
+
+// 使用页面标题管理
+usePageTitle('code-formatter')
 
 const selectedLanguage = ref('javascript')
 const inputCode = ref('')
@@ -496,14 +499,6 @@ const downloadOutput = () => {
 
 updateStats()
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('code-formatter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>

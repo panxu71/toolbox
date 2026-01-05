@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { setPageTitle, restoreDefaultTitle } from '../utils/cardTitles'
+import { usePageTitle } from '../composables/usePageTitle'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 
@@ -156,6 +156,9 @@ defineEmits<{
 }>()
 
 // 模式切换
+// 使用页面标题管理
+usePageTitle('json-postman-converter')
+
 const mode = ref<'json-to-postman' | 'postman-to-json'>('json-to-postman')
 
 // JSON转Postman相关
@@ -616,14 +619,6 @@ const clearAll = () => {
     postmanInputError.value = ''
 }
 
-// 页面标题管理
-onMounted(() => {
-    setPageTitle('json-postman-converter')
-})
-
-onUnmounted(() => {
-    restoreDefaultTitle()
-})
 </script>
 
 <style scoped>
