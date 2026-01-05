@@ -188,11 +188,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -200,7 +195,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import cardsConfig from '../config/cards.json'
@@ -229,8 +224,8 @@ const pageTitle = getCardTitle('timestamp-convert')
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const timestampInput = ref('')
 const timestampUnit = ref('seconds')
@@ -377,7 +372,7 @@ const updateWorldTimes = () => {
 // 刷新当前时间
 const refreshCurrentTime = () => {
     updateCurrentTime()
-    showMessage('时间已刷新', 'success')
+    showSuccess('时间已刷新')
 }
 
 // 时间戳转日期
@@ -410,7 +405,7 @@ const convertTimestampToDate = () => {
         }
     } catch (error) {
         timestampResult.value = null
-        showMessage(`转换失败: ${(error as Error).message}`, 'error')
+        showError(`转换失败: ${(error as Error).message}`)
     }
 }
 
@@ -450,7 +445,7 @@ const convertDateToTimestamp = () => {
         }
     } catch (error) {
         dateResult.value = null
-        showMessage(`转换失败: ${(error as Error).message}`, 'error')
+        showError(`转换失败: ${(error as Error).message}`)
     }
 }
 
@@ -459,7 +454,7 @@ const getCurrentTimestamp = () => {
     const now = Math.floor(Date.now() / 1000)
     timestampInput.value = now.toString()
     convertTimestampToDate()
-    showMessage('已获取当前时间戳', 'success')
+    showSuccess('已获取当前时间戳')
 }
 
 // 设置当前日期时间
@@ -468,7 +463,7 @@ const setCurrentDateTime = () => {
     dateTimeInput.value = formatDateTime(now)
 
     convertDateToTimestamp()
-    showMessage('已设置当前日期时间', 'success')
+    showSuccess('已设置当前日期时间')
 }
 
 // 设置今天开始时间
@@ -478,7 +473,7 @@ const setTodayStart = () => {
     dateTimeInput.value = formatDateTime(today)
 
     convertDateToTimestamp()
-    showMessage('已设置今天开始时间', 'success')
+    showSuccess('已设置今天开始时间')
 }
 
 // 设置今天结束时间
@@ -488,7 +483,7 @@ const setTodayEnd = () => {
     dateTimeInput.value = formatDateTime(today)
 
     convertDateToTimestamp()
-    showMessage('已设置今天结束时间', 'success')
+    showSuccess('已设置今天结束时间')
 }
 
 // 设置昨天开始时间
@@ -499,7 +494,7 @@ const setYesterdayStart = () => {
     dateTimeInput.value = formatDateTime(yesterday)
 
     convertDateToTimestamp()
-    showMessage('已设置昨天开始时间', 'success')
+    showSuccess('已设置昨天开始时间')
 }
 
 // 设置明天开始时间
@@ -510,7 +505,7 @@ const setTomorrowStart = () => {
     dateTimeInput.value = formatDateTime(tomorrow)
 
     convertDateToTimestamp()
-    showMessage('已设置明天开始时间', 'success')
+    showSuccess('已设置明天开始时间')
 }
 
 // 显示日期时间选择器
@@ -558,7 +553,7 @@ const handleDateTimePickerChange = (event: Event) => {
         const date = new Date(target.value)
         dateTimeInput.value = formatDateTime(date)
         convertDateToTimestamp()
-        showMessage('已选择日期时间', 'success')
+        showSuccess('已选择日期时间')
     }
     hideDateTimePicker()
 }
@@ -567,9 +562,9 @@ const handleDateTimePickerChange = (event: Event) => {
 const copyText = async (text: string) => {
     const success = await copyToClipboard(text)
     if (success) {
-        showMessage('已复制到剪贴板', 'success')
+        showSuccess('已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -579,7 +574,7 @@ const clearAll = () => {
     timestampResult.value = null
     dateTimeInput.value = ''
     dateResult.value = null
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 </script>
 <style scoped>
@@ -1062,41 +1057,6 @@ const clearAll = () => {
     background: #f0f8ff;
     border-color: #007bff;
     box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
-}
-
-.message-toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message-toast.success {
-    background: #28a745;
-    color: white;
-}
-
-.message-toast.error {
-    background: #dc3545;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 @media (max-width: 1200px) {

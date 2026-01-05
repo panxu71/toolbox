@@ -3,9 +3,11 @@ import { ref, onMounted, onUnmounted } from 'vue'
 /**
  * 全屏和防睡眠功能 composable
  */
-export const useFullscreen = () => {
+export const useFullscreen = (enableDoubleClick: boolean = false) => {
     const isFullscreen = ref(false)
     let wakeLock: any = null
+    let doubleClickElement: HTMLElement | null = null
+    let fullscreenTargetElement: HTMLElement | null = null
 
     // 请求防睡眠锁
     const requestWakeLock = async () => {
@@ -39,7 +41,7 @@ export const useFullscreen = () => {
     // 进入全屏
     const enterFullscreen = async (element?: HTMLElement) => {
         try {
-            const targetElement = element || document.documentElement
+            const targetElement = element || fullscreenTargetElement || document.documentElement
 
             if (targetElement.requestFullscreen) {
                 await targetElement.requestFullscreen()
@@ -83,6 +85,33 @@ export const useFullscreen = () => {
         }
     }
 
+    // 双击处理函数
+    const handleDoubleClick = (event: Event) => {
+        event.preventDefault()
+        // 使用设置的全屏目标元素
+        toggleFullscreen(fullscreenTargetElement || undefined)
+    }
+
+    // 设置双击元素
+    const setDoubleClickElement = (element: HTMLElement | null) => {
+        // 移除之前的事件监听器
+        if (doubleClickElement) {
+            doubleClickElement.removeEventListener('dblclick', handleDoubleClick)
+        }
+
+        doubleClickElement = element
+
+        // 添加新的事件监听器
+        if (doubleClickElement && enableDoubleClick) {
+            doubleClickElement.addEventListener('dblclick', handleDoubleClick)
+        }
+    }
+
+    // 设置全屏目标元素
+    const setFullscreenTarget = (element: HTMLElement | null) => {
+        fullscreenTargetElement = element
+    }
+
     // 监听全屏状态变化
     const handleFullscreenChange = () => {
         const isCurrentlyFullscreen = !!(
@@ -121,6 +150,11 @@ export const useFullscreen = () => {
         document.removeEventListener('msfullscreenchange', handleFullscreenChange)
         document.removeEventListener('visibilitychange', handleVisibilityChange)
 
+        // 移除双击事件监听器
+        if (doubleClickElement) {
+            doubleClickElement.removeEventListener('dblclick', handleDoubleClick)
+        }
+
         // 清理防睡眠锁
         releaseWakeLock()
     })
@@ -131,6 +165,8 @@ export const useFullscreen = () => {
         exitFullscreen,
         toggleFullscreen,
         requestWakeLock,
-        releaseWakeLock
+        releaseWakeLock,
+        setDoubleClickElement,
+        setFullscreenTarget
     }
 }

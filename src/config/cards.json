@@ -108,7 +108,7 @@
             {
                 "id": "base64-encode",
                 "title": "Base64编码",
-                "description": "Base64编码和解码",
+                "description": "Base64编码和解码，支持URL安全格式",
                 "icon": "🔤",
                 "action": "base64Encode",
                 "color": "#6366f1",

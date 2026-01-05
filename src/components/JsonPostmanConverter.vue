@@ -120,11 +120,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -133,7 +128,7 @@ import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import hljs from 'highlight.js/lib/core'
@@ -171,8 +166,8 @@ const { downloadText, downloadJson } = useDownload()
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const mode = ref<'json-to-postman' | 'postman-to-json'>('json-to-postman')
 
@@ -254,7 +249,7 @@ const convertJsonToPostman = (showSuccessMessage = true) => {
 
     if (!jsonInput.value.trim()) {
         if (showSuccessMessage) {
-            showMessage('请先输入JSON数据', 'error')
+            showError('请先输入JSON数据')
         }
         return
     }
@@ -263,13 +258,13 @@ const convertJsonToPostman = (showSuccessMessage = true) => {
         const jsonData = JSON.parse(jsonInput.value)
         postmanOutput.value = jsonToPostman(jsonData)
         if (showSuccessMessage) {
-            showMessage('JSON转Postman参数成功', 'success')
+            showSuccess('JSON转Postman参数成功')
         }
     } catch (error) {
         jsonInputError.value = `JSON格式错误: ${(error as Error).message}`
         postmanOutput.value = ''
         if (showSuccessMessage) {
-            showMessage('JSON格式错误', 'error')
+            showError('JSON格式错误')
         }
     }
 }
@@ -349,7 +344,7 @@ const convertPostmanToJson = (showSuccessMessage = true) => {
 
     if (!postmanInput.value.trim()) {
         if (showSuccessMessage) {
-            showMessage('请先输入Postman参数', 'error')
+            showError('请先输入Postman参数')
         }
         return
     }
@@ -359,13 +354,13 @@ const convertPostmanToJson = (showSuccessMessage = true) => {
         // 始终使用格式化输出
         jsonOutput.value = JSON.stringify(jsonResult, null, 2)
         if (showSuccessMessage) {
-            showMessage('Postman参数转JSON成功', 'success')
+            showSuccess('Postman参数转JSON成功')
         }
     } catch (error) {
         postmanInputError.value = `转换失败: ${(error as Error).message}`
         jsonOutput.value = ''
         if (showSuccessMessage) {
-            showMessage('转换失败', 'error')
+            showError('转换失败')
         }
     }
 }
@@ -427,17 +422,17 @@ const postmanToJson = (postmanData: string): any => {
 
 const validatePostmanInput = () => {
     if (!postmanInput.value.trim()) {
-        showMessage('请先输入Postman参数', 'error')
+        showError('请先输入Postman参数')
         return
     }
 
     try {
         postmanToJson(postmanInput.value)
         postmanInputError.value = ''
-        showMessage('Postman参数格式正确 ✅', 'success')
+        showSuccess('Postman参数格式正确 ✅')
     } catch (error) {
         postmanInputError.value = `参数格式错误: ${(error as Error).message}`
-        showMessage('参数格式错误 ❌', 'error')
+        showError('参数格式错误 ❌')
     }
 }
 
@@ -448,9 +443,9 @@ const formatJsonInput = () => {
         const parsed = JSON.parse(jsonInput.value)
         jsonInput.value = JSON.stringify(parsed, null, 2)
         convertJsonToPostman(false)
-        showMessage('JSON格式化成功！', 'success')
+        showSuccess('JSON格式化成功！')
     } catch (error) {
-        showMessage('JSON格式错误，无法格式化', 'error')
+        showError('JSON格式错误，无法格式化')
     }
 }
 
@@ -459,58 +454,58 @@ const formatJsonInput = () => {
 // 复制功能
 const copyPostmanResult = async () => {
     if (!postmanOutput.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     const success = await copyToClipboard(postmanOutput.value)
     if (success) {
-        showMessage('Postman参数已复制到剪贴板', 'success')
+        showSuccess('Postman参数已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
 const copyJsonResult = async () => {
     if (!jsonOutput.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     const success = await copyToClipboard(jsonOutput.value)
     if (success) {
-        showMessage('JSON数据已复制到剪贴板', 'success')
+        showSuccess('JSON数据已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
 // 下载功能
 const downloadPostmanResult = () => {
     if (!postmanOutput.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
     const success = downloadText(postmanOutput.value, 'postman-params', 'txt')
     if (success) {
-        showMessage('Postman参数文件已下载', 'success')
+        showSuccess('Postman参数文件已下载')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
 const downloadJsonResult = () => {
     if (!jsonOutput.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
     const success = downloadJson(jsonOutput.value, 'converted-data')
     if (success) {
-        showMessage('JSON文件已下载', 'success')
+        showSuccess('JSON文件已下载')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
@@ -571,7 +566,7 @@ const loadJsonExample = (exampleNumber: number) => {
     if (example) {
         jsonInput.value = JSON.stringify(example.data, null, 2)
         convertJsonToPostman(false)
-        showMessage(`已加载${example.name}示例`, 'success')
+        showSuccess(`已加载${example.name}示例`)
     }
 }
 
@@ -616,7 +611,7 @@ reviews[1][comment]=性价比不错`
     if (example) {
         postmanInput.value = example.data
         convertPostmanToJson(false)
-        showMessage(`已加载${example.name}示例`, 'success')
+        showSuccess(`已加载${example.name}示例`)
     }
 }
 
@@ -627,7 +622,7 @@ const clearAll = () => {
     jsonOutput.value = ''
     jsonInputError.value = ''
     postmanInputError.value = ''
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 </script>
 
@@ -838,41 +833,6 @@ const clearAll = () => {
 .output-placeholder svg {
     margin-bottom: 16px;
     opacity: 0.5;
-}
-
-.message-toast {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message-toast.success {
-    background: #10b981;
-    color: white;
-}
-
-.message-toast.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 @media (max-width: 768px) {

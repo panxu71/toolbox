@@ -232,11 +232,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -244,7 +239,7 @@
 import { ref, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import cardsConfig from '../config/cards.json'
@@ -273,8 +268,8 @@ const pageTitle = getCardTitle('date-calculator')
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 // 日期间隔计算
 const startDate = ref('')
@@ -442,7 +437,7 @@ const calculateInterval = () => {
         }
     } catch (error) {
         intervalResult.value = null
-        showMessage(`计算失败: ${(error as Error).message}`, 'error')
+        showError(`计算失败: ${(error as Error).message}`)
     }
 }
 
@@ -491,7 +486,7 @@ const calculateArithmetic = () => {
         }
     } catch (error) {
         arithmeticResult.value = null
-        showMessage(`计算失败: ${(error as Error).message}`, 'error')
+        showError(`计算失败: ${(error as Error).message}`)
     }
 }
 
@@ -550,7 +545,7 @@ const calculateSpecialDates = () => {
         }
     } catch (error) {
         specialResult.value = null
-        showMessage(`计算失败: ${(error as Error).message}`, 'error')
+        showError(`计算失败: ${(error as Error).message}`)
     }
 }
 
@@ -558,9 +553,9 @@ const calculateSpecialDates = () => {
 const copyText = async (text: string) => {
     const success = await copyToClipboard(text)
     if (success) {
-        showMessage('已复制到剪贴板', 'success')
+        showSuccess('已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -583,7 +578,7 @@ const clearAll = () => {
     arithmeticResult.value = null
     specialResult.value = null
 
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 </script>
 <style scoped>
@@ -607,7 +602,7 @@ const clearAll = () => {
 
 /* 计算区域 */
 .calculation-section {
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     margin-bottom: 20px;
@@ -634,8 +629,17 @@ const clearAll = () => {
 }
 
 .section-info {
-    font-size: 12px;
-    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
 }
 
 /* 日期间隔计算 */
@@ -682,6 +686,128 @@ const clearAll = () => {
 .quick-actions {
     display: flex;
     gap: 4px;
+}
+
+/* 输入框样式 */
+.date-input,
+.time-input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition);
+    height: 36px;
+    box-sizing: border-box;
+}
+
+.date-input:focus,
+.time-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.date-input:hover,
+.time-input:hover {
+    border-color: var(--primary-color);
+}
+
+/* 快速操作按钮样式 */
+.quick-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 数量输入框样式 */
+.amount-input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition);
+    height: 36px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.amount-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.amount-input:hover {
+    border-color: var(--primary-color);
+}
+
+/* 快速操作按钮组样式 */
+.quick-operations {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.quick-op-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.quick-op-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
+}
+
+.quick-op-btn.add {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border-color: #10b981;
+}
+
+.quick-op-btn.subtract {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border-color: #ef4444;
+}
+
+.quick-op-btn.add:hover,
+.quick-op-btn.subtract:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .date-time-inputs {
@@ -843,26 +969,46 @@ const clearAll = () => {
 
 /* 日期加减计算 */
 .date-arithmetic-container {
-    padding: 20px;
+    padding: 24px;
 }
 
 .base-date-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .base-date-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
 }
 
+.date-input-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.date-input-wrapper .date-input,
+.date-input-wrapper .time-input {
+    flex: 1;
+    min-width: 140px;
+}
+
+.date-input-wrapper .quick-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    height: 36px;
+    font-size: 14px;
+}
+
 .arithmetic-controls {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .operation-group,
@@ -870,7 +1016,7 @@ const clearAll = () => {
 .unit-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .operation-group label,
@@ -879,6 +1025,32 @@ const clearAll = () => {
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
+}
+
+/* 快速操作按钮组 - 改为更宽松的布局 */
+.quick-arithmetic-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.quick-arithmetic-buttons .quick-btn {
+    padding: 10px 16px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.quick-arithmetic-buttons .quick-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
 }
 
 .operation-select,
@@ -968,41 +1140,6 @@ const clearAll = () => {
     margin-top: 12px;
 }
 
-.message-toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message-toast.success {
-    background: #28a745;
-    color: white;
-}
-
-.message-toast.error {
-    background: #dc3545;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @media (max-width: 768px) {
     .calculator-content {
         padding: 16px;
@@ -1038,8 +1175,19 @@ const clearAll = () => {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .date-arithmetic-container {
+        padding: 20px 16px;
+    }
+
     .quick-arithmetic-buttons {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .quick-arithmetic-buttons .quick-btn {
+        padding: 12px 8px;
+        font-size: 13px;
     }
 
     .date-input-wrapper {

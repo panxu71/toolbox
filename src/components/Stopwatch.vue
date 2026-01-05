@@ -1,105 +1,88 @@
 <template>
-    <div class="stopwatch" :class="{ fullscreen: isFullscreen }">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">在线秒表</h2>
-
-            <div class="header-actions">
-                <button v-if="laps.length > 0" class="header-export-btn" @click="exportLaps">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7,10 12,15 17,10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    导出记录
-                </button>
-
-                <button v-if="laps.length > 0" class="header-clear-btn" @click="clearLaps">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3,6 5,6 21,6" />
-                        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2" />
-                    </svg>
-                    清空记录
-                </button>
-            </div>
-        </div>
+    <div class="stopwatch">
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton 
+                    v-if="laps.length > 0" 
+                    icon="download" 
+                    tooltip="导出记录"
+                    @click="exportLaps" 
+                />
+                <HeaderActionButton 
+                    v-if="laps.length > 0" 
+                    icon="clear" 
+                    tooltip="清空记录"
+                    @click="clearLaps" 
+                />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <div class="stopwatch-container">
-                <!-- 主秒表区域 - 始终居中 -->
+                <!-- 主秒表区域 -->
                 <div class="main-stopwatch-area">
-                    <!-- 主显示区域 -->
-                    <div class="time-display">
-                        <div class="time-content">
-                            <div class="main-time">{{ formatTime(currentTime) }}</div>
-                            <div class="milliseconds">.{{ formatMilliseconds(currentTime) }}</div>
+                    <!-- 时间显示和控制按钮的容器 -->
+                    <div class="timer-display-card" ref="timerDisplayRef">
+                        <!-- 时间显示 -->
+                        <div class="time-display">
+                            <div class="time-content">
+                                <div class="main-time">{{ formatTime(currentTime) }}</div>
+                                <div class="milliseconds">.{{ formatMilliseconds(currentTime) }}</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- 控制按钮 -->
-                    <div class="control-buttons">
-                        <button v-if="!isRunning && currentTime === 0" class="start-btn" @click="start">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                            开始
-                        </button>
+                        <!-- 控制按钮 -->
+                        <div class="control-buttons">
+                            <button v-if="!isRunning && currentTime === 0" class="control-btn start-btn" @click="start">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                开始
+                            </button>
 
-                        <button v-if="isRunning" class="pause-btn" @click="pause">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="6" y="4" width="4" height="16" />
-                                <rect x="14" y="4" width="4" height="16" />
-                            </svg>
-                            暂停
-                        </button>
+                            <button v-if="isRunning" class="control-btn pause-btn" @click="pause">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="6" y="4" width="4" height="16" />
+                                    <rect x="14" y="4" width="4" height="16" />
+                                </svg>
+                                暂停
+                            </button>
 
-                        <button v-if="!isRunning && currentTime > 0" class="resume-btn" @click="resume">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                            继续
-                        </button>
+                            <button v-if="!isRunning && currentTime > 0" class="control-btn resume-btn" @click="resume">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                继续
+                            </button>
 
-                        <button v-if="isRunning" class="lap-btn" @click="recordLap">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12,6 12,12 16,14" />
-                            </svg>
-                            计次
-                        </button>
+                            <button v-if="isRunning" class="control-btn lap-btn" @click="recordLap">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12,6 12,12 16,14" />
+                                </svg>
+                                计次
+                            </button>
 
-                        <button v-if="currentTime > 0" class="reset-btn" @click="reset">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                                <path d="M21 3v5h-5" />
-                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                                <path d="M3 21v-5h5" />
-                            </svg>
-                            重置
-                        </button>
+                            <button v-if="currentTime > 0" class="control-btn reset-btn" @click="reset">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                    <path d="M21 3v5h-5" />
+                                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                    <path d="M3 21v-5h5" />
+                                </svg>
+                                重置
+                            </button>
 
-                        <button class="fullscreen-btn" @click="toggleFullscreen">
-                            <svg v-if="!isFullscreen" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="m15 3 6 6m-6-6v6m6-6h-6M9 21l-6-6m6 6v-6m-6 6h6" />
-                            </svg>
-                            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path
-                                    d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                            </svg>
-                            {{ isFullscreen ? '退出全屏' : '全屏' }}
-                        </button>
+                            <button class="control-btn fullscreen-btn" @click="() => toggleFullscreen(timerDisplayRef)">
+                                <svg v-if="!isFullscreen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                </svg>
+                                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                                </svg>
+                                {{ isFullscreen ? '退出' : '全屏' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -111,16 +94,15 @@
                             <span class="lap-number">次数</span>
                             <span class="lap-time">计次时间</span>
                             <span class="lap-total">总时间</span>
+                            <span class="lap-timestamp">记录时间</span>
                         </div>
                         <div class="laps-list">
                             <div v-for="(lap, index) in reversedLaps" :key="lap.id"
                                 :class="['lap-item', { 'fastest': lap.isFastest, 'slowest': lap.isSlowest }]">
                                 <span class="lap-number">{{ laps.length - index }}</span>
-                                <span class="lap-time">{{ formatTime(lap.lapTime) }}.{{
-                                    formatMilliseconds(lap.lapTime)
-                                }}</span>
-                                <span class="lap-total">{{ formatTime(lap.totalTime) }}.{{
-                                    formatMilliseconds(lap.totalTime) }}</span>
+                                <span class="lap-time">{{ formatTime(lap.lapTime) }}.{{ formatMilliseconds(lap.lapTime) }}</span>
+                                <span class="lap-total">{{ formatTime(lap.totalTime) }}.{{ formatMilliseconds(lap.totalTime) }}</span>
+                                <span class="lap-timestamp">{{ lap.timestamp }}</span>
                             </div>
                         </div>
                     </div>
@@ -136,62 +118,69 @@
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">最快计次</div>
-                            <div class="stat-value">{{ formatTime(fastestLap) }}.{{ formatMilliseconds(fastestLap)
-                            }}
-                            </div>
+                            <div class="stat-value">{{ formatTime(fastestLap) }}.{{ formatMilliseconds(fastestLap) }}</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">最慢计次</div>
-                            <div class="stat-value">{{ formatTime(slowestLap) }}.{{ formatMilliseconds(slowestLap)
-                            }}
-                            </div>
+                            <div class="stat-value">{{ formatTime(slowestLap) }}.{{ formatMilliseconds(slowestLap) }}</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">平均计次</div>
-                            <div class="stat-value">{{ formatTime(averageLap) }}.{{ formatMilliseconds(averageLap)
-                            }}
-                            </div>
+                            <div class="stat-value">{{ formatTime(averageLap) }}.{{ formatMilliseconds(averageLap) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 消息提示 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
-import { useWakeLock } from '../composables/useWakeLock'
+import { useFullscreen } from '../composables/useFullscreen'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 状态管理
-// 使用页面标题管理
 usePageTitle('stopwatch')
+const cardTitle = getCardTitle('stopwatch')
 
 const isRunning = ref(false)
 const currentTime = ref(0)
 const startTime = ref(0)
 const pausedTime = ref(0)
 const intervalId = ref<number | null>(null)
-const isFullscreen = ref(false)
 
-// 防止息屏
-const { requestWakeLock, releaseWakeLock } = useWakeLock()
+const timerDisplayRef = ref<HTMLElement | null>(null)
+
+// 全屏功能
+const { isFullscreen, toggleFullscreen, setDoubleClickElement, setFullscreenTarget } = useFullscreen(true)
 
 // 计次记录
 interface Lap {
     id: number
     lapTime: number
     totalTime: number
+    timestamp: string // 添加时间戳字段
     isFastest?: boolean
     isSlowest?: boolean
 }
@@ -199,11 +188,10 @@ interface Lap {
 const laps = ref<Lap[]>([])
 const lapCounter = ref(0)
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
+import { useNotification } from '../composables/useNotification'
 
-// 计算属性
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 const reversedLaps = computed(() => [...laps.value].reverse())
 
 const fastestLap = computed(() => {
@@ -229,7 +217,6 @@ const formatTime = (milliseconds: number): string => {
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
 
-    // 始终显示时分秒格式
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 
@@ -246,7 +233,7 @@ const start = () => {
         currentTime.value = Date.now() - startTime.value
     }, 10)
 
-    showMessage('秒表已开始', 'success')
+    showSuccess('秒表已开始')
 }
 
 const pause = () => {
@@ -258,12 +245,12 @@ const pause = () => {
         intervalId.value = null
     }
 
-    showMessage('秒表已暂停', 'success')
+    showSuccess('秒表已暂停')
 }
 
 const resume = () => {
     start()
-    showMessage('秒表已继续', 'success')
+    showSuccess('秒表已继续')
 }
 
 const reset = () => {
@@ -277,7 +264,7 @@ const reset = () => {
         intervalId.value = null
     }
 
-    showMessage('秒表已重置', 'success')
+    showSuccess('秒表已重置')
 }
 
 // 计次功能
@@ -288,15 +275,24 @@ const recordLap = () => {
     const lapTime = currentTime.value - previousTotalTime
 
     lapCounter.value++
+    const now = new Date()
     const newLap: Lap = {
         id: lapCounter.value,
         lapTime,
-        totalTime: currentTime.value
+        totalTime: currentTime.value,
+        timestamp: now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }) + '.' + now.getMilliseconds().toString().padStart(3, '0')
     }
 
     laps.value.push(newLap)
     updateLapStats()
-    showMessage(`第 ${laps.value.length} 次计次已记录`, 'success')
+    showSuccess(`第 ${laps.value.length} 次计次已记录`)
 }
 
 const updateLapStats = () => {
@@ -314,22 +310,23 @@ const updateLapStats = () => {
 const clearLaps = () => {
     laps.value = []
     lapCounter.value = 0
-    showMessage('计次记录已清空', 'success')
+    showSuccess('计次记录已清空')
 }
 
 // 导出功能
 const exportLaps = () => {
     if (laps.value.length === 0) {
-        showMessage('没有计次记录可导出', 'error')
+        showError('没有计次记录可导出')
         return
     }
 
     const data = [
-        ['次数', '计次时间', '总时间'],
+        ['次数', '计次时间', '总时间', '记录时间'],
         ...laps.value.map((lap, index) => [
             (index + 1).toString(),
             `${formatTime(lap.lapTime)}.${formatMilliseconds(lap.lapTime)}`,
-            `${formatTime(lap.totalTime)}.${formatMilliseconds(lap.totalTime)}`
+            `${formatTime(lap.totalTime)}.${formatMilliseconds(lap.totalTime)}`,
+            lap.timestamp
         ])
     ]
 
@@ -345,60 +342,7 @@ const exportLaps = () => {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        showMessage('计次记录已导出', 'success')
-    }
-}
-
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
-// 全屏功能
-const toggleFullscreen = async () => {
-    try {
-        if (!document.fullscreenElement) {
-            // 进入全屏
-            await document.documentElement.requestFullscreen()
-            isFullscreen.value = true
-            // 全屏时启用防息屏
-            requestWakeLock(showMessage)
-            showMessage('已进入全屏模式，按F11或ESC键退出', 'success')
-        } else {
-            // 退出全屏
-            await document.exitFullscreen()
-            isFullscreen.value = false
-            // 退出全屏时释放防息屏
-            releaseWakeLock(showMessage)
-            showMessage('已退出全屏模式', 'success')
-        }
-    } catch (error) {
-        // 如果浏览器不支持全屏API，回退到CSS全屏
-        isFullscreen.value = !isFullscreen.value
-        if (isFullscreen.value) {
-            // 组件全屏时也启用防息屏
-            requestWakeLock(showMessage)
-            showMessage('已进入全屏模式（CSS模式），按ESC键退出', 'success')
-        } else {
-            // 退出组件全屏时释放防息屏
-            releaseWakeLock(showMessage)
-            showMessage('已退出全屏模式', 'success')
-        }
-    }
-}
-
-// 监听全屏状态变化
-const handleFullscreenChange = () => {
-    const wasFullscreen = isFullscreen.value
-    isFullscreen.value = !!document.fullscreenElement
-    
-    // 如果从全屏退出，释放防息屏
-    if (wasFullscreen && !isFullscreen.value) {
-        releaseWakeLock(showMessage)
+        showSuccess('计次记录已导出')
     }
 }
 
@@ -419,35 +363,31 @@ const handleKeyPress = (event: KeyboardEvent) => {
     } else if (event.code === 'KeyR' && !isRunning.value) {
         event.preventDefault()
         reset()
-    } else if (event.code === 'Escape') {
-        event.preventDefault()
-        if (document.fullscreenElement) {
-            // 如果是浏览器全屏，退出浏览器全屏
-            document.exitFullscreen()
-        } else if (isFullscreen.value) {
-            // 如果是CSS全屏，退出CSS全屏
-            isFullscreen.value = false
-            showMessage('已退出全屏模式', 'success')
-        }
-    } else if (event.code === 'KeyF' || event.code === 'F11') {
-        event.preventDefault()
-        toggleFullscreen()
     }
 }
 
 // 生命周期
-onMounted(() => {document.addEventListener('keydown', handleKeyPress)
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    showMessage('快捷键：空格键 开始/暂停，L键 计次，R键 重置，F键/F11键 全屏', 'success')
+// 生命周期
+onMounted(() => {
+    document.addEventListener('keydown', handleKeyPress)
+    
+    // 使用 nextTick 确保 DOM 元素已经渲染
+    nextTick(() => {
+        // 设置双击元素和全屏目标元素
+        if (timerDisplayRef.value) {
+            setDoubleClickElement(timerDisplayRef.value)
+            setFullscreenTarget(timerDisplayRef.value)
+        }
+    })
+    
+    showSuccess('快捷键：空格键 开始/暂停，L键 计次，R键 重置，双击计时器进入全屏')
 })
 
-onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
-    document.removeEventListener('fullscreenchange', handleFullscreenChange)
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeyPress)
     if (intervalId.value) {
         clearInterval(intervalId.value)
     }
-    // 组件卸载时释放防息屏
-    releaseWakeLock()
 })
 </script>
 
@@ -457,80 +397,8 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: var(--bg-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* 全屏模式样式 */
-.stopwatch.fullscreen,
-.stopwatch:fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999;
-    background: #2d3748;
-}
-
-.stopwatch.fullscreen .converter-header,
-.stopwatch:fullscreen .converter-header {
-    display: none;
-}
-
-.stopwatch.fullscreen .converter-content,
-.stopwatch:fullscreen .converter-content {
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-}
-
-.stopwatch.fullscreen .main-stopwatch-area,
-.stopwatch:fullscreen .main-stopwatch-area {
-    min-height: 100vh;
-    justify-content: center;
-}
-
-.stopwatch.fullscreen .time-display,
-.stopwatch:fullscreen .time-display {
-    background: transparent;
-    box-shadow: none;
-    padding: 4rem 2rem;
-    border-radius: 0;
-}
-
-.stopwatch.fullscreen .main-time,
-.stopwatch:fullscreen .main-time {
-    font-size: 12rem;
-    color: #ffffff;
-}
-
-.stopwatch.fullscreen .milliseconds,
-.stopwatch:fullscreen .milliseconds {
-    font-size: 6rem;
-    color: #a0aec0;
-}
-
-.stopwatch.fullscreen .control-buttons button,
-.stopwatch:fullscreen .control-buttons button {
-    background: #4a5568;
-    color: white;
-    border: none;
-}
-
-.stopwatch.fullscreen .control-buttons button:hover,
-.stopwatch:fullscreen .control-buttons button:hover {
-    background: #718096;
-    transform: translateY(-2px);
-}
-
-.stopwatch.fullscreen .laps-section,
-.stopwatch.fullscreen .stats-section,
-.stopwatch.fullscreen .action-buttons,
-.stopwatch:fullscreen .laps-section,
-.stopwatch:fullscreen .stats-section,
-.stopwatch:fullscreen .action-buttons {
-    display: none;
 }
 
 .converter-header {
@@ -538,9 +406,9 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     align-items: center;
     gap: 1rem;
     padding: 1.5rem 2rem;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-actions {
@@ -556,28 +424,28 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .header-export-btn {
-    background: #6366f1;
+    background: var(--primary-color);
     color: white;
 }
 
 .header-export-btn:hover {
-    background: #5b21b6;
+    background: var(--primary-hover);
 }
 
 .header-clear-btn {
-    background: #64748b;
+    background: var(--error-color);
     color: white;
 }
 
 .header-clear-btn:hover {
-    background: #475569;
+    background: var(--error-color-dark);
 }
 
 .back-btn {
@@ -585,25 +453,25 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     font-size: 0.875rem;
 }
 
 .back-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .converter-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .converter-content {
@@ -633,26 +501,81 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     margin-bottom: 2rem;
 }
 
-.main-stopwatch-area {
+.timer-display-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 70vh;
-    margin-bottom: 2rem;
-    position: relative;
+    margin-bottom: 3rem;
 }
 
 .time-display {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 3rem;
     padding: 6rem 5rem;
-    background: white;
-    border-radius: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
     min-height: 300px;
+    margin-bottom: 3rem;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 全屏模式样式 */
+.timer-display-card:fullscreen {
+    background: var(--bg-primary);
+    border: none;
+    border-radius: 0;
+    padding: 2rem;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+}
+
+.timer-display-card:fullscreen .time-display {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    margin-bottom: 0;
+    padding: 2rem;
+}
+
+.timer-display-card:fullscreen .time-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timer-display-card:fullscreen .main-time {
+    font-size: 12rem !important;
+    font-weight: 300 !important;
+    color: var(--text-primary);
+}
+
+.timer-display-card:fullscreen .milliseconds {
+    font-size: 6rem !important;
+    font-weight: 300 !important;
+    color: var(--text-secondary);
+}
+
+.timer-display-card:fullscreen .control-buttons {
+    gap: 2rem;
+}
+
+.timer-display-card:fullscreen .control-btn {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    min-width: 150px;
 }
 
 .time-content {
@@ -664,7 +587,7 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 .main-time {
     font-size: 7.2rem;
     font-weight: 300;
-    color: #1e293b;
+    color: var(--text-primary);
     font-family: 'Courier New', monospace;
     line-height: 1;
 }
@@ -672,7 +595,7 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 .milliseconds {
     font-size: 3.6rem;
     font-weight: 300;
-    color: #64748b;
+    color: var(--text-secondary);
     font-family: 'Courier New', monospace;
     margin-left: 0.6rem;
 }
@@ -684,77 +607,77 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     flex-wrap: wrap;
 }
 
-.control-buttons button {
+.control-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 2rem;
     border: none;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     min-width: 120px;
     justify-content: center;
 }
 
 .start-btn,
 .resume-btn {
-    background: #10b981;
+    background: var(--success-color);
     color: white;
 }
 
 .start-btn:hover,
 .resume-btn:hover {
-    background: #059669;
+    background: var(--success-color-dark);
     transform: translateY(-1px);
 }
 
 .pause-btn {
-    background: #f59e0b;
+    background: var(--warning-color);
     color: white;
 }
 
 .pause-btn:hover {
-    background: #d97706;
+    background: var(--warning-color-dark);
     transform: translateY(-1px);
 }
 
 .lap-btn {
-    background: #3b82f6;
+    background: var(--primary-color);
     color: white;
 }
 
 .lap-btn:hover {
-    background: #2563eb;
+    background: var(--primary-hover);
     transform: translateY(-1px);
 }
 
 .reset-btn {
-    background: #ef4444;
+    background: var(--error-color);
     color: white;
 }
 
 .reset-btn:hover {
-    background: #dc2626;
+    background: var(--error-color-dark);
     transform: translateY(-1px);
 }
 
 .fullscreen-btn {
-    background: #8b5cf6;
+    background: var(--primary-color);
     color: white;
 }
 
 .fullscreen-btn:hover {
-    background: #7c3aed;
+    background: var(--primary-hover);
     transform: translateY(-1px);
 }
 
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0 0 1.5rem 0;
 }
 
@@ -763,21 +686,22 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 }
 
 .laps-container {
-    background: white;
-    border-radius: 0.75rem;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
 .laps-header {
     display: grid;
-    grid-template-columns: 80px 1fr 1fr;
+    grid-template-columns: 80px 1fr 1fr 1.2fr;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
     font-weight: 600;
-    color: #475569;
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
@@ -788,16 +712,16 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 
 .lap-item {
     display: grid;
-    grid-template-columns: 80px 1fr 1fr;
+    grid-template-columns: 80px 1fr 1fr 1.2fr;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
     font-family: 'Courier New', monospace;
-    transition: background-color 0.2s;
+    transition: var(--transition);
 }
 
 .lap-item:hover {
-    background: #f8fafc;
+    background: var(--bg-hover);
 }
 
 .lap-item:last-child {
@@ -805,18 +729,24 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 }
 
 .lap-item.fastest {
-    background: #ecfdf5;
-    color: #059669;
+    background: var(--success-color-alpha);
+    color: var(--success-color);
 }
 
 .lap-item.slowest {
-    background: #fef2f2;
-    color: #dc2626;
+    background: var(--error-color-alpha);
+    color: var(--error-color);
 }
 
 .lap-number {
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-secondary);
+}
+
+.lap-timestamp {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .stats-section {
@@ -830,96 +760,36 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 }
 
 .stat-item {
-    background: white;
+    background: var(--bg-card);
     padding: 1.5rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
     text-align: center;
 }
 
 .stat-label {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
 
 .stat-value {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     font-family: 'Courier New', monospace;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 3rem;
-}
-
-.export-btn,
-.clear-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.export-btn {
-    background: #6366f1;
-    color: white;
-}
-
-.export-btn:hover {
-    background: #5b21b6;
-}
-
-.clear-btn {
-    background: #64748b;
-    color: white;
-}
-
-.clear-btn:hover {
-    background: #475569;
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
+@media (max-width: 1024px) and (min-width: 769px) {
+    .lap-timestamp {
+        font-size: 0.75rem;
     }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
+    
+    .laps-header,
+    .lap-item {
+        grid-template-columns: 70px 1fr 1fr 1fr;
+        gap: 0.75rem;
     }
 }
 
@@ -933,9 +803,32 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
         min-height: 60vh;
     }
 
-    .time-display {
+    .timer-display-card .time-display {
         padding: 4.8rem 3rem;
         min-height: 240px;
+    }
+
+    .timer-display-card:fullscreen {
+        gap: 3rem;
+    }
+
+    .timer-display-card:fullscreen .main-time {
+        font-size: 8rem !important;
+    }
+
+    .timer-display-card:fullscreen .milliseconds {
+        font-size: 4rem !important;
+    }
+
+    .timer-display-card:fullscreen .control-buttons {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .timer-display-card:fullscreen .control-btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        min-width: 120px;
     }
 
     .main-time {
@@ -950,7 +843,7 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
         gap: 0.5rem;
     }
 
-    .control-buttons button {
+    .control-btn {
         padding: 0.75rem 1rem;
         min-width: 100px;
         font-size: 0.875rem;
@@ -958,17 +851,17 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
 
     .laps-header,
     .lap-item {
-        grid-template-columns: 60px 1fr 1fr;
+        grid-template-columns: 50px 1fr 1fr;
         padding: 0.75rem 1rem;
         font-size: 0.875rem;
     }
 
-    .stats-grid {
-        grid-template-columns: 1fr;
+    .lap-timestamp {
+        display: none;
     }
 
-    .action-buttons {
-        margin-bottom: 2rem;
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>

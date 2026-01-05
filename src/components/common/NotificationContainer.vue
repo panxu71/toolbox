@@ -60,7 +60,7 @@ const getIcon = (type: string) => {
 <style scoped>
 .notification-container {
     position: fixed;
-    top: 1rem;
+    bottom: 1rem;
     right: 1rem;
     z-index: 9999;
     display: flex;
@@ -85,7 +85,7 @@ const getIcon = (type: string) => {
 }
 
 .notification-success {
-    border-left: 4px solid var(--success-color);
+    /* 移除左侧边框线 */
 }
 
 .notification-success .notification-icon {
@@ -93,7 +93,7 @@ const getIcon = (type: string) => {
 }
 
 .notification-error {
-    border-left: 4px solid var(--danger-color);
+    /* 移除左侧边框线 */
 }
 
 .notification-error .notification-icon {
@@ -101,7 +101,7 @@ const getIcon = (type: string) => {
 }
 
 .notification-warning {
-    border-left: 4px solid var(--warning-color);
+    /* 移除左侧边框线 */
 }
 
 .notification-warning .notification-icon {
@@ -109,7 +109,7 @@ const getIcon = (type: string) => {
 }
 
 .notification-info {
-    border-left: 4px solid var(--primary-color);
+    /* 移除左侧边框线 */
 }
 
 .notification-info .notification-icon {
@@ -198,12 +198,12 @@ const getIcon = (type: string) => {
 }
 
 .notification-enter-from {
-    transform: translateX(100%);
+    transform: translateY(100%);
     opacity: 0;
 }
 
 .notification-leave-to {
-    transform: translateX(100%);
+    transform: translateY(100%);
     opacity: 0;
 }
 

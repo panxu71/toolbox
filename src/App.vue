@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import Navigation from './components/Navigation.vue'
 import CardGrid from './components/CardGrid.vue'
 import Header from './components/Header.vue'
+import NotificationContainer from './components/common/NotificationContainer.vue'
 import { useTheme } from './composables/useTheme'
 import navigationConfig from './config/navigation.json'
 import cardsConfig from './config/cards.json'
@@ -180,6 +181,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'stopwatch': 'stopwatch',
         'clock': 'clock',
         'base64-converter': 'base64-encode',
+        'base64-converter-new': 'base64-encode-new',
         'url-converter': 'url-encode',
         'hash-generator': 'md5-hash',
         'rsa-key-generator': 'rsa-key-generator',
@@ -297,6 +299,9 @@ const executeFunction = async (action: string) => {
             // 加密工具
             case 'base64Encode':
                 openPage('base64-converter')
+                return // 不需要loading状态
+            case 'base64EncodeNew':
+                openPage('base64-converter-new')
                 return // 不需要loading状态
             case 'urlEncode':
                 openPage('url-converter')
@@ -995,6 +1000,9 @@ const updateUrl = (category?: string, tool?: string) => {
                 </div>
             </div>
         </div>
+
+        <!-- 通知容器 -->
+        <NotificationContainer />
     </div>
 </template>
 

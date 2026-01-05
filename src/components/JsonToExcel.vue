@@ -181,11 +181,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -195,7 +190,7 @@ import * as XLSX from 'xlsx'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import cardsConfig from '../config/cards.json'
@@ -228,8 +223,8 @@ const { downloadJson } = useDownload()
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const mode = ref<'json-to-excel' | 'excel-to-json'>('json-to-excel')
 
@@ -291,7 +286,7 @@ const onPaste = async () => {
 // 解析JSON数据
 const parseJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请先输入JSON数据', 'error')
+        showError('请先输入JSON数据')
         return
     }
 
@@ -328,11 +323,11 @@ const parseJson = () => {
         }
 
         inputError.value = ''
-        showMessage(`成功解析 ${parsedData.value.length} 行数据`, 'success')
+        showSuccess(`成功解析 ${parsedData.value.length} 行数据`)
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
         parsedData.value = []
-        showMessage('JSON格式错误', 'error')
+        showError('JSON格式错误')
     }
 }
 
@@ -346,7 +341,7 @@ const formatCellValue = (value: any): string => {
 // 导出数据
 const exportData = () => {
     if (!parsedData.value || parsedData.value.length === 0) {
-        showMessage('没有数据可导出', 'error')
+        showError('没有数据可导出')
         return
     }
 
@@ -367,10 +362,10 @@ const exportData = () => {
         // 导出文件
         XLSX.writeFile(wb, filename)
 
-        showMessage(`文件已导出: ${filename}`, 'success')
+        showSuccess(`文件已导出: ${filename}`)
     } catch (error) {
         console.error('Export error:', error)
-        showMessage('导出失败', 'error')
+        showError('导出失败')
     }
 }
 
@@ -452,10 +447,10 @@ const processFile = (file: File) => {
                 }).filter(row => Object.values(row).some(val => val !== '')) // 过滤空行
 
                 convertedJson.value = JSON.stringify(result, null, 2)
-                showMessage(`成功转换 ${result.length} 行数据`, 'success')
+                showSuccess(`成功转换 ${result.length} 行数据`)
             } else {
                 convertedJson.value = '[]'
-                showMessage('文件为空或无有效数据', 'error')
+                showError('文件为空或无有效数据')
             }
         } catch (error) {
             console.error('File processing error:', error)
@@ -497,9 +492,9 @@ const copyJson = async () => {
 
     const success = await copyToClipboard(convertedJson.value)
     if (success) {
-        showMessage('JSON已复制到剪贴板', 'success')
+        showSuccess('JSON已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -509,9 +504,9 @@ const downloadJsonFile = () => {
 
     const success = downloadJson(convertedJson.value, 'excel-to-json')
     if (success) {
-        showMessage('JSON文件已下载', 'success')
+        showSuccess('JSON文件已下载')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
@@ -532,7 +527,7 @@ const clearAll = () => {
     uploadedFile.value = null
     uploadError.value = ''
     convertedJson.value = ''
-    showMessage('已清空', 'success')
+    showSuccess('已清空')
 }
 
 // 加载示例数据
@@ -611,7 +606,7 @@ const loadExample = (exampleNumber: number) => {
     if (example) {
         inputJson.value = JSON.stringify(example.data, null, 2)
         parseJson()
-        showMessage(`已加载${example.name}示例`, 'success')
+        showSuccess(`已加载${example.name}示例`)
     }
 }
 </script>
@@ -1028,41 +1023,6 @@ const loadExample = (exampleNumber: number) => {
 .preview-placeholder svg {
     margin-bottom: 16px;
     opacity: 0.5;
-}
-
-.message-toast {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message-toast.success {
-    background: #10b981;
-    color: white;
-}
-
-.message-toast.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 @media (max-width: 768px) {

@@ -93,11 +93,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -106,7 +101,7 @@ import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import JsonTreeNode from './common/JsonTreeNode.vue'
@@ -145,8 +140,8 @@ const { downloadJson } = useDownload()
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const inputJson = ref('')
 const formattedJson = ref('')
@@ -323,12 +318,12 @@ const handleNodeCopy = async (nodeInfo: { key: string | number | null, value: an
         const success = await copyToClipboard(textToCopy)
         if (success) {
             const copyType = nodeInfo.key !== null ? '键值对' : (typeof nodeInfo.value === 'object' ? '节点' : '值')
-            showMessage(`已复制${copyType}到剪贴板`, 'success')
+            showSuccess(`已复制${copyType}到剪贴板`)
         } else {
-            showMessage('复制失败', 'error')
+            showError('复制失败')
         }
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -361,9 +356,9 @@ const handleNodeDelete = (nodeInfo: { key: string | number | null, path: string 
         inputJson.value = newJsonString
         formattedJson.value = newJsonString
 
-        showMessage('节点已删除', 'success')
+        showSuccess('节点已删除')
     } catch (error) {
-        showMessage('删除失败', 'error')
+        showError('删除失败')
     }
 }
 
@@ -372,7 +367,7 @@ const clearAll = () => {
     inputJson.value = ''
     formattedJson.value = ''
     inputError.value = ''
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 
 // 复制结果
@@ -381,9 +376,9 @@ const copyResult = async () => {
 
     const success = await copyToClipboard(formattedJson.value)
     if (success) {
-        showMessage('已复制到剪贴板', 'success')
+        showSuccess('已复制到剪贴板')
     } else {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -393,16 +388,16 @@ const downloadJsonFile = () => {
 
     const success = downloadJson(formattedJson.value, 'json')
     if (success) {
-        showMessage('JSON文件已下载', 'success')
+        showSuccess('JSON文件已下载')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
 // 格式化JSON
 const formatJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请输入JSON内容', 'error')
+        showError('请输入JSON内容')
         return
     }
 
@@ -410,34 +405,34 @@ const formatJson = () => {
         const parsed = JSON.parse(inputJson.value)
         formattedJson.value = JSON.stringify(parsed, null, 2)
         inputError.value = ''
-        showMessage('格式化成功', 'success')
+        showSuccess('格式化成功')
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
-        showMessage('格式化失败', 'error')
+        showError('格式化失败')
     }
 }
 
 // 验证JSON
 const validateJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请输入JSON内容', 'error')
+        showError('请输入JSON内容')
         return
     }
 
     try {
         JSON.parse(inputJson.value)
         inputError.value = ''
-        showMessage('JSON格式正确', 'success')
+        showSuccess('JSON格式正确')
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
-        showMessage('JSON格式错误', 'error')
+        showError('JSON格式错误')
     }
 }
 
 // 压缩JSON
 const minifyJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请输入JSON内容', 'error')
+        showError('请输入JSON内容')
         return
     }
 
@@ -445,22 +440,22 @@ const minifyJson = () => {
         const parsed = JSON.parse(inputJson.value)
         formattedJson.value = JSON.stringify(parsed)
         inputError.value = ''
-        showMessage('压缩成功', 'success')
+        showSuccess('压缩成功')
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
-        showMessage('压缩失败', 'error')
+        showError('压缩失败')
     }
 }
 
 // 转义JSON
 const escapeJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请输入JSON内容', 'error')
+        showError('请输入JSON内容')
         return
     }
 
     formattedJson.value = JSON.stringify(inputJson.value)
-    showMessage('转义成功', 'success')
+    showSuccess('转义成功')
 }
 
 // 去转义JSON
@@ -480,16 +475,16 @@ const unescapeJson = () => {
             try {
                 const parsed = JSON.parse(unescaped)
                 formattedJson.value = JSON.stringify(parsed, null, 2)
-                showMessage('去转义并格式化成功', 'success')
+                showSuccess('去转义并格式化成功')
             } catch {
                 // 如果不是有效的JSON，直接显示去转义的字符串
                 formattedJson.value = unescaped
-                showMessage('去转义成功', 'success')
+                showSuccess('去转义成功')
             }
         } else {
             // 如果解析结果不是字符串，格式化为JSON字符串
             formattedJson.value = JSON.stringify(unescaped, null, 2)
-            showMessage('去转义成功', 'success')
+            showSuccess('去转义成功')
         }
 
         inputError.value = ''
@@ -497,10 +492,10 @@ const unescapeJson = () => {
         // 如果输入的内容不是有效的转义JSON，检查是否是普通JSON
         try {
             JSON.parse(inputJson.value)
-            showMessage('输入内容已经是有效的JSON，无需去转义', 'error')
+            showError('输入内容已经是有效的JSON，无需去转义')
         } catch {
             inputError.value = `去转义失败: ${(error as Error).message}`
-            showMessage('去转义失败，请检查输入格式', 'error')
+            showError('去转义失败，请检查输入格式')
         }
     }
 }
@@ -566,7 +561,7 @@ const loadExample = (exampleNumber: number) => {
         inputJson.value = JSON.stringify(example.data)
         formattedJson.value = JSON.stringify(example.data, null, 2)
         inputError.value = ''
-        showMessage(`已加载${example.name}示例数据`, 'success')
+        showSuccess(`已加载${example.name}示例数据`)
     }
 }
 </script>
@@ -846,41 +841,6 @@ const loadExample = (exampleNumber: number) => {
 .stat-item.complex {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
-}
-
-.message-toast {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message-toast.success {
-    background: #10b981;
-    color: white;
-}
-
-.message-toast.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
 }
 
 /* JSON语法高亮 */

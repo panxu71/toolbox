@@ -1,49 +1,37 @@
 <template>
     <div class="clock" :class="[{ fullscreen: isFullscreen }, `style-${clockStyle}`]">
-        <div class="converter-header" v-if="!isFullscreen">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">数字时钟</h2>
-            <div class="converter-actions">
-                <button @click="toggleStyle" class="control-btn" title="切换风格">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-6.5L19 7l-1.5 1.5M5 17l1.5-1.5L5 14"/>
-                    </svg>
-                </button>
-                <button @click="toggle24Hour" class="control-btn" :title="is24Hour ? '切换到12小时制' : '切换到24小时制'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12,6 12,12 16,14"/>
-                        <text x="12" y="18" text-anchor="middle" font-size="6" fill="currentColor">{{ is24Hour ? '24' : '12' }}</text>
-                    </svg>
-                </button>
-                <button @click="toggleMilliseconds" class="control-btn" :title="showMilliseconds ? '隐藏毫秒' : '显示毫秒'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 7v5l3 3"/>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                    </svg>
-                </button>
-                <button @click="toggleLunar" class="control-btn" :title="showLunar ? '隐藏农历' : '显示农历'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-                <button @click="toggleFullscreen" class="control-btn" title="全屏显示">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')" v-if="!isFullscreen">
+            <template #actions>
+                <HeaderActionButton 
+                    icon="settings" 
+                    tooltip="切换风格"
+                    @click="toggleStyle" 
+                />
+                <HeaderActionButton 
+                    icon="clock" 
+                    :tooltip="is24Hour ? '切换到12小时制' : '切换到24小时制'"
+                    @click="toggle24Hour" 
+                />
+                <HeaderActionButton 
+                    icon="eye" 
+                    :tooltip="showMilliseconds ? '隐藏毫秒' : '显示毫秒'"
+                    @click="toggleMilliseconds" 
+                />
+                <HeaderActionButton 
+                    icon="moon" 
+                    :tooltip="showLunar ? '隐藏农历' : '显示农历'"
+                    @click="toggleLunar" 
+                />
+                <HeaderActionButton 
+                    icon="fullscreen" 
+                    tooltip="全屏显示"
+                    @click="toggleFullscreen" 
+                />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
-            <div class="digital-display" :class="clockStyle" @dblclick="toggleFullscreen">
+            <div class="digital-display" :class="clockStyle" ref="digitalDisplayRef">
                 <!-- 时间显示 -->
                 <div class="time-display" v-if="clockStyle !== 'analog'">
                     <div class="time-digits">
@@ -60,7 +48,6 @@
 
                 <!-- 模拟时钟 -->
                 <div class="analog-clock" v-if="clockStyle === 'analog'">
-
                     <!-- 大刻度（12个小时刻度）带数字 -->
                     <div v-for="i in 12" :key="`hour-tick-${i}`" 
                          class="hour-tick" 
@@ -103,34 +90,41 @@
                     <div class="lunar-line" v-if="showLunar">{{ currentLunarDate }}</div>
                     <div class="weekday-line" v-if="showWeekday">{{ currentWeekday }}</div>
                 </div>
-
-
             </div>
-
-        </div>
-
-        <!-- 消息提示 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import {  ref, computed, onMounted, onUnmounted, nextTick  } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { Solar } from 'lunar-javascript'
-import { useWakeLock } from '../composables/useWakeLock'
+import { useFullscreen } from '../composables/useFullscreen'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 状态管理
-// 使用页面标题管理
-usePageTitle('clock')
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
 
-const isFullscreen = ref(false)
+// 状态管理
+usePageTitle('clock')
+const cardTitle = getCardTitle('clock')
+
 const showSeconds = ref(true)
 const showMilliseconds = ref(true)
 const showLunar = ref(true)
@@ -138,18 +132,18 @@ const showWeekday = ref(true)
 const is24Hour = ref(true)
 const clockStyle = ref<'minimal' | 'digital' | 'analog' | 'card' | 'immersive'>('digital')
 
-// 防止息屏
-const { requestWakeLock, releaseWakeLock } = useWakeLock()
+// 全屏功能（对整个页面进行全屏，而不是时钟元素）
+const { isFullscreen, toggleFullscreen, setDoubleClickElement } = useFullscreen(true)
 
 // 时间状态
 const currentDateTime = ref(new Date())
 const intervalId = ref<number | null>(null)
+const digitalDisplayRef = ref<HTMLElement | null>(null)
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
+import { useNotification } from '../composables/useNotification'
 
-// 计算属性
+// 使用通知系统
+const { success: showSuccess } = useNotification()
 const timeHours = computed(() => {
     const now = currentDateTime.value
     if (is24Hour.value) {
@@ -206,41 +200,7 @@ const currentWeekday = computed(() => {
 // 获取星期简写
 const getWeekdayShort = (): string => {
     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-    return days[currentDateTime.value.getDay()]
-}
-
-// 获取农历日期
-const getLunarDay = (): string => {
-    try {
-        const now = currentDateTime.value
-        const solar = Solar.fromDate(now)
-        const lunar = solar.getLunar()
-        
-        // 直接使用库提供的中文日期
-        return lunar.getDayInChinese()
-    } catch (error) {
-        console.error('农历日期计算错误:', error)
-        return '初一'
-    }
-}
-
-// 罗马数字转换函数
-const getRomanNumeral = (num: number): string => {
-    const romanNumerals: Record<number, string> = {
-        1: 'I',
-        2: 'II', 
-        3: 'III',
-        4: 'IV',
-        5: 'V',
-        6: 'VI',
-        7: 'VII',
-        8: 'VIII',
-        9: 'IX',
-        10: 'X',
-        11: 'XI',
-        12: 'XII'
-    }
-    return romanNumerals[num] || num.toString()
+    return days[currentDateTime.value.getDay()] || 'SUN'
 }
 
 // 模拟时钟指针角度计算
@@ -248,7 +208,6 @@ const hourAngle = computed(() => {
     const now = currentDateTime.value
     const hours = now.getHours() % 12
     const minutes = now.getMinutes()
-    // 每小时30度，数字1在30度位置，所以1点时指针应该指向30度
     return (hours * 30 + minutes * 0.5)
 })
 
@@ -256,47 +215,31 @@ const minuteAngle = computed(() => {
     const now = currentDateTime.value
     const minutes = now.getMinutes()
     const seconds = now.getSeconds()
-    // 每分钟6度，数字1在30度位置，所以16分钟时指针应该指向96度(16*6)
     return (minutes * 6 + seconds * 0.1)
 })
 
 const secondAngle = computed(() => {
     const now = currentDateTime.value
     const seconds = now.getSeconds()
-    // 每秒6度
     return (seconds * 6)
 })
 
-// 农历计算函数 - 使用专业的lunar-javascript库
+// 农历计算函数
 const getLunarDate = (date: Date): string => {
     try {
-        // 使用Solar类创建公历日期对象
         const solar = Solar.fromDate(date)
-        
-        // 转换为农历
         const lunar = solar.getLunar()
-        
-        // 获取天干地支年份
         const ganZhi = lunar.getYearInGanZhi()
-        
-        // 获取生肖
         const shengXiao = lunar.getYearShengXiao()
-        
-        // 获取农历月份数字
         const monthNum = lunar.getMonth()
-        
-        // 手动处理月份名称，确保显示正确
         const monthNames = ['正月', '二月', '三月', '四月', '五月', '六月', 
                            '七月', '八月', '九月', '十月', '十一月', '腊月']
         const monthName = monthNames[monthNum - 1] || '未知月'
-        
-        // 获取农历日期名称
         const dayName = lunar.getDayInChinese()
         
         return `农历${ganZhi}年 (${shengXiao}年) ${monthName}${dayName}`
     } catch (error) {
         console.error('农历计算错误:', error)
-        // 如果出错，返回基本信息
         const year = date.getFullYear()
         const gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
         const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
@@ -333,71 +276,30 @@ const toggleStyle = () => {
         'immersive': '全屏沉浸式'
     }
     
-    showMessage(`切换到${styleNames[clockStyle.value]}`, 'success')
+    showSuccess(`切换到${styleNames[clockStyle.value]}`)
 }
 
 const toggle24Hour = () => {
     is24Hour.value = !is24Hour.value
-    showMessage(`切换到${is24Hour.value ? '24' : '12'}小时制`, 'success')
+    showSuccess(`切换到${is24Hour.value ? '24' : '12'}小时制`)
 }
 
 const toggleLunar = () => {
     showLunar.value = !showLunar.value
-    showMessage(`${showLunar.value ? '显示' : '隐藏'}农历`, 'success')
+    showSuccess(`${showLunar.value ? '显示' : '隐藏'}农历`)
 }
 
 const toggleMilliseconds = () => {
     showMilliseconds.value = !showMilliseconds.value
-    showMessage(`${showMilliseconds.value ? '显示' : '隐藏'}毫秒`, 'success')
-}
-
-// 防止息屏功能
-const toggleFullscreen = async () => {
-    try {
-        if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen()
-            isFullscreen.value = true
-            // 全屏时启用防息屏
-            requestWakeLock(showMessage)
-            showMessage('双击时钟可退出全屏', 'success')
-        } else {
-            await document.exitFullscreen()
-            isFullscreen.value = false
-            // 退出全屏时释放防息屏
-            releaseWakeLock(showMessage)
-        }
-    } catch (error) {
-        isFullscreen.value = !isFullscreen.value
-        if (isFullscreen.value) {
-            // 组件全屏时也启用防息屏
-            requestWakeLock(showMessage)
-            showMessage('双击时钟可退出全屏', 'success')
-        } else {
-            // 退出组件全屏时释放防息屏
-            releaseWakeLock(showMessage)
-        }
-    }
-}
-
-// 监听全屏状态变化
-const handleFullscreenChange = () => {
-    const wasFullscreen = isFullscreen.value
-    isFullscreen.value = !!document.fullscreenElement
-    
-    // 如果从全屏退出，释放防息屏
-    if (wasFullscreen && !isFullscreen.value) {
-        releaseWakeLock(showMessage)
-    }
+    showSuccess(`${showMilliseconds.value ? '显示' : '隐藏'}毫秒`)
 }
 
 // 键盘快捷键
 const handleKeyPress = (event: KeyboardEvent) => {
     if (event.code === 'Escape') {
         event.preventDefault()
-        if (document.fullscreenElement) {
-            document.exitFullscreen()
-        } else if (isFullscreen.value) {
-            isFullscreen.value = false
+        if (isFullscreen.value) {
+            toggleFullscreen()
         }
     } else if (event.code === 'KeyF' || event.code === 'F11') {
         event.preventDefault()
@@ -405,37 +307,32 @@ const handleKeyPress = (event: KeyboardEvent) => {
     }
 }
 
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 // 生命周期
-onMounted(() => {// 开始时间更新
+onMounted(() => {
     updateTime()
-    intervalId.value = window.setInterval(updateTime, 1) // 1ms更新一次以显示完整毫秒
+    intervalId.value = window.setInterval(updateTime, 10)
     
-    // 添加事件监听
     document.addEventListener('keydown', handleKeyPress)
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
     
-    showMessage('双击时钟进入全屏模式', 'success')
+    // 使用 nextTick 确保 DOM 元素已经渲染
+    nextTick(() => {
+        // 设置双击元素，但全屏目标设置为整个页面
+        if (digitalDisplayRef.value) {
+            setDoubleClickElement(digitalDisplayRef.value)
+            // 不设置fullscreenTarget，让它使用默认的document.documentElement
+        }
+    })
+    
+    showSuccess('双击时钟进入全屏模式')
 })
 
-onUnmounted(() => {if (intervalId.value) {
+onUnmounted(() => {
+    if (intervalId.value) {
         clearInterval(intervalId.value)
     }
-    // 组件卸载时释放防息屏
-    releaseWakeLock()
     document.removeEventListener('keydown', handleKeyPress)
-    document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 </script>
-
 <style scoped>
 .clock {
     width: 100%;
@@ -445,7 +342,7 @@ onUnmounted(() => {if (intervalId.value) {
     font-family: 'Courier New', 'SF Mono', 'Monaco', monospace;
     position: relative;
     overflow: hidden;
-    background: #000000; /* 默认背景 */
+    background: #000000;
 }
 
 /* 不同风格的背景 */
@@ -479,78 +376,6 @@ onUnmounted(() => {if (intervalId.value) {
     z-index: 9999;
 }
 
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    position: relative;
-}
-
-.clock.fullscreen .converter-header,
-.clock:fullscreen .converter-header {
-    display: none;
-}
-
-.back-btn {
-    position: absolute;
-    left: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.converter-actions {
-    position: absolute;
-    right: 24px;
-    display: flex;
-    gap: 8px;
-}
-
-.converter-actions .control-btn {
-    padding: 8px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 12px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-}
-
-.converter-actions .control-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
 .converter-content {
     flex: 1;
     display: flex;
@@ -572,9 +397,10 @@ onUnmounted(() => {if (intervalId.value) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    min-height: 60vh;
 }
 
-/* 简约白色风格 - 类似苹果风格 */
+/* 简约白色风格 */
 .digital-display.minimal {
     background: #ffffff;
     border: none;
@@ -582,8 +408,6 @@ onUnmounted(() => {if (intervalId.value) {
     width: fit-content;
     min-width: 0;
 }
-
-/* 简约白色风格
 
 .digital-display.minimal .time-digits {
     color: #1d1d1f;
@@ -622,7 +446,7 @@ onUnmounted(() => {if (intervalId.value) {
     border: none;
 }
 
-/* 数字显示屏风格 - LED效果 */
+/* 数字显示屏风格 */
 .digital-display.digital {
     background: #0a0a0a;
     border: 3px solid #333;
@@ -701,7 +525,7 @@ onUnmounted(() => {if (intervalId.value) {
     text-shadow: 0 0 6px #006600;
 }
 
-/* 模拟时钟风格 - 真实时钟设计 */
+/* 模拟时钟风格 */
 .digital-display.analog {
     background: 
         radial-gradient(circle at center, #ffffff 0%, #f8f9fa 60%, #e9ecef 85%, #dee2e6 100%);
@@ -719,9 +543,9 @@ onUnmounted(() => {if (intervalId.value) {
         0 0 0 12px #2c3e50,
         0 20px 60px rgba(0, 0, 0, 0.3),
         inset 0 0 100px rgba(0, 0, 0, 0.05);
+    min-height: auto;
 }
 
-/* 外圈装饰 */
 .digital-display.analog::before {
     content: '';
     position: absolute;
@@ -736,7 +560,6 @@ onUnmounted(() => {if (intervalId.value) {
         0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* 内圈装饰 */
 .digital-display.analog::after {
     content: '';
     position: absolute;
@@ -747,10 +570,6 @@ onUnmounted(() => {if (intervalId.value) {
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
 }
-
-
-
-
 
 /* 大刻度（小时刻度） */
 .hour-tick {
@@ -773,8 +592,6 @@ onUnmounted(() => {if (intervalId.value) {
     transform: translateX(-50%);
     border-radius: 3px;
 }
-
-
 
 .tick-number {
     position: absolute;
@@ -813,61 +630,7 @@ onUnmounted(() => {if (intervalId.value) {
     transform: translateX(-50%);
 }
 
-/* 刻度系统 */
-.clock-ticks {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-}
-
-.tick {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 2px;
-    height: 50%;
-    transform-origin: center bottom;
-}
-
-.tick span {
-    display: block;
-    width: 4px;
-    height: 20px;
-    background: #343a40;
-    margin-left: -1px;
-    border-radius: 2px;
-}
-
-/* 刻度容器 */
-.tick-container {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 2px;
-    height: 50%;
-    transform-origin: center bottom;
-}
-
-/* 刻度线 */
-.tick-mark {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 3px;
-    height: 15px;
-    background: #343a40;
-    transform: translateX(-50%);
-}
-
-/* 刻度 */
-.clock-tick {
-    position: absolute;
-    background: #343a40;
-}
-
-/* 日期窗口 - 真实手表样式 */
+/* 日期窗口 */
 .date-window {
     position: absolute;
     right: 120px;
@@ -887,7 +650,7 @@ onUnmounted(() => {if (intervalId.value) {
     z-index: 1;
 }
 
-/* 星期窗口 - 真实手表样式 */
+/* 星期窗口 */
 .day-window {
     position: absolute;
     right: 160px;
@@ -925,7 +688,7 @@ onUnmounted(() => {if (intervalId.value) {
     letter-spacing: 0.2px;
 }
 
-/* 指针 - 真实时钟样式 */
+/* 指针 */
 .clock-hour-hand, .clock-minute-hand, .clock-second-hand {
     position: absolute;
     left: 50%;
@@ -978,52 +741,7 @@ onUnmounted(() => {if (intervalId.value) {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.digital-display.analog .time-digits {
-    color: #212529;
-    text-shadow: none;
-    font-family: 'Times New Roman', serif;
-    font-weight: bold;
-    font-size: clamp(2rem, 8vw, 3rem);
-}
-
-.digital-display.analog .digit-group {
-    background: transparent;
-    border: none;
-}
-
-.digital-display.analog .separator {
-    color: #212529;
-    text-shadow: none;
-}
-
-.digital-display.analog .ampm {
-    color: #6c757d;
-    text-shadow: none;
-    background: transparent;
-    border: none;
-    font-size: clamp(1rem, 3vw, 1.5rem);
-}
-
-.digital-display.analog .date-display {
-    color: #495057;
-    font-size: clamp(0.8rem, 2vw, 1rem);
-    position: absolute;
-    bottom: 80px;
-}
-
-.digital-display.analog .date-line,
-.digital-display.analog .lunar-line,
-.digital-display.analog .weekday-line {
-    color: #6c757d;
-    text-shadow: none;
-    background: transparent;
-    border: none;
-    font-size: 0.8em;
-}
-
-
-
-/* 卡片式设计 - 现代简约风格 */
+/* 卡片式设计 */
 .digital-display.card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
@@ -1036,8 +754,6 @@ onUnmounted(() => {if (intervalId.value) {
     overflow: hidden;
     width: fit-content;
     min-width: 0;
-    will-change: auto;
-    transform: translateZ(0);
 }
 
 .digital-display.card::before {
@@ -1108,7 +824,7 @@ onUnmounted(() => {if (intervalId.value) {
     text-transform: capitalize;
 }
 
-/* 全屏沉浸式 - 专注大字体显示 */
+/* 全屏沉浸式 */
 .digital-display.immersive {
     background: transparent;
     border: none;
@@ -1123,7 +839,6 @@ onUnmounted(() => {if (intervalId.value) {
         0 0 40px rgba(255, 255, 255, 0.3);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 100;
-    font-size: clamp(6rem, 15vw, 12rem);
 }
 
 .digital-display.immersive .digit-group {
@@ -1166,9 +881,7 @@ onUnmounted(() => {if (intervalId.value) {
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    margin-bottom: 2rem;
     width: 100%;
-    min-height: 120px;
     padding: 0 2rem;
 }
 
@@ -1182,8 +895,6 @@ onUnmounted(() => {if (intervalId.value) {
     font-family: 'Courier New', 'SF Mono', 'Monaco', 'Consolas', monospace;
     white-space: nowrap;
     flex-wrap: nowrap;
-    will-change: auto;
-    transform: translateZ(0);
     line-height: 1;
     height: 100%;
 }
@@ -1223,17 +934,7 @@ onUnmounted(() => {if (intervalId.value) {
 .separator.milliseconds {
     font-size: 0.8em;
     opacity: 0.8;
-    width: 0.4ch;
-}
-
-.separator.milliseconds {
-    font-size: 0.8em;
-    opacity: 0.8;
     width: 0.5ch;
-}
-
-.separator {
-    margin: 0 0.2em;
 }
 
 .separator.blink {
@@ -1256,7 +957,7 @@ onUnmounted(() => {if (intervalId.value) {
 .date-display {
     text-align: center;
     font-size: clamp(1rem, 2.5vw, 1.5rem);
-    margin-top: 3rem;
+    margin-top: 2rem;
 }
 
 .date-line {
@@ -1278,22 +979,33 @@ onUnmounted(() => {if (intervalId.value) {
     letter-spacing: 0.2em;
 }
 
-
 /* 全屏模式样式 */
 .clock.fullscreen .converter-content,
 .clock:fullscreen .converter-content {
-    padding: 0;
+    padding: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .clock.fullscreen .digital-display,
 .clock:fullscreen .digital-display {
-    padding: 1rem;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: auto !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    border-radius: initial !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .clock.fullscreen .digital-display.digital,
@@ -1310,131 +1022,149 @@ onUnmounted(() => {if (intervalId.value) {
 
 .clock.fullscreen .digital-display.analog,
 .clock:fullscreen .digital-display.analog {
-    width: 80vmin;
-    height: 80vmin;
-    border-width: 3vmin;
+    background: 
+        radial-gradient(circle at center, #ffffff 0%, #f8f9fa 60%, #e9ecef 85%, #dee2e6 100%) !important;
+    border: 30px solid #2c3e50 !important;
+    border-radius: 50% !important;
+    width: 800px !important;
+    height: 800px !important;
+    min-width: 800px !important;
+    min-height: 800px !important;
+    max-width: 800px !important;
+    max-height: 800px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+    box-shadow: 
+        0 0 0 10px #34495e,
+        0 0 0 15px #2c3e50,
+        0 30px 80px rgba(0, 0, 0, 0.3),
+        inset 0 0 120px rgba(0, 0, 0, 0.05) !important;
+    min-height: auto !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    transform: none !important;
+    box-sizing: content-box !important;
 }
 
 .clock.fullscreen .digital-display.analog::before,
 .clock:fullscreen .digital-display.analog::before {
-    top: -4vmin;
-    left: -4vmin;
-    right: -4vmin;
-    bottom: -4vmin;
-    border-width: 0.5vmin;
+    content: '' !important;
+    position: absolute !important;
+    top: -40px !important;
+    left: -40px !important;
+    right: -40px !important;
+    bottom: -40px !important;
+    border: 5px solid #1a252f !important;
+    border-radius: 50% !important;
+    box-shadow: 
+        0 0 0 3px #34495e,
+        0 15px 40px rgba(0, 0, 0, 0.2) !important;
 }
 
 .clock.fullscreen .digital-display.analog::after,
 .clock:fullscreen .digital-display.analog::after {
-    top: 6vmin;
-    left: 6vmin;
-    right: 6vmin;
-    bottom: 6vmin;
+    content: '' !important;
+    position: absolute !important;
+    top: 50px !important;
+    left: 50px !important;
+    right: 50px !important;
+    bottom: 50px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 50% !important;
 }
 
-.clock.fullscreen .hour-tick::before,
-.clock:fullscreen .hour-tick::before {
-    top: 1.5vmin;
-    width: 0.8vmin;
-    height: 4vmin;
+.clock.fullscreen .digital-display.analog .tick-number,
+.clock:fullscreen .digital-display.analog .tick-number {
+    font-size: 42px !important;
+    width: 50px !important;
+    height: 50px !important;
+    line-height: 50px !important;
+    top: 53px !important;
+    margin-left: -25px !important;
 }
 
-.clock.fullscreen .minute-tick::before,
-.clock:fullscreen .minute-tick::before {
-    top: 1.5vmin;
-    width: 0.3vmin;
-    height: 2vmin;
+.clock.fullscreen .digital-display.analog .hour-tick::before,
+.clock:fullscreen .digital-display.analog .hour-tick::before {
+    top: 13px !important;
+    width: 8px !important;
+    height: 33px !important;
+    border-radius: 4px !important;
 }
 
-.clock.fullscreen .tick-number,
-.clock:fullscreen .tick-number {
-    top: 6vmin;
-    width: 5vmin;
-    height: 5vmin;
-    line-height: 5vmin;
-    font-size: 4vmin;
-    margin-left: -2.5vmin;
+.clock.fullscreen .digital-display.analog .minute-tick::before,
+.clock:fullscreen .digital-display.analog .minute-tick::before {
+    top: 13px !important;
+    width: 3px !important;
+    height: 16px !important;
 }
 
-.clock.fullscreen .clock-hour-hand,
-.clock:fullscreen .clock-hour-hand {
-    width: 1.2vmin;
-    height: 20vmin;
-    margin-left: -0.6vmin;
-    margin-top: -20vmin;
+.clock.fullscreen .digital-display.analog .date-window,
+.clock:fullscreen .digital-display.analog .date-window {
+    right: 160px !important;
+    width: 42px !important;
+    height: 26px !important;
+    border-radius: 3px !important;
 }
 
-.clock.fullscreen .clock-minute-hand,
-.clock:fullscreen .clock-minute-hand {
-    width: 0.6vmin;
-    height: 26vmin;
-    margin-left: -0.3vmin;
-    margin-top: -26vmin;
+.clock.fullscreen .digital-display.analog .day-window,
+.clock:fullscreen .digital-display.analog .day-window {
+    right: 213px !important;
+    width: 42px !important;
+    height: 26px !important;
+    border-radius: 3px !important;
 }
 
-.clock.fullscreen .clock-second-hand,
-.clock:fullscreen .clock-second-hand {
-    width: 0.3vmin;
-    height: 28vmin;
-    margin-left: -0.15vmin;
-    margin-top: -28vmin;
+.clock.fullscreen .digital-display.analog .date-number,
+.clock:fullscreen .digital-display.analog .date-number {
+    font-size: 18px !important;
 }
 
-.clock.fullscreen .clock-center,
-.clock:fullscreen .clock-center {
-    width: 2vmin;
-    height: 2vmin;
+.clock.fullscreen .digital-display.analog .day-text,
+.clock:fullscreen .digital-display.analog .day-text {
+    font-size: 13px !important;
 }
 
-.clock.fullscreen .date-window,
-.clock:fullscreen .date-window {
-    right: 15vmin;
-    width: 4.5vmin;
-    height: 2.8vmin;
-    border-width: 0.15vmin;
-    border-radius: 0.3vmin;
+.clock.fullscreen .digital-display.analog .clock-hour-hand,
+.clock:fullscreen .digital-display.analog .clock-hour-hand {
+    width: 11px !important;
+    height: 200px !important;
+    margin-left: -5.5px !important;
+    margin-top: -200px !important;
+    border-radius: 5.5px !important;
 }
 
-.clock.fullscreen .date-number,
-.clock:fullscreen .date-number {
-    font-size: 2vmin;
+.clock.fullscreen .digital-display.analog .clock-minute-hand,
+.clock:fullscreen .digital-display.analog .clock-minute-hand {
+    width: 5px !important;
+    height: 267px !important;
+    margin-left: -2.5px !important;
+    margin-top: -267px !important;
+    border-radius: 2.5px !important;
 }
 
-.clock.fullscreen .day-window,
-.clock:fullscreen .day-window {
-    right: 21vmin;
-    width: 4.5vmin;
-    height: 2.8vmin;
-    border-width: 0.15vmin;
-    border-radius: 0.3vmin;
+.clock.fullscreen .digital-display.analog .clock-second-hand,
+.clock:fullscreen .digital-display.analog .clock-second-hand {
+    width: 3px !important;
+    height: 293px !important;
+    margin-left: -1.5px !important;
+    margin-top: -293px !important;
+    border-radius: 1.5px !important;
 }
 
-.clock.fullscreen .day-text,
-.clock:fullscreen .day-text {
-    font-size: 1.4vmin;
+.clock.fullscreen .digital-display.analog .clock-center,
+.clock:fullscreen .digital-display.analog .clock-center {
+    width: 18px !important;
+    height: 18px !important;
 }
-
-
-
-.clock.fullscreen .time-display,
-.clock:fullscreen .time-display {
-    width: 100%;
-    height: auto;
-    margin: 0;
-    padding: 0 2rem;
-}
-
 
 .clock.fullscreen .time-digits,
 .clock:fullscreen .time-digits {
-    font-size: clamp(4rem, 15vw, 10rem);
+    font-size: clamp(6rem, 15vw, 12rem);
     white-space: nowrap;
     overflow: visible;
-}
-
-.clock.fullscreen .digital-display.analog .time-digits,
-.clock:fullscreen .digital-display.analog .time-digits {
-    font-size: clamp(3rem, 10vw, 6rem);
 }
 
 .clock.fullscreen .ampm,
@@ -1442,180 +1172,10 @@ onUnmounted(() => {if (intervalId.value) {
     font-size: clamp(2rem, 6vw, 4rem);
 }
 
-.clock.fullscreen .digital-display.analog .ampm,
-.clock:fullscreen .digital-display.analog .ampm {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-}
-
 .clock.fullscreen .date-display,
 .clock:fullscreen .date-display {
     font-size: clamp(1.5rem, 4vw, 2.5rem);
-}
-
-.clock.fullscreen .digital-display.analog .date-display,
-.clock:fullscreen .digital-display.analog .date-display {
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    bottom: 10vmin;
-}
-
-.clock.fullscreen .controls,
-.clock:fullscreen .controls {
-    display: none;
-}
-
-/* 消息提示 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 1rem 1.5rem;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    color: #374151;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-family: inherit;
-}
-
-.message-toast.success {
-    border-color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-}
-
-.message-toast.error {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .converter-content {
-        padding: 1rem;
-    }
-
-    .digital-display {
-        padding: 2rem 1rem;
-    }
-
-    .digital-display.analog {
-        width: 300px;
-        height: 300px;
-        border-width: 6px;
-    }
-
-    .digital-display.analog div[class^="number-"] {
-        font-size: 18px;
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
-    }
-
-    .digital-display.analog .hour-hand {
-        height: 60px;
-        margin-top: -60px;
-    }
-
-    .digital-display.analog .minute-hand {
-        height: 85px;
-        margin-top: -85px;
-    }
-
-    .digital-display.analog .second-hand {
-        height: 100px;
-        margin-top: -100px;
-    }
-
-    .digital-display.analog .center-dot {
-        width: 10px;
-        height: 10px;
-    }
-
-    .controls {
-        gap: 0.5rem;
-    }
-
-    .control-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .converter-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .digital-display {
-        padding: 1.5rem 0.5rem;
-    }
-
-    .digital-display.analog {
-        width: 250px;
-        height: 250px;
-        border-width: 4px;
-    }
-
-    .digital-display.analog div[class^="number-"] {
-        font-size: 14px;
-        width: 20px;
-        height: 20px;
-        line-height: 20px;
-    }
-
-    .digital-display.analog .hour-hand {
-        height: 50px;
-        margin-top: -50px;
-    }
-
-    .digital-display.analog .minute-hand {
-        height: 70px;
-        margin-top: -70px;
-    }
-
-    .digital-display.analog .second-hand {
-        height: 80px;
-        margin-top: -80px;
-    }
-
-    .digital-display.analog .center-dot {
-        width: 8px;
-        height: 8px;
-    }
-
-    .time-digits {
-        font-size: clamp(2.5rem, 12vw, 5rem);
-    }
-
-    .digital-display.analog .time-digits {
-        font-size: clamp(1.5rem, 6vw, 2.5rem);
-    }
-
-    .controls {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .control-btn {
-        width: 100%;
-        max-width: 200px;
-    }
+    margin-top: 2rem;
 }
 
 /* 扫描线效果 - 仅用于数字显示屏风格 */
@@ -1634,5 +1194,42 @@ onUnmounted(() => {if (intervalId.value) {
 @keyframes scan {
     0% { transform: translateY(0); }
     100% { transform: translateY(400px); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .converter-content {
+        padding: 1rem;
+    }
+
+    .digital-display {
+        padding: 2rem 1rem;
+    }
+
+    .digital-display.analog {
+        width: 300px;
+        height: 300px;
+        border-width: 6px;
+    }
+
+    .time-digits {
+        font-size: clamp(2.5rem, 12vw, 5rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .digital-display {
+        padding: 1.5rem 0.5rem;
+    }
+
+    .digital-display.analog {
+        width: 250px;
+        height: 250px;
+        border-width: 4px;
+    }
+
+    .time-digits {
+        font-size: clamp(2rem, 10vw, 4rem);
+    }
 }
 </style>

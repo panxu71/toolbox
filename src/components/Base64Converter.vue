@@ -1,23 +1,10 @@
 <template>
     <div class="base64-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">Base64编码解码</h2>
-            <div class="converter-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <!-- 文本编码解码 -->
@@ -25,7 +12,7 @@
                 <div class="section-header">
                     <h3>文本编码解码</h3>
                     <div class="section-info">
-                        <span class="info-text">对文本进行Base64编码和解码</span>
+                        <span class="info-text">对文本进行Base64编码和解码，支持URL安全格式</span>
                     </div>
                 </div>
                 <div class="text-converter-container">
@@ -52,7 +39,7 @@
                                 </div>
                             </div>
                             <textarea v-model="inputText" placeholder="请输入要编码的文本..." class="text-input"
-                                @input="encodeText"></textarea>
+                                @input="handleTextInput"></textarea>
                             <div class="input-info">
                                 <span class="char-count">字符数: {{ inputText.length }}</span>
                                 <span class="byte-count">字节数: {{ getByteLength(inputText) }}</span>
@@ -89,6 +76,14 @@
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="converter-options">
+                        <label class="option-checkbox">
+                            <input type="checkbox" v-model="isUrlSafe" @change="handleTextInput">
+                            <span class="checkmark"></span>
+                            URL安全格式 (替换 +/= 字符)
+                        </label>
                     </div>
 
                     <div class="converter-actions">
@@ -209,77 +204,52 @@
                     </div>
                 </div>
             </div>
-
-            <!-- URL安全编码 -->
-            <div class="converter-section">
-                <div class="section-header">
-                    <h3>URL安全Base64</h3>
-                    <div class="section-info">
-                        <span class="info-text">URL安全的Base64编码，替换+/字符</span>
-                    </div>
-                </div>
-                <div class="url-safe-container">
-                    <div class="url-safe-grid">
-                        <div class="input-group">
-                            <label>输入文本</label>
-                            <textarea v-model="urlSafeInput" placeholder="请输入要进行URL安全编码的文本..." class="url-safe-input"
-                                @input="encodeUrlSafe"></textarea>
-                        </div>
-                        <div class="output-group">
-                            <label>URL安全Base64结果</label>
-                            <textarea v-model="urlSafeOutput" placeholder="URL安全编码结果..." class="url-safe-output"
-                                readonly></textarea>
-                            <button class="copy-url-safe-btn" @click="copyUrlSafe" title="复制结果">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="url-safe-actions">
-                        <button class="url-safe-btn encode" @click="encodeUrlSafe">编码</button>
-                        <button class="url-safe-btn decode" @click="decodeUrlSafe">解码</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('base64-encode')
+const cardTitle = getCardTitle('base64-encode')
+
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 // 文本编码解码状态
 const inputText = ref('')
 const encodedText = ref('')
+const isUrlSafe = ref(false)
 
 // 文件编码状态
 const selectedFile = ref<File | null>(null)
 const fileEncodedResult = ref('')
 const isProcessing = ref(false)
 const fileInput = ref<HTMLInputElement>()
-
-// URL安全编码状态
-const urlSafeInput = ref('')
-const urlSafeOutput = ref('')
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 获取字符串字节长度
 const getByteLength = (str: string): number => {
@@ -295,6 +265,15 @@ const getCompressionRatio = (): string => {
     return ratio
 }
 
+// 处理文本输入变化
+const handleTextInput = () => {
+    if (inputText.value.trim()) {
+        encodeText()
+    } else {
+        encodedText.value = ''
+    }
+}
+
 // 文本编码
 const encodeText = () => {
     if (!inputText.value.trim()) {
@@ -303,10 +282,17 @@ const encodeText = () => {
     }
 
     try {
-        encodedText.value = btoa(unescape(encodeURIComponent(inputText.value)))
-        showMessage('编码成功', 'success')
+        let base64 = btoa(new TextEncoder().encode(inputText.value).reduce((data, byte) => data + String.fromCharCode(byte), ''))
+        
+        if (isUrlSafe.value) {
+            // URL安全格式：替换 + 为 -，/ 为 _，移除 =
+            base64 = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+        }
+        
+        encodedText.value = base64
+        showSuccess('编码成功')
     } catch (error) {
-        showMessage('编码失败，请检查输入内容', 'error')
+        showError('编码失败，请检查输入内容')
     }
 }
 
@@ -318,10 +304,26 @@ const decodeText = () => {
     }
 
     try {
-        encodedText.value = decodeURIComponent(escape(atob(inputText.value)))
-        showMessage('解码成功', 'success')
+        let base64 = inputText.value
+        
+        if (isUrlSafe.value) {
+            // 还原URL安全格式
+            base64 = base64.replace(/-/g, '+').replace(/_/g, '/')
+            // 补充padding
+            while (base64.length % 4) {
+                base64 += '='
+            }
+        }
+        
+        const binaryString = atob(base64)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i)
+        }
+        encodedText.value = new TextDecoder().decode(bytes)
+        showSuccess('解码成功')
     } catch (error) {
-        showMessage('解码失败，请检查Base64格式', 'error')
+        showError('解码失败，请检查Base64格式')
     }
 }
 
@@ -330,7 +332,7 @@ const swapContent = () => {
     const temp = inputText.value
     inputText.value = encodedText.value
     encodedText.value = temp
-    showMessage('内容已交换', 'success')
+    showSuccess('内容已交换')
 }
 
 // 粘贴文本
@@ -339,9 +341,9 @@ const pasteText = async () => {
         const text = await navigator.clipboard.readText()
         inputText.value = text
         encodeText()
-        showMessage('已粘贴文本', 'success')
+        showSuccess('已粘贴文本')
     } catch (error) {
-        showMessage('粘贴失败', 'error')
+        showError('粘贴失败')
     }
 }
 
@@ -349,28 +351,28 @@ const pasteText = async () => {
 const clearInput = () => {
     inputText.value = ''
     encodedText.value = ''
-    showMessage('已清空输入', 'success')
+    showSuccess('已清空输入')
 }
 
 // 复制编码结果
 const copyEncoded = async () => {
     if (!encodedText.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     try {
         await navigator.clipboard.writeText(encodedText.value)
-        showMessage('编码结果已复制到剪贴板', 'success')
+        showSuccess('编码结果已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
 // 下载编码结果
 const downloadEncoded = () => {
     if (!encodedText.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
@@ -381,7 +383,7 @@ const downloadEncoded = () => {
     a.download = 'base64-encoded.txt'
     a.click()
     URL.revokeObjectURL(url)
-    showMessage('编码结果已下载', 'success')
+    showSuccess('编码结果已下载')
 }
 
 // 处理文件选择
@@ -390,12 +392,12 @@ const handleFileSelect = (event: Event) => {
     const file = target.files?.[0]
     if (file) {
         if (file.size > 10 * 1024 * 1024) { // 10MB限制
-            showMessage('文件大小不能超过10MB', 'error')
+            showError('文件大小不能超过10MB')
             return
         }
         selectedFile.value = file
         fileEncodedResult.value = ''
-        showMessage('文件已选择', 'success')
+        showSuccess('文件已选择')
     }
 }
 
@@ -405,12 +407,12 @@ const handleFileDrop = (event: DragEvent) => {
     const file = event.dataTransfer?.files[0]
     if (file) {
         if (file.size > 10 * 1024 * 1024) {
-            showMessage('文件大小不能超过10MB', 'error')
+            showError('文件大小不能超过10MB')
             return
         }
         selectedFile.value = file
         fileEncodedResult.value = ''
-        showMessage('文件已选择', 'success')
+        showSuccess('文件已选择')
     }
 }
 
@@ -421,7 +423,7 @@ const removeFile = () => {
     if (fileInput.value) {
         fileInput.value.value = ''
     }
-    showMessage('文件已移除', 'success')
+    showSuccess('文件已移除')
 }
 
 // 编码文件
@@ -436,16 +438,16 @@ const encodeFile = () => {
             const result = e.target?.result as string
             const base64Data = result.split(',')[1]
             fileEncodedResult.value = base64Data || '' // 移除data:前缀
-            showMessage('文件编码完成', 'success')
+            showSuccess('文件编码完成')
         } catch (error) {
-            showMessage('文件编码失败', 'error')
+            showError('文件编码失败')
         } finally {
             isProcessing.value = false
         }
     }
 
     reader.onerror = () => {
-        showMessage('文件读取失败', 'error')
+        showError('文件读取失败')
         isProcessing.value = false
     }
 
@@ -458,9 +460,9 @@ const copyFileResult = async () => {
 
     try {
         await navigator.clipboard.writeText(fileEncodedResult.value)
-        showMessage('文件编码结果已复制', 'success')
+        showSuccess('文件编码结果已复制')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -475,7 +477,7 @@ const downloadFileResult = () => {
     a.download = `${selectedFile.value?.name || 'file'}-base64.txt`
     a.click()
     URL.revokeObjectURL(url)
-    showMessage('文件编码结果已下载', 'success')
+    showSuccess('文件编码结果已下载')
 }
 
 // 格式化文件大小
@@ -487,82 +489,23 @@ const formatFileSize = (bytes: number): string => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// URL安全编码
-const encodeUrlSafe = () => {
-    if (!urlSafeInput.value.trim()) {
-        urlSafeOutput.value = ''
-        return
-    }
-
-    try {
-        const base64 = btoa(unescape(encodeURIComponent(urlSafeInput.value)))
-        urlSafeOutput.value = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-        showMessage('URL安全编码成功', 'success')
-    } catch (error) {
-        showMessage('URL安全编码失败', 'error')
-    }
-}
-
-// URL安全解码
-const decodeUrlSafe = () => {
-    if (!urlSafeInput.value.trim()) {
-        urlSafeOutput.value = ''
-        return
-    }
-
-    try {
-        let base64 = urlSafeInput.value.replace(/-/g, '+').replace(/_/g, '/')
-        // 补充padding
-        while (base64.length % 4) {
-            base64 += '='
-        }
-        urlSafeOutput.value = decodeURIComponent(escape(atob(base64)))
-        showMessage('URL安全解码成功', 'success')
-    } catch (error) {
-        showMessage('URL安全解码失败', 'error')
-    }
-}
-
-// 复制URL安全编码结果
-const copyUrlSafe = async () => {
-    if (!urlSafeOutput.value) return
-
-    try {
-        await navigator.clipboard.writeText(urlSafeOutput.value)
-        showMessage('URL安全编码结果已复制', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
-    }
-}
-
 // 清空所有
 const clearAll = () => {
     inputText.value = ''
     encodedText.value = ''
     selectedFile.value = null
     fileEncodedResult.value = ''
-    urlSafeInput.value = ''
-    urlSafeOutput.value = ''
+    isUrlSafe.value = false
     if (fileInput.value) {
         fileInput.value.value = ''
     }
-    showMessage('已清空所有内容', 'success')
-}
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showSuccess('已清空所有内容')
 }
 
 onMounted(() => {
     // 页面初始化逻辑
 })
 </script>
-
 <style scoped>
 .base64-converter {
     width: 100%;
@@ -574,74 +517,14 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.converter-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
 .converter-content {
     flex: 1;
-    padding: 1.5rem;
     overflow-y: auto;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
 }
@@ -651,13 +534,16 @@ onMounted(() => {
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .section-header h3 {
@@ -676,9 +562,12 @@ onMounted(() => {
 .info-text {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
 }
 
-/* 文本编码解码样式 */
+/* 文本转换器样式 */
 .text-converter-container {
     display: flex;
     flex-direction: column;
@@ -735,7 +624,7 @@ onMounted(() => {
 .text-input,
 .text-output {
     width: 100%;
-    height: 250px;
+    height: 200px;
     padding: 0.75rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -747,8 +636,7 @@ onMounted(() => {
     min-height: 150px;
 }
 
-.text-input:focus,
-.text-output:focus {
+.text-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--primary-color-alpha);
@@ -766,9 +654,8 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
-.char-count,
-.byte-count,
-.compression-ratio {
+.input-info span,
+.output-info span {
     padding: 0.25rem 0.5rem;
     background: var(--bg-tertiary);
     border-radius: 0.25rem;
@@ -778,12 +665,35 @@ onMounted(() => {
     display: flex;
     gap: 0.75rem;
     justify-content: center;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
 }
 
-.convert-btn,
-.swap-btn {
+.converter-options {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.option-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.option-checkbox input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.option-checkbox .checkmark {
+    user-select: none;
+}
+
+.convert-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -819,19 +729,27 @@ onMounted(() => {
 }
 
 .swap-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
     background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
     color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
 .swap-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-/* 文件编码样式 */
+/* 文件转换器样式 */
 .file-converter-container {
     display: flex;
     flex-direction: column;
@@ -839,7 +757,6 @@ onMounted(() => {
 }
 
 .file-upload-area {
-    position: relative;
     border: 2px dashed var(--border-color);
     border-radius: 0.75rem;
     padding: 2rem;
@@ -853,15 +770,8 @@ onMounted(() => {
     background: var(--primary-color-alpha);
 }
 
-.file-upload-area.dragover {
-    border-color: var(--primary-color);
-    background: var(--primary-color-alpha);
-}
-
 .file-input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+    display: none;
 }
 
 .upload-content {
@@ -869,10 +779,11 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    color: var(--text-secondary);
 }
 
 .upload-content svg {
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
 }
 
 .upload-text {
@@ -889,17 +800,19 @@ onMounted(() => {
 }
 
 .file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 0.5rem;
 }
 
 .file-details {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 1rem;
 }
 
 .file-icon {
@@ -922,7 +835,7 @@ onMounted(() => {
 
 .file-name {
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-primary);
 }
 
@@ -1033,157 +946,6 @@ onMounted(() => {
     border-radius: 0.25rem;
 }
 
-/* URL安全编码样式 */
-.url-safe-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.url-safe-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.input-group,
-.output-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    position: relative;
-}
-
-.input-group label,
-.output-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.url-safe-input,
-.url-safe-output {
-    width: 100%;
-    height: 150px;
-    padding: 0.75rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    font-family: 'Courier New', monospace;
-    resize: vertical;
-    min-height: 100px;
-}
-
-.url-safe-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-}
-
-.url-safe-output {
-    background: var(--bg-quaternary);
-}
-
-.copy-url-safe-btn {
-    position: absolute;
-    top: 2rem;
-    right: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.copy-url-safe-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.url-safe-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-}
-
-.url-safe-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.url-safe-btn.encode {
-    background: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
-}
-
-.url-safe-btn.encode:hover {
-    background: var(--success-color-dark);
-    border-color: var(--success-color-dark);
-}
-
-.url-safe-btn.decode {
-    background: var(--warning-color);
-    color: white;
-    border-color: var(--warning-color);
-}
-
-.url-safe-btn.decode:hover {
-    background: var(--warning-color-dark);
-    border-color: var(--warning-color-dark);
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     .converter-content {
@@ -1195,13 +957,11 @@ onMounted(() => {
         padding: 1rem;
     }
 
-    .input-output-grid,
-    .url-safe-grid {
+    .input-output-grid {
         grid-template-columns: 1fr;
     }
 
-    .converter-actions,
-    .url-safe-actions {
+    .converter-actions {
         flex-direction: column;
     }
 
@@ -1219,11 +979,6 @@ onMounted(() => {
     .text-output,
     .file-result-text {
         height: 150px;
-    }
-
-    .url-safe-input,
-    .url-safe-output {
-        height: 100px;
     }
 }
 </style>

@@ -121,11 +121,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 保持原有的消息提示样式 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -134,7 +129,7 @@ import { ref, computed, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import hljs from 'highlight.js/lib/core'
@@ -173,8 +168,8 @@ const { downloadText, downloadJson } = useDownload()
 // 使用剪贴板功能
 const { copyToClipboard } = useClipboard()
 
-// 使用消息提示
-const { message, messageType, showMessage } = useMessage()
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const mode = ref<'json-to-php' | 'php-to-json'>('json-to-php')
 
@@ -266,17 +261,17 @@ const onJsonPaste = async () => {
 
 const validateJsonInput = () => {
     if (!jsonInput.value.trim()) {
-        showMessage('请先输入JSON数据', 'error')
+        showError('请先输入JSON数据')
         return
     }
 
     try {
         JSON.parse(jsonInput.value)
         inputError.value = ''
-        showMessage('JSON格式正确 ✅', 'success')
+        showSuccess('JSON格式正确 ✅')
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
-        showMessage('JSON格式错误 ❌', 'error')
+        showError('JSON格式错误 ❌')
     }
 }
 
@@ -367,7 +362,7 @@ const convertPhpToJson = (showSuccessMessage = true) => {
 
     if (!phpInput.value.trim()) {
         if (showSuccessMessage) {
-            showMessage('请先输入PHP数组代码', 'error')
+            showError('请先输入PHP数组代码')
         }
         return
     }
@@ -377,30 +372,30 @@ const convertPhpToJson = (showSuccessMessage = true) => {
         // 始终使用格式化输出
         jsonOutput.value = JSON.stringify(result, null, 2)
         if (showSuccessMessage) {
-            showMessage('转换成功！', 'success')
+            showSuccess('转换成功！')
         }
     } catch (error) {
         phpInputError.value = `PHP数组解析错误: ${(error as Error).message}`
         jsonOutput.value = ''
         if (showSuccessMessage) {
-            showMessage('PHP数组解析错误', 'error')
+            showError('PHP数组解析错误')
         }
     }
 }
 
 const validatePhpInput = () => {
     if (!phpInput.value.trim()) {
-        showMessage('请先输入PHP数组代码', 'error')
+        showError('请先输入PHP数组代码')
         return
     }
 
     try {
         parsePhpArray(phpInput.value)
         phpInputError.value = ''
-        showMessage('PHP数组格式正确 ✅', 'success')
+        showSuccess('PHP数组格式正确 ✅')
     } catch (error) {
         phpInputError.value = `PHP数组格式错误: ${(error as Error).message}`
-        showMessage('PHP数组格式错误 ❌', 'error')
+        showError('PHP数组格式错误 ❌')
     }
 }
 
@@ -529,9 +524,9 @@ const formatJsonInput = () => {
         const parsed = JSON.parse(jsonInput.value)
         jsonInput.value = JSON.stringify(parsed, null, 2)
         convertJsonToPhp()
-        showMessage('JSON格式化成功！', 'success')
+        showSuccess('JSON格式化成功！')
     } catch (error) {
-        showMessage('JSON格式错误，无法格式化', 'error')
+        showError('JSON格式错误，无法格式化')
     }
 }
 
@@ -547,58 +542,58 @@ const toggleJsonFormat = () => {
 
 const copyPhpResult = async () => {
     if (!phpOutput.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     const success = await copyToClipboard(phpOutput.value)
     if (success) {
-        showMessage('PHP代码已复制到剪贴板！', 'success')
+        showSuccess('PHP代码已复制到剪贴板！')
     } else {
-        showMessage('复制失败，请手动复制', 'error')
+        showError('复制失败，请手动复制')
     }
 }
 
 const copyJsonResult = async () => {
     if (!jsonOutput.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     const success = await copyToClipboard(jsonOutput.value)
     if (success) {
-        showMessage('JSON数据已复制到剪贴板！', 'success')
+        showSuccess('JSON数据已复制到剪贴板！')
     } else {
-        showMessage('复制失败，请手动复制', 'error')
+        showError('复制失败，请手动复制')
     }
 }
 
 const downloadPhpResult = () => {
     if (!phpOutput.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
     const content = `<?php\n\n$data = ${phpOutput.value};\n`
     const success = downloadText(content, 'converted_array', 'php')
     if (success) {
-        showMessage('PHP文件下载成功！', 'success')
+        showSuccess('PHP文件下载成功！')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
 const downloadJsonResult = () => {
     if (!jsonOutput.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
     const success = downloadJson(jsonOutput.value, 'converted_data')
     if (success) {
-        showMessage('JSON文件下载成功！', 'success')
+        showSuccess('JSON文件下载成功！')
     } else {
-        showMessage('下载失败', 'error')
+        showError('下载失败')
     }
 }
 
@@ -609,7 +604,7 @@ const clearAll = () => {
     jsonOutput.value = ''
     inputError.value = ''
     phpInputError.value = ''
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 
 onMounted(() => {
@@ -826,41 +821,6 @@ onMounted(() => {
 .code-output code {
     background: none !important;
     padding: 0 !important;
-}
-
-.message {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* 响应式设计 */

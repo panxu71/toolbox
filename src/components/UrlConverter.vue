@@ -1,23 +1,10 @@
 <template>
     <div class="url-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">URL编码解码</h2>
-            <div class="converter-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <!-- URL编码解码 -->
@@ -56,7 +43,7 @@
                             <div class="input-info">
                                 <span class="char-count">字符数: {{ inputText.length }}</span>
                                 <span class="url-valid"
-                                    :class="{ valid: isValidUrl(inputText), invalid: inputText && !isValidUrl(inputText) }">
+                                    :class="getUrlStatusClass(inputText)">
                                     {{ getUrlStatus(inputText) }}
                                 </span>
                             </div>
@@ -89,7 +76,7 @@
                             <div class="output-info">
                                 <span class="char-count">字符数: {{ encodedText.length }}</span>
                                 <span class="url-valid"
-                                    :class="{ valid: isValidUrl(encodedText), invalid: encodedText && !isValidUrl(encodedText) }">
+                                    :class="getUrlStatusClass(encodedText)">
                                     {{ getUrlStatus(encodedText) }}
                                 </span>
                             </div>
@@ -127,29 +114,21 @@
                 </div>
             </div>
 
-            <!-- URL参数解析 -->
+            <!-- URL解析 -->
             <div class="converter-section">
                 <div class="section-header">
-                    <h3>URL参数解析</h3>
+                    <h3>URL解析</h3>
                     <div class="section-info">
-                        <span class="info-text">解析URL中的各个组成部分和参数</span>
+                        <span class="info-text">解析URL的各个组成部分</span>
                     </div>
                 </div>
                 <div class="url-parser-container">
-                    <div class="url-input-section">
-                        <label>输入URL</label>
-                        <div class="url-input-wrapper">
-                            <input v-model="parseUrl" type="text"
-                                placeholder="https://example.com/path?param1=value1&param2=value2" class="url-input"
+                    <div class="parser-input">
+                        <label>要解析的URL</label>
+                        <div class="input-with-button">
+                            <input v-model="parseUrl" type="text" placeholder="请输入完整的URL..." class="url-input"
                                 @input="parseUrlComponents" />
-                            <button class="parse-btn" @click="parseUrlComponents">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <path d="M21 21l-4.35-4.35" />
-                                </svg>
-                                解析
-                            </button>
+                            <button class="parse-btn" @click="parseUrlComponents">解析</button>
                         </div>
                     </div>
 
@@ -157,59 +136,47 @@
                         <div class="component-grid">
                             <div class="component-item">
                                 <label>协议 (Protocol)</label>
-                                <div class="component-value">{{ urlComponents.protocol || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.protocol }}</span>
                             </div>
                             <div class="component-item">
                                 <label>主机 (Host)</label>
-                                <div class="component-value">{{ urlComponents.host || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.host }}</span>
                             </div>
                             <div class="component-item">
                                 <label>端口 (Port)</label>
-                                <div class="component-value">{{ urlComponents.port || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.port || '默认' }}</span>
                             </div>
                             <div class="component-item">
                                 <label>路径 (Path)</label>
-                                <div class="component-value">{{ urlComponents.pathname || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.pathname }}</span>
                             </div>
                             <div class="component-item">
                                 <label>查询字符串 (Search)</label>
-                                <div class="component-value">{{ urlComponents.search || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.search || '无' }}</span>
                             </div>
                             <div class="component-item">
                                 <label>锚点 (Hash)</label>
-                                <div class="component-value">{{ urlComponents.hash || '-' }}</div>
+                                <span class="component-value">{{ urlComponents.hash || '无' }}</span>
                             </div>
                         </div>
 
                         <div v-if="urlParams.length > 0" class="url-params">
                             <div class="params-header">
-                                <h4>URL参数</h4>
-                                <button class="copy-params-btn" @click="copyParams" title="复制参数">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
+                                <h4>查询参数</h4>
+                                <button class="copy-params-btn" @click="copyParams">复制所有参数</button>
                             </div>
-                            <div class="params-table">
-                                <div class="params-header-row">
-                                    <div class="param-key">参数名</div>
-                                    <div class="param-value">参数值</div>
-                                    <div class="param-actions">操作</div>
-                                </div>
-                                <div v-for="(param, index) in urlParams" :key="index" class="param-row">
-                                    <div class="param-key">{{ param.key }}</div>
-                                    <div class="param-value">{{ param.value }}</div>
-                                    <div class="param-actions">
-                                        <button class="copy-param-btn" @click="copyParam(param)" title="复制">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2">
-                                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                            <div class="params-list">
+                                <div v-for="param in urlParams" :key="param.key" class="param-item">
+                                    <span class="param-key">{{ param.key }}</span>
+                                    <span class="param-separator">=</span>
+                                    <span class="param-value">{{ param.value }}</span>
+                                    <button class="copy-param-btn" @click="copyParam(param)" title="复制此参数">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -217,73 +184,76 @@
                 </div>
             </div>
 
-            <!-- 常用编码字符 -->
+            <!-- 常用字符编码 -->
             <div class="converter-section">
                 <div class="section-header">
-                    <h3>常用编码字符</h3>
+                    <h3>常用字符编码</h3>
                     <div class="section-info">
-                        <span class="info-text">常见字符的URL编码对照表</span>
+                        <span class="info-text">常见特殊字符的URL编码对照</span>
                     </div>
                 </div>
-                <div class="encoding-reference">
-                    <div class="reference-grid">
+                <div class="char-reference">
+                    <div class="char-grid">
                         <div v-for="char in commonChars" :key="char.original" class="char-item"
                             @click="insertChar(char)">
-                            <div class="char-original">{{ char.original }}</div>
-                            <div class="char-encoded">{{ char.encoded }}</div>
-                            <div class="char-description">{{ char.description }}</div>
+                            <span class="char-original">{{ char.original }}</span>
+                            <span class="char-encoded">{{ char.encoded }}</span>
+                            <span class="char-description">{{ char.description }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本编码解码状态
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('url-encode')
+const cardTitle = getCardTitle('url-encode')
 
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
+
+// URL编码解码状态
 const inputText = ref('')
 const encodedText = ref('')
 
 // URL解析状态
 const parseUrl = ref('')
-const urlComponents = ref<{
-    protocol: string
-    host: string
-    port: string
-    pathname: string
-    search: string
-    hash: string
-} | null>(null)
-
-// URL参数
+const urlComponents = ref<any>(null)
 const urlParams = ref<Array<{ key: string; value: string }>>([])
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
-// 常用编码字符
+// 常用字符编码对照
 const commonChars = [
     { original: ' ', encoded: '%20', description: '空格' },
     { original: '!', encoded: '%21', description: '感叹号' },
     { original: '"', encoded: '%22', description: '双引号' },
     { original: '#', encoded: '%23', description: '井号' },
-    { original: '$', encoded: '%24', description: '美元符' },
+    { original: '$', encoded: '%24', description: '美元符号' },
     { original: '%', encoded: '%25', description: '百分号' },
     { original: '&', encoded: '%26', description: '和号' },
     { original: "'", encoded: '%27', description: '单引号' },
@@ -299,7 +269,7 @@ const commonChars = [
     { original: '=', encoded: '%3D', description: '等号' },
     { original: '>', encoded: '%3E', description: '大于号' },
     { original: '?', encoded: '%3F', description: '问号' },
-    { original: '@', encoded: '%40', description: '@符号' },
+    { original: '@', encoded: '%40', description: 'at符号' },
     { original: '[', encoded: '%5B', description: '左方括号' },
     { original: '\\', encoded: '%5C', description: '反斜杠' },
     { original: ']', encoded: '%5D', description: '右方括号' },
@@ -311,13 +281,79 @@ const commonChars = [
     { original: '~', encoded: '%7E', description: '波浪号' }
 ]
 
+// 验证URL格式
+const isValidUrl = (url: string): boolean => {
+    if (!url) return false
+    try {
+        new URL(url)
+        return true
+    } catch {
+        // 如果直接验证失败，尝试解码后再验证（可能是编码后的URL）
+        try {
+            const decoded = decodeURIComponent(url)
+            new URL(decoded)
+            return true
+        } catch {
+            return false
+        }
+    }
+}
+
+// 获取URL状态文本
+const getUrlStatus = (url: string): string => {
+    if (!url) return ''
+    
+    // 先检查是否是有效的URL
+    try {
+        new URL(url)
+        return '有效URL'
+    } catch {
+        // 检查是否是编码后的URL
+        try {
+            const decoded = decodeURIComponent(url)
+            new URL(decoded)
+            return '编码后的有效URL'
+        } catch {
+            // 检查是否包含URL编码字符
+            if (url.includes('%')) {
+                return '包含编码字符'
+            }
+            return '文本内容'
+        }
+    }
+}
+
+// 获取URL状态样式类
+const getUrlStatusClass = (url: string): string => {
+    if (!url) return ''
+    
+    // 先检查是否是有效的URL
+    try {
+        new URL(url)
+        return 'valid'
+    } catch {
+        // 检查是否是编码后的URL
+        try {
+            const decoded = decodeURIComponent(url)
+            new URL(decoded)
+            return 'valid'  // 编码后的有效URL也算有效
+        } catch {
+            // 检查是否包含URL编码字符但不是有效URL
+            if (url.includes('%')) {
+                return ''  // 包含编码字符但不是有效URL，使用默认样式
+            }
+            return url.length > 0 ? 'invalid' : ''  // 只有非空文本才标记为invalid
+        }
+    }
+}
+
 // 自动编码
 const autoEncode = () => {
-    if (!inputText.value.trim()) {
+    if (inputText.value.trim()) {
+        encodeUrl()
+    } else {
         encodedText.value = ''
-        return
     }
-    encodeUrl()
 }
 
 // URL编码
@@ -329,9 +365,9 @@ const encodeUrl = () => {
 
     try {
         encodedText.value = encodeURIComponent(inputText.value)
-        showMessage('URL编码成功', 'success')
+        showSuccess('URL编码成功')
     } catch (error) {
-        showMessage('URL编码失败', 'error')
+        showError('URL编码失败')
     }
 }
 
@@ -344,9 +380,9 @@ const decodeUrl = () => {
 
     try {
         encodedText.value = decodeURIComponent(inputText.value)
-        showMessage('URL解码成功', 'success')
+        showSuccess('URL解码成功')
     } catch (error) {
-        showMessage('URL解码失败，请检查编码格式', 'error')
+        showError('URL解码失败，请检查编码格式')
     }
 }
 
@@ -355,7 +391,7 @@ const swapContent = () => {
     const temp = inputText.value
     inputText.value = encodedText.value
     encodedText.value = temp
-    showMessage('内容已交换', 'success')
+    showSuccess('内容已交换')
 }
 
 // 粘贴文本
@@ -364,9 +400,9 @@ const pasteText = async () => {
         const text = await navigator.clipboard.readText()
         inputText.value = text
         autoEncode()
-        showMessage('已粘贴文本', 'success')
+        showSuccess('已粘贴文本')
     } catch (error) {
-        showMessage('粘贴失败', 'error')
+        showError('粘贴失败')
     }
 }
 
@@ -374,50 +410,51 @@ const pasteText = async () => {
 const clearInput = () => {
     inputText.value = ''
     encodedText.value = ''
-    showMessage('已清空输入', 'success')
+    showSuccess('已清空输入')
 }
 
 // 复制编码结果
 const copyEncoded = async () => {
     if (!encodedText.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     try {
         await navigator.clipboard.writeText(encodedText.value)
-        showMessage('编码结果已复制到剪贴板', 'success')
+        showSuccess('编码结果已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
 // 打开URL
 const openUrl = () => {
     if (!isValidUrl(encodedText.value)) {
-        showMessage('不是有效的URL', 'error')
+        showError('不是有效的URL')
         return
     }
 
-    window.open(encodedText.value, '_blank')
-    showMessage('已在新窗口打开URL', 'success')
-}
-
-// 验证URL
-const isValidUrl = (url: string): boolean => {
-    if (!url) return false
+    let urlToOpen = encodedText.value
+    
+    // 如果是编码后的URL，先解码再打开
     try {
-        new URL(url)
-        return true
+        new URL(encodedText.value)
+        // 直接是有效URL，直接打开
     } catch {
-        return false
+        // 可能是编码后的URL，尝试解码
+        try {
+            const decoded = decodeURIComponent(encodedText.value)
+            new URL(decoded)
+            urlToOpen = decoded
+        } catch {
+            showError('无法解析URL')
+            return
+        }
     }
-}
 
-// 获取URL状态
-const getUrlStatus = (url: string): string => {
-    if (!url) return ''
-    return isValidUrl(url) ? '有效URL' : '无效URL'
+    window.open(urlToOpen, '_blank')
+    showSuccess('已在新窗口打开URL')
 }
 
 // 解析URL组件
@@ -430,43 +467,39 @@ const parseUrlComponents = () => {
 
     try {
         const url = new URL(parseUrl.value)
-
         urlComponents.value = {
             protocol: url.protocol,
             host: url.host,
+            hostname: url.hostname,
             port: url.port,
             pathname: url.pathname,
             search: url.search,
             hash: url.hash
         }
 
-        // 解析URL参数
-        urlParams.value = []
-        url.searchParams.forEach((value, key) => {
-            urlParams.value.push({ key, value })
-        })
+        // 解析查询参数
+        urlParams.value = Array.from(url.searchParams.entries()).map(([key, value]) => ({
+            key,
+            value
+        }))
 
-        showMessage('URL解析完成', 'success')
+        showSuccess('URL解析完成')
     } catch (error) {
-        showMessage('URL解析失败，请检查URL格式', 'error')
+        showError('URL解析失败，请检查URL格式')
         urlComponents.value = null
         urlParams.value = []
     }
 }
 
-// 复制参数
+// 复制所有参数
 const copyParams = async () => {
-    if (urlParams.value.length === 0) return
-
-    const paramsText = urlParams.value
-        .map(param => `${param.key}=${param.value}`)
-        .join('\n')
-
+    const paramsText = urlParams.value.map(param => `${param.key}=${param.value}`).join('&')
+    
     try {
         await navigator.clipboard.writeText(paramsText)
-        showMessage('参数已复制到剪贴板', 'success')
+        showSuccess('参数已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -474,17 +507,17 @@ const copyParams = async () => {
 const copyParam = async (param: { key: string; value: string }) => {
     try {
         await navigator.clipboard.writeText(`${param.key}=${param.value}`)
-        showMessage(`参数 ${param.key} 已复制`, 'success')
+        showSuccess(`参数 ${param.key} 已复制`)
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
 // 插入字符
-const insertChar = (char: { original: string; encoded: string }) => {
+const insertChar = (char: { original: string; encoded: string; description: string }) => {
     inputText.value += char.original
     autoEncode()
-    showMessage(`已插入字符: ${char.original}`, 'success')
+    showSuccess(`已插入字符: ${char.original}`)
 }
 
 // 清空所有
@@ -494,18 +527,8 @@ const clearAll = () => {
     parseUrl.value = ''
     urlComponents.value = null
     urlParams.value = []
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 </script>
 <style scoped>
 .url-converter {
@@ -518,74 +541,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     overflow: hidden;
 }
 
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.converter-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
 .converter-content {
     flex: 1;
-    padding: 1.5rem;
     overflow-y: auto;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
 }
@@ -595,13 +558,16 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .section-header h3 {
@@ -620,9 +586,12 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .info-text {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
 }
 
-/* URL编码解码样式 */
+/* URL转换器样式 */
 .url-converter-container {
     display: flex;
     flex-direction: column;
@@ -693,7 +662,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     font-size: 0.875rem;
     font-family: 'Courier New', monospace;
     resize: vertical;
-    min-height: 120px;
+    min-height: 150px;
 }
 
 .text-input:focus {
@@ -727,25 +696,27 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .url-valid.valid {
-    background: var(--success-color-alpha);
-    color: var(--success-color);
+    background: var(--success-color);
+    color: white;
 }
 
 .url-valid.invalid {
-    background: var(--error-color-alpha);
-    color: var(--error-color);
+    background: var(--error-color);
+    color: white;
+}
+
+.url-valid:not(.valid):not(.invalid) {
+    background: var(--warning-color);
+    color: white;
 }
 
 .converter-actions {
     display: flex;
     gap: 0.75rem;
     justify-content: center;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
 }
 
-.convert-btn,
-.swap-btn {
+.convert-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -781,38 +752,46 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .swap-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
     background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
     color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
 .swap-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-/* URL解析样式 */
+/* URL解析器样式 */
 .url-parser-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
-.url-input-section {
+.parser-input {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
-.url-input-section label {
+.parser-input label {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
 }
 
-.url-input-wrapper {
+.input-with-button {
     display: flex;
     gap: 0.75rem;
 }
@@ -834,10 +813,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .parse-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.5rem;
     background: var(--primary-color);
     color: white;
     border: none;
@@ -846,7 +822,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     transition: all 0.2s ease;
     font-size: 0.875rem;
     font-weight: 500;
-    white-space: nowrap;
 }
 
 .parse-btn:hover {
@@ -854,23 +829,25 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .url-components {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .component-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
-    margin-bottom: 1.5rem;
 }
 
 .component-item {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
 }
 
 .component-item label {
@@ -878,29 +855,26 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     font-weight: 500;
     color: var(--text-secondary);
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .component-value {
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
     font-size: 0.875rem;
+    color: var(--text-primary);
     font-family: 'Courier New', monospace;
     word-break: break-all;
 }
 
 .url-params {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .params-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
 }
 
 .params-header h4 {
@@ -911,17 +885,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .copy-params-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.375rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.75rem;
 }
 
 .copy-params-btn:hover {
@@ -930,53 +901,37 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     border-color: var(--primary-color);
 }
 
-.params-table {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    overflow: hidden;
+.params-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.params-header-row {
-    display: grid;
-    grid-template-columns: 1fr 2fr auto;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
+.param-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
     background: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.param-row {
-    display: grid;
-    grid-template-columns: 1fr 2fr auto;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.875rem;
-}
-
-.param-row:last-child {
-    border-bottom: none;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
 }
 
 .param-key {
-    font-family: 'Courier New', monospace;
-    color: var(--text-primary);
     font-weight: 500;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+}
+
+.param-separator {
+    color: var(--text-secondary);
 }
 
 .param-value {
+    flex: 1;
+    color: var(--text-primary);
     font-family: 'Courier New', monospace;
-    color: var(--text-secondary);
     word-break: break-all;
-}
-
-.param-actions {
-    display: flex;
-    justify-content: center;
 }
 
 .copy-param-btn {
@@ -985,7 +940,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     justify-content: center;
     width: 1.5rem;
     height: 1.5rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 0.25rem;
     color: var(--text-secondary);
@@ -999,15 +954,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     border-color: var(--primary-color);
 }
 
-/* 编码字符参考样式 */
-.encoding-reference {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+/* 字符编码对照样式 */
+.char-reference {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.reference-grid {
+.char-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 0.75rem;
@@ -1017,73 +971,47 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.25rem;
     padding: 0.75rem;
-    background: var(--bg-secondary);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    text-align: center;
 }
 
 .char-item:hover {
-    background: var(--primary-color-alpha);
+    background: var(--primary-color);
+    color: white;
     border-color: var(--primary-color);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
 }
 
 .char-original {
     font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    font-weight: 600;
     font-family: 'Courier New', monospace;
 }
 
 .char-encoded {
     font-size: 0.75rem;
-    color: var(--primary-color);
     font-family: 'Courier New', monospace;
-    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.char-item:hover .char-encoded {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .char-description {
     font-size: 0.625rem;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
+    text-align: center;
 }
 
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.char-item:hover .char-description {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* 响应式设计 */
@@ -1105,7 +1033,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         flex-direction: column;
     }
 
-    .url-input-wrapper {
+    .input-with-button {
         flex-direction: column;
     }
 
@@ -1113,18 +1041,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         grid-template-columns: 1fr;
     }
 
-    .params-header-row,
-    .param-row {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-
-    .param-actions {
-        justify-content: flex-start;
-    }
-
-    .reference-grid {
+    .char-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .params-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
     }
 
     .text-input,

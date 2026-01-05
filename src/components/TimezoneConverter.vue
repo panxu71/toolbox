@@ -246,10 +246,6 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
@@ -259,7 +255,7 @@ import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
+import { useNotification } from '../composables/useNotification'
 
 defineEmits<{
     back: []
@@ -268,7 +264,7 @@ defineEmits<{
 // 使用 composables
 usePageTitle('timezone-convert')
 const { copyToClipboard } = useClipboard()
-const { message, messageType, showSuccess, showError } = useMessage()
+const { success: showSuccess, error: showError } = useNotification()
 
 // 获取页面标题
 const pageTitle = '时区转换'
@@ -1393,41 +1389,6 @@ const clearAll = () => {
     color: var(--text-primary);
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-weight: 500;
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
 }
 
 /* 响应式设计 */
