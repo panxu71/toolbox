@@ -1,23 +1,11 @@
 <template>
     <div class="date-calculator">
-        <div class="calculator-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="calculator-title">日期计算器</h2>
-            <div class="calculator-actions">
-                <button class="action-btn" @click="clearAll" title="清空">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <!-- 使用通用头部组件 -->
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="calculator-content">
             <!-- 日期间隔计算 -->
@@ -29,74 +17,75 @@
                     </div>
                 </div>
                 <div class="date-interval-container">
-                    <div class="date-input-group">
-                        <label>开始日期</label>
-                        <div class="date-input-wrapper">
-                            <input 
-                                v-model="startDate" 
-                                type="date" 
-                                @change="calculateInterval"
-                                class="date-input"
-                            />
-                            <input 
-                                v-model="startTime" 
-                                type="time" 
-                                step="1"
-                                @change="calculateInterval"
-                                class="time-input"
-                            />
+                    <!-- 日期输入区域 - 使用卡片式布局 -->
+                    <div class="input-cards">
+                        <div class="input-card">
+                            <div class="card-header">
+                                <label>开始日期</label>
+                                <div class="quick-actions">
+                                    <button class="quick-btn" @click="setToday('start')">今天</button>
+                                    <button class="quick-btn" @click="setNow('start')">现在</button>
+                                </div>
+                            </div>
+                            <div class="date-time-inputs">
+                                <input v-model="startDate" type="date" @change="calculateInterval" class="date-input" />
+                                <input v-model="startTime" type="time" step="1" @change="calculateInterval"
+                                    class="time-input" />
+                            </div>
+                        </div>
+
+                        <div class="separator">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M5 12h14" />
+                                <path d="m12 5 7 7-7 7" />
+                            </svg>
+                        </div>
+
+                        <div class="input-card">
+                            <div class="card-header">
+                                <label>结束日期</label>
+                                <div class="quick-actions">
+                                    <button class="quick-btn" @click="setToday('end')">今天</button>
+                                    <button class="quick-btn" @click="setNow('end')">现在</button>
+                                </div>
+                            </div>
+                            <div class="date-time-inputs">
+                                <input v-model="endDate" type="date" @change="calculateInterval" class="date-input" />
+                                <input v-model="endTime" type="time" step="1" @change="calculateInterval"
+                                    class="time-input" />
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="date-input-group">
-                        <label>结束日期</label>
-                        <div class="date-input-wrapper">
-                            <input 
-                                v-model="endDate" 
-                                type="date" 
-                                @change="calculateInterval"
-                                class="date-input"
-                            />
-                            <input 
-                                v-model="endTime" 
-                                type="time" 
-                                step="1"
-                                @change="calculateInterval"
-                                class="time-input"
-                            />
-                        </div>
-                    </div>
-                    
-                    <div class="quick-date-buttons">
-                        <button class="quick-btn" @click="setToday('start')">今天</button>
-                        <button class="quick-btn" @click="setNow('start')">现在</button>
-                        <button class="quick-btn" @click="setToday('end')">今天</button>
-                        <button class="quick-btn" @click="setNow('end')">现在</button>
-                    </div>
-                    
+
+                    <!-- 结果显示区域 -->
                     <div v-if="intervalResult" class="interval-result">
-                        <div class="result-grid">
+                        <div class="result-summary">
+                            <div class="summary-item primary">
+                                <span class="summary-label">详细间隔</span>
+                                <span class="summary-value">{{ intervalResult.detailed }}</span>
+                            </div>
+                        </div>
+                        <div class="result-grid compact">
                             <div class="result-item">
                                 <span class="result-label">总天数</span>
-                                <span class="result-value">{{ intervalResult.totalDays }} 天</span>
+                                <span class="result-value">{{ intervalResult.totalDays }}</span>
+                                <span class="result-unit">天</span>
                             </div>
                             <div class="result-item">
                                 <span class="result-label">总小时</span>
-                                <span class="result-value">{{ intervalResult.totalHours }} 小时</span>
+                                <span class="result-value">{{ intervalResult.totalHours }}</span>
+                                <span class="result-unit">小时</span>
                             </div>
                             <div class="result-item">
                                 <span class="result-label">总分钟</span>
-                                <span class="result-value">{{ intervalResult.totalMinutes }} 分钟</span>
+                                <span class="result-value">{{ intervalResult.totalMinutes }}</span>
+                                <span class="result-unit">分钟</span>
                             </div>
                             <div class="result-item">
                                 <span class="result-label">总秒数</span>
-                                <span class="result-value">{{ intervalResult.totalSeconds }} 秒</span>
-                            </div>
-                        </div>
-                        <div class="detailed-result">
-                            <div class="result-item large">
-                                <span class="result-label">详细间隔</span>
-                                <span class="result-value">{{ intervalResult.detailed }}</span>
+                                <span class="result-value">{{ intervalResult.totalSeconds }}</span>
+                                <span class="result-unit">秒</span>
                             </div>
                         </div>
                     </div>
@@ -115,23 +104,13 @@
                     <div class="base-date-group">
                         <label>基准日期</label>
                         <div class="date-input-wrapper">
-                            <input 
-                                v-model="baseDate" 
-                                type="date" 
-                                @change="calculateArithmetic"
-                                class="date-input"
-                            />
-                            <input 
-                                v-model="baseTime" 
-                                type="time" 
-                                step="1"
-                                @change="calculateArithmetic"
-                                class="time-input"
-                            />
+                            <input v-model="baseDate" type="date" @change="calculateArithmetic" class="date-input" />
+                            <input v-model="baseTime" type="time" step="1" @change="calculateArithmetic"
+                                class="time-input" />
                             <button class="quick-btn" @click="setNowToBase">现在</button>
                         </div>
                     </div>
-                    
+
                     <div class="arithmetic-controls">
                         <div class="operation-group">
                             <label>操作</label>
@@ -140,19 +119,13 @@
                                 <option value="subtract">减少 (-)</option>
                             </select>
                         </div>
-                        
+
                         <div class="amount-group">
                             <label>数量</label>
-                            <input 
-                                v-model.number="amount" 
-                                type="number" 
-                                min="0"
-                                @input="calculateArithmetic"
-                                class="amount-input"
-                                placeholder="0"
-                            />
+                            <input v-model.number="amount" type="number" min="0" @input="calculateArithmetic"
+                                class="amount-input" placeholder="0" />
                         </div>
-                        
+
                         <div class="unit-group">
                             <label>单位</label>
                             <select v-model="unit" @change="calculateArithmetic" class="unit-select">
@@ -165,7 +138,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="quick-arithmetic-buttons">
                         <button class="quick-btn" @click="quickArithmetic(1, 'days')">+1天</button>
                         <button class="quick-btn" @click="quickArithmetic(-1, 'days')">-1天</button>
@@ -176,13 +149,14 @@
                         <button class="quick-btn" @click="quickArithmetic(1, 'years')">+1年</button>
                         <button class="quick-btn" @click="quickArithmetic(-1, 'years')">-1年</button>
                     </div>
-                    
+
                     <div v-if="arithmeticResult" class="arithmetic-result">
                         <div class="result-item large">
                             <span class="result-label">计算结果</span>
                             <span class="result-value">{{ arithmeticResult.formatted }}</span>
                             <button class="copy-btn" @click="copyText(arithmeticResult.formatted)" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
@@ -195,7 +169,8 @@
                             <div class="detail-item">
                                 <span>时间戳：{{ arithmeticResult.timestamp }}</span>
                                 <button class="copy-btn" @click="copyText(arithmeticResult.timestamp)" title="复制">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -218,12 +193,8 @@
                     <div class="special-date-group">
                         <label>特殊日期</label>
                         <div class="date-input-wrapper">
-                            <input 
-                                v-model="specialDate" 
-                                type="date" 
-                                @change="calculateSpecialDates"
-                                class="date-input"
-                            />
+                            <input v-model="specialDate" type="date" @change="calculateSpecialDates"
+                                class="date-input" />
                             <select v-model="specialType" @change="calculateSpecialDates" class="special-type-select">
                                 <option value="birthday">生日</option>
                                 <option value="anniversary">纪念日</option>
@@ -231,7 +202,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div v-if="specialResult" class="special-result">
                         <div class="result-grid">
                             <div class="result-item">
@@ -262,6 +233,7 @@
             </div>
         </div>
 
+        <!-- 保持原有的消息提示样式 -->
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
@@ -269,17 +241,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useClipboard } from '../composables/useClipboard'
+import { useMessage } from '../composables/useMessage'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 日期间隔计算
 // 使用页面标题管理
 usePageTitle('date-calculator')
 
+// 获取卡片标题
+const getCardTitle = (cardId: string): string => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
+const pageTitle = getCardTitle('date-calculator')
+
+// 使用剪贴板功能
+const { copyToClipboard } = useClipboard()
+
+// 使用消息提示
+const { message, messageType, showMessage } = useMessage()
+
+// 日期间隔计算
 const startDate = ref('')
 const startTime = ref('00:00:00')
 const endDate = ref('')
@@ -315,14 +312,12 @@ const specialResult = ref<{
     ageInfo?: string
 } | null>(null)
 
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
 // 组件挂载时设置默认值
-onMounted(() => {const now = new Date()
+onMounted(() => {
+    const now = new Date()
     const today = formatDate(now)
     const currentTime = formatTime(now)
-    
+
     startDate.value = today
     endDate.value = today
     baseDate.value = today
@@ -351,7 +346,7 @@ const formatDateTime = (date: Date): string => {
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
     const seconds = String(date.getSeconds()).padStart(2, '0')
-    
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
@@ -379,7 +374,7 @@ const setNow = (type: 'start' | 'end') => {
     const now = new Date()
     const today = formatDate(now)
     const currentTime = formatTime(now)
-    
+
     if (type === 'start') {
         startDate.value = today
         startTime.value = currentTime
@@ -408,18 +403,18 @@ const calculateInterval = () => {
     try {
         const start = new Date(`${startDate.value}T${startTime.value}`)
         const end = new Date(`${endDate.value}T${endTime.value}`)
-        
+
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             throw new Error('无效的日期时间')
         }
 
         const diffMs = Math.abs(end.getTime() - start.getTime())
-        
+
         const totalSeconds = Math.floor(diffMs / 1000)
         const totalMinutes = Math.floor(totalSeconds / 60)
         const totalHours = Math.floor(totalMinutes / 60)
         const totalDays = Math.floor(totalHours / 24)
-        
+
         // 计算详细间隔
         const years = Math.floor(totalDays / 365)
         const months = Math.floor((totalDays % 365) / 30)
@@ -427,7 +422,7 @@ const calculateInterval = () => {
         const hours = totalHours % 24
         const minutes = totalMinutes % 60
         const seconds = totalSeconds % 60
-        
+
         let detailed = ''
         if (years > 0) detailed += `${years}年 `
         if (months > 0) detailed += `${months}个月 `
@@ -435,7 +430,7 @@ const calculateInterval = () => {
         if (hours > 0) detailed += `${hours}小时 `
         if (minutes > 0) detailed += `${minutes}分钟 `
         if (seconds > 0) detailed += `${seconds}秒`
-        
+
         if (!detailed) detailed = '0秒'
 
         intervalResult.value = {
@@ -460,7 +455,7 @@ const calculateArithmetic = () => {
 
     try {
         const base = new Date(`${baseDate.value}T${baseTime.value}`)
-        
+
         if (isNaN(base.getTime())) {
             throw new Error('无效的基准日期时间')
         }
@@ -518,7 +513,7 @@ const calculateSpecialDates = () => {
     try {
         const special = new Date(specialDate.value)
         const now = new Date()
-        
+
         if (isNaN(special.getTime())) {
             throw new Error('无效的特殊日期')
         }
@@ -526,18 +521,18 @@ const calculateSpecialDates = () => {
         // 计算已过天数
         const diffMs = now.getTime() - special.getTime()
         const daysPassed = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-        
+
         // 计算已过年数
         const yearsPassed = Math.floor(daysPassed / 365.25)
-        
+
         // 计算下次日期
-        const nextYear = now.getFullYear() + (special.getMonth() < now.getMonth() || 
+        const nextYear = now.getFullYear() + (special.getMonth() < now.getMonth() ||
             (special.getMonth() === now.getMonth() && special.getDate() <= now.getDate()) ? 1 : 0)
         const nextDate = new Date(nextYear, special.getMonth(), special.getDate())
-        
+
         // 计算距离下次的天数
         const daysUntilNext = Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-        
+
         let ageInfo = ''
         if (specialType.value === 'birthday') {
             const age = Math.floor((now.getTime() - special.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
@@ -561,10 +556,10 @@ const calculateSpecialDates = () => {
 
 // 复制文本
 const copyText = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text)
+    const success = await copyToClipboard(text)
+    if (success) {
         showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
@@ -574,7 +569,7 @@ const clearAll = () => {
     const now = new Date()
     const today = formatDate(now)
     const currentTime = formatTime(now)
-    
+
     startDate.value = today
     endDate.value = today
     baseDate.value = today
@@ -583,89 +578,22 @@ const clearAll = () => {
     endTime.value = currentTime
     baseTime.value = currentTime
     amount.value = 0
-    
+
     intervalResult.value = null
     arithmeticResult.value = null
     specialResult.value = null
-    
-    showMessage('已清空所有内容', 'success')
-}
 
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showMessage('已清空所有内容', 'success')
 }
 </script>
 <style scoped>
+/* 保持原有的所有样式，只是移除了 calculator-header 部分 */
 .date-calculator {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.calculator-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.calculator-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.calculator-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
 }
 
 .calculator-content {
@@ -679,115 +607,174 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 /* 计算区域 */
 .calculation-section {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    margin-bottom: 24px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-bottom: 20px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
-    background: #fff;
-    border-bottom: 1px solid #e9ecef;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    min-height: 48px;
+    box-sizing: border-box;
 }
 
 .section-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .section-info {
     font-size: 12px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 /* 日期间隔计算 */
 .date-interval-container {
-    padding: 24px;
+    padding: 20px;
 }
 
-.date-input-group {
+/* 卡片式输入布局 */
+.input-cards {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
     margin-bottom: 20px;
 }
 
-.date-input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
+.input-card {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition: var(--transition);
 }
 
-.date-input-wrapper {
+.input-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.1);
+}
+
+.card-header {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
 
-.date-input,
-.time-input {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    color: #333;
+.card-header label {
     font-size: 14px;
-    transition: border-color 0.2s;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
 }
 
-.date-input:focus,
-.time-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.quick-date-buttons {
+.quick-actions {
     display: flex;
+    gap: 4px;
+}
+
+.date-time-inputs {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    margin: 16px 0;
-    flex-wrap: wrap;
 }
 
-.quick-btn {
-    padding: 6px 12px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    color: #333;
+.separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    min-width: 40px;
+}
+
+/* 结果摘要 */
+.result-summary {
+    margin-bottom: 16px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-color), #667eea);
+    border-radius: var(--radius-md);
+    color: white;
+    text-align: center;
+}
+
+.summary-label {
     font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.quick-btn:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+}
+
+/* 紧凑型结果网格 */
+.result-grid.compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.result-grid.compact .result-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    transition: var(--transition);
+}
+
+.result-grid.compact .result-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.15);
+}
+
+.result-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 /* 结果显示 */
 .interval-result,
 .arithmetic-result,
 .special-result {
-    margin-top: 20px;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
 }
 
 .result-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .result-item {
@@ -795,9 +782,16 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     flex-direction: column;
     gap: 4px;
     padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
     position: relative;
+    transition: var(--transition);
+}
+
+.result-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.1);
 }
 
 .result-item.large {
@@ -805,23 +799,26 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    padding: 16px;
 }
 
 .result-label {
     font-size: 12px;
-    color: #666;
+    color: var(--text-muted);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .result-value {
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
 }
 
 .detailed-result {
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
 .copy-btn {
@@ -829,43 +826,43 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     height: 24px;
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
     margin-left: 8px;
 }
 
 .copy-btn:hover {
-    background: #f5f5f5;
-    color: #333;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 /* 日期加减计算 */
 .date-arithmetic-container {
-    padding: 24px;
+    padding: 20px;
 }
 
 .base-date-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .base-date-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .arithmetic-controls {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .operation-group,
@@ -873,7 +870,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .unit-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .operation-group label,
@@ -881,81 +878,94 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .unit-group label {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .operation-select,
 .unit-select,
 .special-type-select {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    color: #333;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: 14px;
     cursor: pointer;
+    height: 36px;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+.operation-select:focus,
+.unit-select:focus,
+.special-type-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .amount-input {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    color: #333;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: 14px;
-    transition: border-color 0.2s;
+    transition: var(--transition);
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .amount-input:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .quick-arithmetic-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 8px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 6px;
+    margin-bottom: 16px;
 }
 
 .result-details {
     display: flex;
-    gap: 16px;
-    margin-top: 12px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .detail-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 /* 特殊日期计算 */
 .special-dates-container {
-    padding: 24px;
+    padding: 20px;
 }
 
 .special-date-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .special-date-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .birthday-info {
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
 .message-toast {
@@ -986,6 +996,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -996,37 +1007,52 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     .calculator-content {
         padding: 16px;
     }
-    
+
     .date-interval-container,
     .date-arithmetic-container,
     .special-dates-container {
         padding: 16px;
     }
-    
+
+    .input-cards {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .separator {
+        transform: rotate(90deg);
+        min-height: 20px;
+        min-width: auto;
+    }
+
     .arithmetic-controls {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-    
+
     .result-grid {
         grid-template-columns: 1fr;
     }
-    
+
+    .result-grid.compact {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .quick-arithmetic-buttons {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .date-input-wrapper {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .result-item.large {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
+
     .result-details {
         flex-direction: column;
     }

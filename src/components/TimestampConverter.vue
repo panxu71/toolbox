@@ -1,29 +1,12 @@
 <template>
     <div class="timestamp-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">时间戳转换</h2>
-            <div class="converter-actions">
-                <button class="action-btn" @click="getCurrentTimestamp" title="获取当前时间戳">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12,6 12,12 16,14" />
-                    </svg>
-                </button>
-                <button class="action-btn" @click="clearAll" title="清空">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <!-- 使用通用头部组件 -->
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="refresh" tooltip="获取当前时间戳" @click="getCurrentTimestamp" />
+                <HeaderActionButton icon="clear" tooltip="清空" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <!-- 当前时间显示 -->
@@ -206,6 +189,7 @@
             </div>
         </div>
 
+        <!-- 保持原有的消息提示样式 -->
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
@@ -215,14 +199,38 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useClipboard } from '../composables/useClipboard'
+import { useMessage } from '../composables/useMessage'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 响应式数据
 // 使用页面标题管理
 usePageTitle('timestamp-convert')
+
+// 获取卡片标题
+const getCardTitle = (cardId: string): string => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
+const pageTitle = getCardTitle('timestamp-convert')
+
+// 使用剪贴板功能
+const { copyToClipboard } = useClipboard()
+
+// 使用消息提示
+const { message, messageType, showMessage } = useMessage()
 
 const timestampInput = ref('')
 const timestampUnit = ref('seconds')
@@ -235,9 +243,6 @@ const outputUnit = ref('seconds')
 const dateResult = ref<{
     timestamp: string
 } | null>(null)
-
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 当前时间显示
 const currentLocalTime = ref('')
@@ -560,10 +565,10 @@ const handleDateTimePickerChange = (event: Event) => {
 
 // 复制文本
 const copyText = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text)
+    const success = await copyToClipboard(text)
+    if (success) {
         showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
@@ -576,82 +581,15 @@ const clearAll = () => {
     dateResult.value = null
     showMessage('已清空所有内容', 'success')
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
 </script>
 <style scoped>
+/* 保持原有的所有样式，只是移除了 converter-header 部分 */
 .timestamp-converter {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.converter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
 }
 
 .converter-content {
@@ -677,6 +615,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    min-height: 48px;
+    box-sizing: border-box;
 }
 
 .section-header h3 {

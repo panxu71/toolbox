@@ -1,10 +1,23 @@
 <template>
     <div class="timezone-converter">
-        <PageHeader :title="pageTitle" @back="$emit('back')">
-            <template #actions>
-                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
-            </template>
-        </PageHeader>
+        <div class="converter-header">
+            <button class="back-btn" @click="$emit('back')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                返回
+            </button>
+            <h2 class="converter-title">时区转换</h2>
+            <div class="converter-actions">
+                <button class="action-btn" @click="clearAll" title="清空所有">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
 
         <div class="converter-content">
             <!-- 世界时钟 -->
@@ -255,32 +268,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
-import { useClipboard } from '../composables/useClipboard'
-import { useMessage } from '../composables/useMessage'
 
 defineEmits<{
     back: []
 }>()
 
-// 使用 composables
-usePageTitle('timezone-convert')
-const { copyToClipboard } = useClipboard()
-const { message, messageType, showSuccess, showError } = useMessage()
-
-// 获取页面标题
-const pageTitle = '时区转换'
 // 时区数据 - 按时间早晚固定排序（UTC偏移从大到小）
 const mainTimezones = [
     { name: '奥克兰', code: 'UTC+12', zone: 'Pacific/Auckland' },
     { name: '悉尼', code: 'UTC+10', zone: 'Australia/Sydney' },
     { name: '东京', code: 'UTC+9', zone: 'Asia/Tokyo' },
-    { name: '首尔', code: 'UTC+9', zone: 'Asia/Seoul' },
     { name: '北京', code: 'UTC+8', zone: 'Asia/Shanghai' },
-    { name: '新加坡', code: 'UTC+8', zone: 'Asia/Singapore' },
-    { name: '曼谷', code: 'UTC+7', zone: 'Asia/Bangkok' },
     { name: '孟买', code: 'UTC+5:30', zone: 'Asia/Kolkata' },
     { name: '迪拜', code: 'UTC+4', zone: 'Asia/Dubai' },
     { name: '莫斯科', code: 'UTC+3', zone: 'Europe/Moscow' },
@@ -337,6 +336,9 @@ const allTimezones = [
 ]
 
 // 转换相关状态
+// 使用页面标题管理
+usePageTitle('timezone-convert')
+
 const sourceTimezone = ref('Asia/Shanghai')
 const targetTimezone = ref('America/New_York')
 const convertDate = ref('')
@@ -360,8 +362,12 @@ const meetingPlan = ref<Array<{
     statusText: string
 }>>([])
 
+// 消息提示
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
+
 // 当前时间更新定时器
-let timeUpdateInterval: NodeJS.Timeout | null = null
+let timeUpdateInterval: number | null = null
 
 // 强制更新时间显示的响应式变量
 const timeUpdateTrigger = ref(0)
@@ -467,13 +473,13 @@ const setCurrentTime = () => {
     const now = new Date()
     convertDate.value = now.toISOString().split('T')[0] || ''
     convertTime.value = (now.toTimeString().split(' ')[0] || '12:00:00').substring(0, 8)
-    showSuccess('已设置为当前时间')
+    showMessage('已设置为当前时间', 'success')
 }
 
 // 时区转换
 const convertTimezone = () => {
     if (!convertDate.value || !convertTime.value) {
-        showError('请输入完整的日期和时间')
+        showMessage('请输入完整的日期和时间', 'error')
         return
     }
 
@@ -521,9 +527,9 @@ const convertTimezone = () => {
             difference: diffText
         }
 
-        showSuccess('时区转换完成')
+        showMessage('时区转换完成', 'success')
     } catch (error) {
-        showError('转换失败，请检查输入')
+        showMessage('转换失败，请检查输入', 'error')
     }
 }
 
@@ -550,14 +556,13 @@ const copyTimeInfo = async (timezone: any) => {
     const date = getCurrentDate(timezone.zone)
     const text = `${timezone.name} (${timezone.code}): ${date} ${time}`
 
-    const success = await copyToClipboard(text)
-    if (success) {
-        showSuccess(`已复制 ${timezone.name} 时间`)
-    } else {
-        showError('复制失败')
+    try {
+        await navigator.clipboard.writeText(text)
+        showMessage(`已复制 ${timezone.name} 时间`, 'success')
+    } catch (error) {
+        showMessage('复制失败', 'error')
     }
 }
-
 const copyResult = async () => {
     if (!conversionResult.value) return
 
@@ -566,11 +571,11 @@ const copyResult = async () => {
 目标时间: ${conversionResult.value.target}
 时差: ${conversionResult.value.difference}`
 
-    const success = await copyToClipboard(text)
-    if (success) {
-        showSuccess('转换结果已复制到剪贴板')
-    } else {
-        showError('复制失败')
+    try {
+        await navigator.clipboard.writeText(text)
+        showMessage('转换结果已复制到剪贴板', 'success')
+    } catch (error) {
+        showMessage('复制失败', 'error')
     }
 }
 
@@ -590,7 +595,7 @@ const removeParticipant = (index: number) => {
 // 规划会议时间
 const planMeeting = () => {
     if (!meetingDate.value || !meetingTime.value) {
-        showError('请输入会议日期和时间')
+        showMessage('请输入会议日期和时间', 'error')
         return
     }
 
@@ -654,9 +659,9 @@ const planMeeting = () => {
         })
 
         meetingPlan.value = plan
-        showSuccess('会议时间规划完成')
+        showMessage('会议时间规划完成', 'success')
     } catch (error) {
-        showError('规划失败，请检查输入')
+        showMessage('规划失败，请检查输入', 'error')
     }
 }
 
@@ -669,11 +674,11 @@ const copyMeetingPlan = async () => {
         text += `${item.name} (${item.timezoneName}): ${item.localTime} - ${item.statusText}\n`
     })
 
-    const success = await copyToClipboard(text)
-    if (success) {
-        showSuccess('会议安排已复制到剪贴板')
-    } else {
-        showError('复制失败')
+    try {
+        await navigator.clipboard.writeText(text)
+        showMessage('会议安排已复制到剪贴板', 'success')
+    } catch (error) {
+        showMessage('复制失败', 'error')
     }
 }
 
@@ -685,7 +690,16 @@ const clearAll = () => {
         { name: '参会者1', timezone: 'America/New_York' },
         { name: '参会者2', timezone: 'Europe/London' }
     ]
-    showSuccess('已清空所有数据')
+    showMessage('已清空所有数据', 'success')
+}
+
+// 显示消息
+const showMessage = (text: string, type: 'success' | 'error') => {
+    message.value = text
+    messageType.value = type
+    setTimeout(() => {
+        message.value = ''
+    }, 3000)
 }
 </script>
 <style scoped>
@@ -700,6 +714,67 @@ const clearAll = () => {
     overflow: hidden;
 }
 
+.converter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.back-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.converter-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.converter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
 .converter-content {
     flex: 1;
     padding: 1.5rem;
@@ -708,7 +783,7 @@ const clearAll = () => {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 900px;
+    max-width: 1400px;
     margin: 0 auto;
     width: 100%;
     min-height: 0;
@@ -727,9 +802,6 @@ const clearAll = () => {
 
 .section-header {
     margin-bottom: 1.5rem;
-    height: 48px;
-    display: flex;
-    align-items: center;
 }
 
 .section-title h3 {
@@ -762,41 +834,10 @@ const clearAll = () => {
     padding: 0.75rem;
     transition: all 0.2s ease;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
 }
 
-.clock-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg,
-            #ff6b6b 0%,
-            #4ecdc4 25%,
-            #45b7d1 50%,
-            #96ceb4 75%,
-            #feca57 100%);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.clock-card:nth-child(4n+1)::before {
-    background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
-}
-
-.clock-card:nth-child(4n+2)::before {
-    background: linear-gradient(90deg, #4ecdc4, #6ed3d0);
-}
-
-.clock-card:nth-child(4n+3)::before {
-    background: linear-gradient(90deg, #45b7d1, #6bc5d8);
-}
-
-.clock-card:nth-child(4n+4)::before {
-    background: linear-gradient(90deg, #96ceb4, #a8d5c4);
+.clock-card:hover {
+    border-color: var(--text-secondary);
 }
 
 .clock-header {
@@ -809,14 +850,13 @@ const clearAll = () => {
 .city-name {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--primary-color);
+    color: var(--text-primary);
 }
 
 .timezone-code {
     font-size: 0.6875rem;
-    color: var(--success-color);
+    color: var(--text-secondary);
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-weight: 600;
 }
 
 .time-display {
@@ -826,7 +866,7 @@ const clearAll = () => {
 .time-value {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--text-primary);
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     margin-bottom: 0.125rem;
     display: block;
@@ -881,7 +921,7 @@ const clearAll = () => {
 
 .timezone-select {
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.875rem 1rem;
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
     border-radius: 0.75rem;
@@ -934,7 +974,7 @@ const clearAll = () => {
 
 .date-input,
 .time-input {
-    padding: 0.5rem 0.75rem;
+    padding: 0.875rem 1rem;
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
     border-radius: 0.75rem;
@@ -1179,9 +1219,9 @@ const clearAll = () => {
 
 .participant-item {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
@@ -1189,8 +1229,7 @@ const clearAll = () => {
 
 .participant-name {
     flex: 1;
-    min-width: 120px;
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
@@ -1208,15 +1247,14 @@ const clearAll = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
     background: var(--error-color);
     color: white;
     border: none;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    flex-shrink: 0;
 }
 
 .remove-participant-btn:hover {
@@ -1519,9 +1557,17 @@ const clearAll = () => {
 }
 
 @media (max-width: 480px) {
+    .converter-header {
+        padding: 0.75rem 1rem;
+    }
+
     .converter-content {
         padding: 1rem;
         padding-bottom: 5rem;
+    }
+
+    .converter-title {
+        font-size: 1.125rem;
     }
 
     .section-title h3 {

@@ -1,36 +1,14 @@
 <template>
     <div class="json-formatter">
-        <div class="formatter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="formatter-title">JSON格式化</h2>
-            <div class="formatter-actions">
-                <button class="action-btn" @click="clearAll" title="清空">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-                <button class="action-btn" @click="copyResult" title="复制JSON" :disabled="!formattedJson">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                        <path d="M4 16c-1.1 0-2-.9-2 2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                    </svg>
-                </button>
-                <button class="action-btn" @click="downloadJson" title="下载JSON文件" :disabled="!formattedJson">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7,10 12,15 17,10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <!-- 使用通用头部组件 -->
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空" @click="clearAll" />
+                <HeaderActionButton icon="copy" tooltip="复制JSON" :disabled="!formattedJson" @click="copyResult" />
+                <HeaderActionButton icon="download" tooltip="下载JSON文件" :disabled="!formattedJson"
+                    @click="downloadJsonFile" />
+            </template>
+        </PageHeader>
 
         <div class="formatter-content">
             <div class="input-section">
@@ -71,16 +49,44 @@
             <div class="output-section">
                 <div class="section-header">
                     <h3>格式化结果</h3>
-                    <div class="result-info" v-if="jsonStats">
-                        <span class="stat-item">{{ jsonStats.lines }} 行</span>
-                        <span class="stat-item">{{ jsonStats.size }} 字符</span>
-                        <span class="stat-item">{{ jsonStats.keys }} 个键</span>
-                        <span class="stat-item" v-if="jsonStats.depth > 1">深度 {{ jsonStats.depth }}</span>
-                        <span class="stat-item" :class="jsonStats.complexity">{{ jsonStats.complexityText }}</span>
+                    <div class="result-controls">
+                        <div class="view-mode-toggle">
+                            <button class="mode-btn" :class="{ active: viewMode === 'tree' }"
+                                @click="viewMode = 'tree'">
+                                树视图
+                            </button>
+                            <button class="mode-btn" :class="{ active: viewMode === 'text' }"
+                                @click="viewMode = 'text'">
+                                文本
+                            </button>
+                        </div>
+                        <div class="result-info" v-if="jsonStats">
+                            <span class="stat-item">{{ jsonStats.lines }} 行</span>
+                            <span class="stat-item">{{ jsonStats.size }} 字符</span>
+                            <span class="stat-item">{{ jsonStats.keys }} 个键</span>
+                            <span class="stat-item" v-if="jsonStats.depth > 1">深度 {{ jsonStats.depth }}</span>
+                            <span class="stat-item" :class="jsonStats.complexity">{{ jsonStats.complexityText }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="json-output-container">
-                    <pre v-if="formattedJson" class="json-output" v-html="highlightedJson"></pre>
+                    <div v-if="formattedJson || parsedJsonForTree" class="json-output-wrapper">
+                        <div class="line-numbers">
+                            <div v-for="(_, index) in visibleLines" :key="index" class="line-number">
+                                {{ index + 1 }}
+                            </div>
+                        </div>
+
+                        <!-- 树视图 -->
+                        <div v-if="viewMode === 'tree' && parsedJsonForTree" class="json-tree-container">
+                            <JsonTreeNode :data="parsedJsonForTree" :level="0" @toggle="updateVisibleLines"
+                                @copy="handleNodeCopy" @delete="handleNodeDelete" />
+                        </div>
+
+                        <!-- 文本视图 -->
+                        <div v-else-if="viewMode === 'text' && formattedJson" class="json-output"
+                            v-html="highlightedJson" />
+                    </div>
                     <div v-else class="output-placeholder">
                         <p>格式化后的JSON将显示在这里</p>
                     </div>
@@ -88,6 +94,7 @@
             </div>
         </div>
 
+        <!-- 保持原有的消息提示样式 -->
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
@@ -95,10 +102,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useDownload } from '../composables/useDownload'
+import { useClipboard } from '../composables/useClipboard'
+import { useMessage } from '../composables/useMessage'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import JsonTreeNode from './common/JsonTreeNode.vue'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
+import cardsConfig from '../config/cards.json'
 
 // 注册JSON语言
 hljs.registerLanguage('json', json)
@@ -110,16 +124,39 @@ defineEmits<{
 // 使用页面标题管理
 usePageTitle('json-format')
 
+// 获取卡片标题
+const getCardTitle = (cardId: string): string => {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
+const pageTitle = getCardTitle('json-format')
+
+// 使用下载功能
+const { downloadJson } = useDownload()
+
+// 使用剪贴板功能
+const { copyToClipboard } = useClipboard()
+
+// 使用消息提示
+const { message, messageType, showMessage } = useMessage()
+
 const inputJson = ref('')
 const formattedJson = ref('')
 const inputError = ref('')
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 const isAutoFormatting = ref(false)
+const viewMode = ref<'tree' | 'text'>('tree') // 新增：视图模式切换
 
 // JSON统计信息
 const jsonStats = computed(() => {
-    if (!formattedJson.value) return null
+    if (!formattedJson.value || typeof formattedJson.value !== 'string') return null
 
     const lines = formattedJson.value.split('\n').length
     const size = formattedJson.value.length
@@ -152,11 +189,44 @@ const jsonStats = computed(() => {
 
 // JSON语法高亮
 const highlightedJson = computed(() => {
-    if (!formattedJson.value) return ''
+    if (!formattedJson.value || typeof formattedJson.value !== 'string') return ''
 
     const result = hljs.highlight(formattedJson.value, { language: 'json' })
     return result.value
 })
+
+// 格式化后的JSON行数组
+const formattedJsonLines = computed(() => {
+    if (!formattedJson.value || typeof formattedJson.value !== 'string') return []
+    return formattedJson.value.split('\n')
+})
+
+// 解析后的JSON对象（用于树视图）
+const parsedJsonForTree = computed(() => {
+    if (!inputJson.value.trim()) return null
+    try {
+        return JSON.parse(inputJson.value)
+    } catch {
+        return null
+    }
+})
+
+// 可见行数（用于行号显示）
+const visibleLines = computed(() => {
+    if (viewMode.value === 'text') {
+        return formattedJsonLines.value
+    } else {
+        // 树视图模式下，行数由树节点动态计算
+        return Array.from({ length: calculateTreeLines() }, (_, i) => i)
+    }
+})
+
+// 计算树视图的行数
+const calculateTreeLines = (): number => {
+    // 这里简化处理，实际应该根据展开状态计算
+    if (!parsedJsonForTree.value) return 0
+    return JSON.stringify(parsedJsonForTree.value, null, 2).split('\n').length
+}
 
 // 递归统计对象中的键数量
 const countKeys = (obj: any): number => {
@@ -200,169 +270,100 @@ const getMaxDepth = (obj: any, currentDepth: number = 1): number => {
 // 输入变化时的处理
 const onInputChange = () => {
     inputError.value = ''
-    if (!inputJson.value.trim()) {
-        formattedJson.value = ''
-        return
-    }
-
-    // 自动尝试格式化（延迟执行，避免频繁触发）
-    clearTimeout(autoFormatTimer.value)
-    autoFormatTimer.value = setTimeout(() => {
-        tryAutoFormat()
-    }, 500)
 }
 
-// 粘贴事件处理
-const onPaste = (event: ClipboardEvent) => {
-    // 获取粘贴的内容
-    const pastedText = event.clipboardData?.getData('text') || ''
+// 粘贴时自动格式化
+const onPaste = async () => {
+    await new Promise(resolve => setTimeout(resolve, 10))
 
-    // 延迟执行，等待 v-model 更新
-    setTimeout(() => {
-        if (pastedText.trim()) {
-            tryAutoFormat()
-            showMessage('已粘贴内容并自动格式化', 'success')
-        }
-    }, 50)
-}
-
-// 自动格式化定时器
-const autoFormatTimer = ref<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-// 尝试自动格式化
-const tryAutoFormat = () => {
-    if (!inputJson.value.trim()) return
-
-    isAutoFormatting.value = true
-
-    try {
-        const parsed = JSON.parse(inputJson.value)
-        formattedJson.value = JSON.stringify(parsed, null, 2)
-        inputError.value = ''
-    } catch (error) {
-        // 静默失败，不显示错误信息（用户可能还在输入）
-        formattedJson.value = ''
-    } finally {
-        setTimeout(() => {
+    if (inputJson.value.trim()) {
+        isAutoFormatting.value = true
+        try {
+            formatJson()
+        } finally {
             isAutoFormatting.value = false
-        }, 300)
+        }
     }
 }
 
-// 格式化JSON
-const formatJson = () => {
-    if (!inputJson.value.trim()) {
-        showMessage('请先输入JSON字符串', 'error')
-        return
-    }
+// 显示消息（保持原有样式）
+// 现在使用 useMessage composable，不需要重复定义
 
-    try {
-        const parsed = JSON.parse(inputJson.value)
-        formattedJson.value = JSON.stringify(parsed, null, 2)
-        inputError.value = ''
-        showMessage('JSON格式化成功', 'success')
-    } catch (error) {
-        inputError.value = `JSON格式错误: ${(error as Error).message}`
-        formattedJson.value = ''
-        showMessage('JSON格式错误', 'error')
-    }
+// 更新可见行数（树视图折叠时调用）
+const updateVisibleLines = () => {
+    // 这里可以添加更复杂的行数计算逻辑
+    // 暂时简化处理
 }
 
-// 验证JSON
-const validateJson = () => {
-    if (!inputJson.value.trim()) {
-        showMessage('请先输入JSON字符串', 'error')
-        return
-    }
-
+// 处理节点复制
+const handleNodeCopy = async (nodeInfo: { key: string | number | null, value: any, path: string }) => {
     try {
-        JSON.parse(inputJson.value)
-        inputError.value = ''
-        showMessage('JSON格式正确 ✅', 'success')
-    } catch (error) {
-        inputError.value = `JSON格式错误: ${(error as Error).message}`
-        showMessage('JSON格式错误 ❌', 'error')
-    }
-}
+        let textToCopy: string
 
-// 压缩JSON
-const minifyJson = () => {
-    if (!inputJson.value.trim()) {
-        showMessage('请先输入JSON字符串', 'error')
-        return
-    }
-
-    try {
-        const parsed = JSON.parse(inputJson.value)
-        formattedJson.value = JSON.stringify(parsed)
-        inputError.value = ''
-        showMessage('JSON压缩成功', 'success')
-    } catch (error) {
-        inputError.value = `JSON格式错误: ${(error as Error).message}`
-        formattedJson.value = ''
-        showMessage('JSON格式错误', 'error')
-    }
-}
-
-// 转义JSON
-const escapeJson = () => {
-    if (!inputJson.value.trim()) {
-        showMessage('请先输入JSON字符串', 'error')
-        return
-    }
-
-    try {
-        // 先验证JSON格式
-        JSON.parse(inputJson.value)
-
-        // 转义JSON字符串
-        const escaped = JSON.stringify(inputJson.value)
-        formattedJson.value = escaped
-        inputError.value = ''
-        showMessage('JSON转义成功', 'success')
-    } catch (error) {
-        // 如果不是有效的JSON，直接转义字符串
-        const escaped = JSON.stringify(inputJson.value)
-        formattedJson.value = escaped
-        inputError.value = ''
-        showMessage('字符串转义成功', 'success')
-    }
-}
-
-// 去转义JSON
-const unescapeJson = () => {
-    if (!inputJson.value.trim()) {
-        showMessage('请先输入转义的JSON字符串', 'error')
-        return
-    }
-
-    try {
-        // 尝试解析转义的字符串
-        const unescaped = JSON.parse(inputJson.value)
-
-        if (typeof unescaped === 'string') {
-            // 如果解析结果是字符串，尝试再次解析为JSON
-            try {
-                const parsed = JSON.parse(unescaped)
-                formattedJson.value = JSON.stringify(parsed, null, 2)
-                inputError.value = ''
-                showMessage('JSON去转义并格式化成功', 'success')
-            } catch {
-                // 如果不是JSON，直接显示去转义的字符串
-                formattedJson.value = unescaped
-                inputError.value = ''
-                showMessage('字符串去转义成功', 'success')
+        if (nodeInfo.key !== null) {
+            // 有键名的情况，复制完整的键值对
+            if (typeof nodeInfo.value === 'object') {
+                // 对象或数组，创建包含键名的完整结构
+                const keyValuePair = { [nodeInfo.key]: nodeInfo.value }
+                textToCopy = JSON.stringify(keyValuePair, null, 2)
+            } else {
+                // 基本类型，创建键值对格式
+                const keyValuePair = { [nodeInfo.key]: nodeInfo.value }
+                textToCopy = JSON.stringify(keyValuePair, null, 2)
             }
         } else {
-            // 如果解析结果不是字符串，格式化显示
-            formattedJson.value = JSON.stringify(unescaped, null, 2)
-            inputError.value = ''
-            showMessage('JSON去转义成功', 'success')
+            // 根节点或无键名的情况，只复制值
+            if (typeof nodeInfo.value === 'object') {
+                textToCopy = JSON.stringify(nodeInfo.value, null, 2)
+            } else {
+                textToCopy = String(nodeInfo.value)
+            }
+        }
+
+        const success = await copyToClipboard(textToCopy)
+        if (success) {
+            const copyType = nodeInfo.key !== null ? '键值对' : (typeof nodeInfo.value === 'object' ? '节点' : '值')
+            showMessage(`已复制${copyType}到剪贴板`, 'success')
+        } else {
+            showMessage('复制失败', 'error')
         }
     } catch (error) {
-        inputError.value = `去转义失败: ${(error as Error).message}`
-        formattedJson.value = ''
-        showMessage('去转义失败', 'error')
+        showMessage('复制失败', 'error')
+    }
+}
+
+// 处理节点删除
+const handleNodeDelete = (nodeInfo: { key: string | number | null, path: string }) => {
+    try {
+        if (!parsedJsonForTree.value) return
+
+        // 创建新的 JSON 对象，删除指定节点
+        const newJsonData = JSON.parse(JSON.stringify(parsedJsonForTree.value))
+
+        // 如果是根级删除且只有一个根属性，清空整个JSON
+        if (nodeInfo.key !== null) {
+            if (Array.isArray(newJsonData)) {
+                const index = parseInt(nodeInfo.key.toString())
+                if (!isNaN(index) && index >= 0 && index < newJsonData.length) {
+                    newJsonData.splice(index, 1)
+                }
+            } else if (typeof newJsonData === 'object') {
+                delete newJsonData[nodeInfo.key]
+            }
+        } else {
+            // 如果删除的是根节点本身，清空所有内容
+            clearAll()
+            return
+        }
+
+        // 更新输入和输出
+        const newJsonString = JSON.stringify(newJsonData, null, 2)
+        inputJson.value = newJsonString
+        formattedJson.value = newJsonString
+
+        showMessage('节点已删除', 'success')
+    } catch (error) {
+        showMessage('删除失败', 'error')
     }
 }
 
@@ -371,46 +372,140 @@ const clearAll = () => {
     inputJson.value = ''
     formattedJson.value = ''
     inputError.value = ''
-    showMessage('已清空', 'success')
+    showMessage('已清空所有内容', 'success')
 }
 
 // 复制结果
 const copyResult = async () => {
     if (!formattedJson.value) return
 
-    try {
-        await navigator.clipboard.writeText(formattedJson.value)
+    const success = await copyToClipboard(formattedJson.value)
+    if (success) {
         showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
 
 // 下载JSON文件
-const downloadJson = () => {
+const downloadJsonFile = () => {
     if (!formattedJson.value) return
 
-    try {
-        const blob = new Blob([formattedJson.value], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-        link.download = `json-${timestamp}.json`
-
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-
+    const success = downloadJson(formattedJson.value, 'json')
+    if (success) {
         showMessage('JSON文件已下载', 'success')
-    } catch (error) {
+    } else {
         showMessage('下载失败', 'error')
     }
 }
 
-// 加载示例数据
+// 格式化JSON
+const formatJson = () => {
+    if (!inputJson.value.trim()) {
+        showMessage('请输入JSON内容', 'error')
+        return
+    }
+
+    try {
+        const parsed = JSON.parse(inputJson.value)
+        formattedJson.value = JSON.stringify(parsed, null, 2)
+        inputError.value = ''
+        showMessage('格式化成功', 'success')
+    } catch (error) {
+        inputError.value = `JSON格式错误: ${(error as Error).message}`
+        showMessage('格式化失败', 'error')
+    }
+}
+
+// 验证JSON
+const validateJson = () => {
+    if (!inputJson.value.trim()) {
+        showMessage('请输入JSON内容', 'error')
+        return
+    }
+
+    try {
+        JSON.parse(inputJson.value)
+        inputError.value = ''
+        showMessage('JSON格式正确', 'success')
+    } catch (error) {
+        inputError.value = `JSON格式错误: ${(error as Error).message}`
+        showMessage('JSON格式错误', 'error')
+    }
+}
+
+// 压缩JSON
+const minifyJson = () => {
+    if (!inputJson.value.trim()) {
+        showMessage('请输入JSON内容', 'error')
+        return
+    }
+
+    try {
+        const parsed = JSON.parse(inputJson.value)
+        formattedJson.value = JSON.stringify(parsed)
+        inputError.value = ''
+        showMessage('压缩成功', 'success')
+    } catch (error) {
+        inputError.value = `JSON格式错误: ${(error as Error).message}`
+        showMessage('压缩失败', 'error')
+    }
+}
+
+// 转义JSON
+const escapeJson = () => {
+    if (!inputJson.value.trim()) {
+        showMessage('请输入JSON内容', 'error')
+        return
+    }
+
+    formattedJson.value = JSON.stringify(inputJson.value)
+    showMessage('转义成功', 'success')
+}
+
+// 去转义JSON
+const unescapeJson = () => {
+    if (!inputJson.value.trim()) {
+        showMessage('请输入JSON内容', 'error')
+        return
+    }
+
+    try {
+        // 尝试解析输入的内容
+        const unescaped = JSON.parse(inputJson.value)
+
+        // 如果解析成功，将结果格式化为字符串
+        if (typeof unescaped === 'string') {
+            // 如果解析结果是字符串，尝试再次解析为JSON对象并格式化
+            try {
+                const parsed = JSON.parse(unescaped)
+                formattedJson.value = JSON.stringify(parsed, null, 2)
+                showMessage('去转义并格式化成功', 'success')
+            } catch {
+                // 如果不是有效的JSON，直接显示去转义的字符串
+                formattedJson.value = unescaped
+                showMessage('去转义成功', 'success')
+            }
+        } else {
+            // 如果解析结果不是字符串，格式化为JSON字符串
+            formattedJson.value = JSON.stringify(unescaped, null, 2)
+            showMessage('去转义成功', 'success')
+        }
+
+        inputError.value = ''
+    } catch (error) {
+        // 如果输入的内容不是有效的转义JSON，检查是否是普通JSON
+        try {
+            JSON.parse(inputJson.value)
+            showMessage('输入内容已经是有效的JSON，无需去转义', 'error')
+        } catch {
+            inputError.value = `去转义失败: ${(error as Error).message}`
+            showMessage('去转义失败，请检查输入格式', 'error')
+        }
+    }
+}
+
+// 加载示例
 const loadExample = (exampleNumber: number) => {
     const examples = {
         1: {
@@ -474,92 +569,16 @@ const loadExample = (exampleNumber: number) => {
         showMessage(`已加载${example.name}示例数据`, 'success')
     }
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
-onMounted(() => {
-    // 页面初始化逻辑
-})
 </script>
 
 <style scoped>
+/* 保持原有的所有样式，只是移除了 formatter-header 部分 */
 .json-formatter {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.formatter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.formatter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.formatter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover:not(:disabled) {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 .formatter-content {
@@ -583,10 +602,10 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 8px 20px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
-    min-height: 72px;
+    min-height: 48px;
     box-sizing: border-box;
 }
 
@@ -597,11 +616,48 @@ onMounted(() => {
     color: var(--text-primary);
 }
 
-.input-status {
+.result-controls {
     display: flex;
     align-items: center;
+    gap: 16px;
+}
+
+.view-mode-toggle {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.mode-btn {
+    padding: 4px 12px;
+    background: var(--bg-primary);
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.mode-btn:first-child {
+    border-right: 1px solid var(--border-color);
+}
+
+.mode-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.mode-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.result-info {
+    display: flex;
     gap: 8px;
     font-size: 12px;
+    color: var(--text-muted);
 }
 
 .auto-format-indicator {
@@ -637,25 +693,6 @@ onMounted(() => {
     gap: 12px;
 }
 
-.divider {
-    width: 1px;
-    height: 20px;
-    background: var(--border-color);
-    margin: 0 4px;
-}
-
-.format-btn,
-.validate-btn,
-.minify-btn {
-    padding: 6px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
 .button-group {
     display: inline-flex;
     border: 1px solid var(--border-color);
@@ -674,6 +711,8 @@ onMounted(() => {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 60px;
+    text-align: center;
 }
 
 .group-btn:first-child {
@@ -684,9 +723,6 @@ onMounted(() => {
 .group-btn:last-child {
     border-top-right-radius: var(--radius-sm);
     border-bottom-right-radius: var(--radius-sm);
-}
-
-.group-btn:last-child {
     border-right: none;
 }
 
@@ -698,8 +734,6 @@ onMounted(() => {
 .group-btn:active {
     background: var(--bg-tertiary);
 }
-
-
 
 .json-input {
     flex: 1;
@@ -731,9 +765,40 @@ onMounted(() => {
     overflow: auto;
 }
 
-.json-output {
-    width: 100%;
+.json-output-wrapper {
+    display: flex;
     height: 100%;
+}
+
+.line-numbers {
+    background: var(--bg-tertiary);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 8px 20px 12px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    user-select: none;
+    min-width: 40px;
+    text-align: right;
+}
+
+.line-number {
+    height: 21px;
+    /* 匹配代码行高 */
+}
+
+.json-tree-container {
+    flex: 1;
+    padding: 20px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: auto;
+}
+
+.json-output {
+    flex: 1;
+    width: 100%;
     padding: 20px;
     margin: 0;
     background: var(--bg-primary);
@@ -743,6 +808,7 @@ onMounted(() => {
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-all;
+    overflow: auto;
 }
 
 .output-placeholder {
@@ -807,20 +873,41 @@ onMounted(() => {
 
 @keyframes slideUp {
     from {
+        transform: translateY(100%);
         opacity: 0;
-        transform: translateY(20px);
     }
 
     to {
-        opacity: 1;
         transform: translateY(0);
+        opacity: 1;
     }
 }
 
+/* JSON语法高亮 */
+:deep(.hljs-attr) {
+    color: #0969da;
+}
+
+:deep(.hljs-string) {
+    color: #032f62;
+}
+
+:deep(.hljs-number) {
+    color: #0550ae;
+}
+
+:deep(.hljs-literal) {
+    color: #8250df;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
     .formatter-content {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr;
+    }
+
+    .button-group {
+        flex-wrap: wrap;
     }
 }
 </style>

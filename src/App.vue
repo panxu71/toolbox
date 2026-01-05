@@ -171,7 +171,8 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'json-formatter': 'json-format',
         'json-to-excel': 'json-to-excel',
         'json-postman-converter': 'json-postman-converter',
-        'json-to-php': 'json-to-php',
+        'json-to-php': 'json-to-php',  // 使用更新后的组件
+        'json-to-php-new': 'json-to-php',  // 新组件的映射
         'timestamp-converter': 'timestamp-convert',
         'date-calculator': 'date-calculator',
         'timezone-converter': 'timezone-convert',

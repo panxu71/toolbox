@@ -15,7 +15,7 @@
             },
             {
                 "id": "json-to-excel",
-                "title": "Excel ⇄ JSON 互转",
+                "title": "JSON与Excel互转",
                 "description": "Excel与JSON数据格式互相转换",
                 "icon": "📊",
                 "action": "jsonToExcel",
@@ -27,7 +27,7 @@
             },
             {
                 "id": "json-postman-converter",
-                "title": "Postman ⇄ JSON 互转",
+                "title": "JSON与Postman互转",
                 "description": "Postman参数与JSON数据格式互相转换",
                 "icon": "🔄",
                 "action": "jsonPostmanConverter",
@@ -35,7 +35,7 @@
             },
             {
                 "id": "json-to-php",
-                "title": "PHP ⇄ JSON 互转",
+                "title": "JSON与PHP数据互转",
                 "description": "PHP数组与JSON数据格式互相转换",
                 "icon": "🐘",
                 "action": "jsonToPhp",

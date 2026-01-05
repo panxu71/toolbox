@@ -1,39 +1,21 @@
 <template>
     <div class="excel-json-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">Excel ⇄ JSON 互转</h2>
-            <div class="converter-actions">
+        <!-- 使用通用头部组件 -->
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
                 <div class="mode-toggle">
-                    <button 
-                        class="mode-btn" 
-                        :class="{ active: mode === 'json-to-excel' }"
-                        @click="switchMode('json-to-excel')"
-                    >
+                    <button class="mode-btn" :class="{ active: mode === 'json-to-excel' }"
+                        @click="switchMode('json-to-excel')">
                         JSON → Excel
                     </button>
-                    <button 
-                        class="mode-btn" 
-                        :class="{ active: mode === 'excel-to-json' }"
-                        @click="switchMode('excel-to-json')"
-                    >
+                    <button class="mode-btn" :class="{ active: mode === 'excel-to-json' }"
+                        @click="switchMode('excel-to-json')">
                         Excel → JSON
                     </button>
                 </div>
-                <button class="action-btn" @click="clearAll" title="清空">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+                <HeaderActionButton icon="clear" tooltip="清空" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <!-- JSON转Excel模式 -->
         <div v-if="mode === 'json-to-excel'" class="converter-content">
@@ -42,14 +24,14 @@
                     <h3>JSON数据输入</h3>
                     <div class="section-actions">
                         <div class="button-group">
-                            <button class="group-btn" @click="loadExample(1)">用户数据</button>
-                            <button class="group-btn" @click="loadExample(2)">销售数据</button>
-                            <button class="group-btn" @click="parseJson">解析JSON</button>
+                            <button class="group-btn" @click="loadExample(1)">示例1</button>
+                            <button class="group-btn" @click="loadExample(2)">示例2</button>
+                            <button class="group-btn" @click="parseJson">重新解析</button>
                         </div>
                     </div>
                 </div>
-                <textarea v-model="inputJson" class="json-input" placeholder="请输入JSON数据..."
-                    @input="onInputChange"></textarea>
+                <textarea v-model="inputJson" class="json-input" placeholder="请输入JSON数据..." @input="onInputChange"
+                    @paste="onPaste"></textarea>
                 <div v-if="inputError" class="error-message">
                     {{ inputError }}
                 </div>
@@ -64,16 +46,8 @@
                             <option value="xls">Excel 97-2003 (.xls)</option>
                             <option value="csv">CSV (.csv)</option>
                         </select>
-                        <button class="export-btn" @click="exportData"
-                            :disabled="!parsedData || parsedData.length === 0">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7,10 12,15 17,10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                            导出文件
-                        </button>
+                        <HeaderActionButton icon="download" tooltip="导出文件"
+                            :disabled="!parsedData || parsedData.length === 0" @click="exportData" />
                     </div>
                 </div>
 
@@ -82,6 +56,7 @@
                         <div class="preview-info">
                             <span class="info-item">{{ parsedData.length }} 行数据</span>
                             <span class="info-item">{{ Object.keys(parsedData[0] || {}).length }} 列</span>
+                            <span class="info-item">预览 {{ previewRows.length }} 行</span>
                         </div>
 
                         <div class="table-container">
@@ -126,15 +101,11 @@
                 <div class="section-header">
                     <h3>Excel文件上传</h3>
                     <div class="section-actions">
-                        <input 
-                            ref="fileInput" 
-                            type="file" 
-                            accept=".xlsx,.xls,.csv" 
-                            @change="handleFileUpload"
-                            style="display: none"
-                        />
+                        <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" @change="handleFileUpload"
+                            style="display: none" />
                         <button class="upload-btn" @click="triggerFileInput">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-15" />
                                 <polyline points="17,10 12,5 7,10" />
                                 <line x1="12" y1="5" x2="12" y2="15" />
@@ -143,10 +114,11 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="upload-area" @drop="handleDrop" @dragover.prevent @dragenter.prevent>
                     <div v-if="!uploadedFile" class="upload-placeholder">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                             <polyline points="14,2 14,8 20,8" />
                             <line x1="16" y1="13" x2="8" y2="13" />
@@ -156,10 +128,11 @@
                         <p>或点击"选择文件"按钮</p>
                         <p class="file-types">支持 .xlsx, .xls, .csv 格式</p>
                     </div>
-                    
+
                     <div v-else class="file-info">
                         <div class="file-details">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14,2 14,8 20,8" />
                             </svg>
@@ -169,14 +142,15 @@
                             </div>
                         </div>
                         <button class="remove-file-btn" @click="removeFile" title="移除文件">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                         </button>
                     </div>
                 </div>
-                
+
                 <div v-if="uploadError" class="error-message">
                     {{ uploadError }}
                 </div>
@@ -186,21 +160,9 @@
                 <div class="section-header">
                     <h3>JSON输出</h3>
                     <div class="export-actions">
-                        <button class="copy-btn" @click="copyJson" :disabled="!convertedJson">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                            </svg>
-                            复制JSON
-                        </button>
-                        <button class="download-btn" @click="downloadJson" :disabled="!convertedJson">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7,10 12,15 17,10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                            下载JSON
-                        </button>
+                        <HeaderActionButton icon="copy" tooltip="复制JSON" :disabled="!convertedJson" @click="copyJson" />
+                        <HeaderActionButton icon="download" tooltip="下载JSON文件" :disabled="!convertedJson"
+                            @click="downloadJsonFile" />
                     </div>
                 </div>
 
@@ -209,7 +171,8 @@
                         <pre class="json-text">{{ convertedJson }}</pre>
                     </div>
                     <div v-else class="output-placeholder">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1">
                             <polyline points="16,18 22,12 16,6" />
                             <polyline points="8,6 2,12 8,18" />
                         </svg>
@@ -219,6 +182,7 @@
             </div>
         </div>
 
+        <!-- 保持原有的消息提示样式 -->
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
@@ -226,17 +190,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import * as XLSX from 'xlsx'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useDownload } from '../composables/useDownload'
+import { useClipboard } from '../composables/useClipboard'
+import { useMessage } from '../composables/useMessage'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 模式切换
 // 使用页面标题管理
 usePageTitle('json-to-excel')
+
+// 获取卡片标题
+const getCardTitle = (cardId: string): string => {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
+const pageTitle = getCardTitle('json-to-excel')
+
+// 使用下载功能
+const { downloadJson } = useDownload()
+
+// 使用剪贴板功能
+const { copyToClipboard } = useClipboard()
+
+// 使用消息提示
+const { message, messageType, showMessage } = useMessage()
 
 const mode = ref<'json-to-excel' | 'excel-to-json'>('json-to-excel')
 
@@ -250,10 +243,6 @@ const selectedFormat = ref<'xlsx' | 'xls' | 'csv'>('xlsx')
 const uploadedFile = ref<File | null>(null)
 const uploadError = ref('')
 const convertedJson = ref('')
-
-// 通用
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 计算列名
 const columns = computed(() => {
@@ -281,6 +270,22 @@ const switchMode = (newMode: 'json-to-excel' | 'excel-to-json') => {
 // 输入变化时清除错误
 const onInputChange = () => {
     inputError.value = ''
+}
+
+// 粘贴时自动解析JSON
+const onPaste = async () => {
+    // 等待粘贴内容更新到 inputJson
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    if (inputJson.value.trim()) {
+        try {
+            // 尝试解析JSON，如果成功就自动解析
+            JSON.parse(inputJson.value)
+            parseJson()
+        } catch {
+            // 如果不是有效JSON，不自动解析
+        }
+    }
 }
 
 // 解析JSON数据
@@ -392,7 +397,7 @@ const processFile = (file: File) => {
     // 检查文件类型
     const fileExtension = file.name.toLowerCase().split('.').pop()
     const allowedExtensions = ['xlsx', 'xls', 'csv']
-    
+
     if (!allowedExtensions.includes(fileExtension || '')) {
         uploadError.value = '不支持的文件格式，请选择 .xlsx, .xls 或 .csv 文件'
         return
@@ -400,7 +405,7 @@ const processFile = (file: File) => {
 
     uploadedFile.value = file
     uploadError.value = ''
-    
+
     // 读取文件
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -421,14 +426,14 @@ const processFile = (file: File) => {
             if (!firstSheetName) {
                 throw new Error('工作表为空')
             }
-            
+
             const worksheet = workbook.Sheets[firstSheetName]
             if (!worksheet) {
                 throw new Error('工作表为空')
             }
 
             // 转换为JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
                 header: 1,  // 使用数组格式
                 defval: ''  // 空单元格默认值
             }) as any[][]
@@ -437,7 +442,7 @@ const processFile = (file: File) => {
             if (jsonData.length > 0) {
                 const headers = jsonData[0] as string[]
                 const rows = jsonData.slice(1)
-                
+
                 const result = rows.map(row => {
                     const obj: any = {}
                     headers.forEach((header, index) => {
@@ -490,31 +495,22 @@ const removeFile = () => {
 const copyJson = async () => {
     if (!convertedJson.value) return
 
-    try {
-        await navigator.clipboard.writeText(convertedJson.value)
+    const success = await copyToClipboard(convertedJson.value)
+    if (success) {
         showMessage('JSON已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
 
-// 下载JSON
-const downloadJson = () => {
+// 下载JSON文件
+const downloadJsonFile = () => {
     if (!convertedJson.value) return
 
-    try {
-        const blob = new Blob([convertedJson.value], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-        a.href = url
-        a.download = `excel-to-json-${timestamp}.json`
-        a.click()
-        
-        URL.revokeObjectURL(url)
+    const success = downloadJson(convertedJson.value, 'excel-to-json')
+    if (success) {
         showMessage('JSON文件已下载', 'success')
-    } catch (error) {
+    } else {
         showMessage('下载失败', 'error')
     }
 }
@@ -618,66 +614,16 @@ const loadExample = (exampleNumber: number) => {
         showMessage(`已加载${example.name}示例`, 'success')
     }
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 </script>
 
 <style scoped>
+/* 保持原有的所有样式，只是移除了 converter-header 部分 */
 .excel-json-converter {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.converter-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
 }
 
 .mode-toggle {
@@ -698,6 +644,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     cursor: pointer;
     transition: var(--transition);
     border-right: 1px solid var(--border-color);
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .mode-btn:last-child {
@@ -711,25 +659,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 .mode-btn:hover:not(.active) {
     background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
     color: var(--text-primary);
 }
 
@@ -750,15 +679,21 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     min-height: 0;
 }
 
-.section-header {
+.excel-json-converter .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 8px 20px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
-    min-height: 72px;
+    min-height: 48px;
     box-sizing: border-box;
+}
+
+.input-status {
+    flex: 1;
+    display: flex;
+    justify-content: center;
 }
 
 .section-header h3 {
@@ -773,6 +708,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     align-items: center;
     gap: 8px;
+    height: 32px;
 }
 
 .button-group {
@@ -793,6 +729,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 60px;
+    text-align: center;
 }
 
 .group-btn:first-child {
@@ -835,65 +773,18 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .format-select {
-    padding: 6px 12px;
+    padding: 8px 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 14px;
     cursor: pointer;
+    height: 36px;
+    box-sizing: border-box;
 }
 
-.export-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #059669;
-    color: white;
-    border: 1px solid #059669;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
 
-.export-btn:hover:not(:disabled) {
-    background: #047857;
-}
-
-.export-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.copy-btn,
-.download-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.copy-btn:hover:not(:disabled),
-.download-btn:hover:not(:disabled) {
-    background: var(--border-color);
-}
-
-.copy-btn:disabled,
-.download-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
 
 .json-input {
     flex: 1;
@@ -1178,16 +1069,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     .converter-content {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
-    }
-    
-    .converter-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-    }
-    
-    .mode-toggle {
-        justify-content: center;
     }
 }
 </style>

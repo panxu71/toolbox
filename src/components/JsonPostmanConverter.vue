@@ -1,39 +1,37 @@
 <template>
     <div class="postman-json-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">Postman ⇄ JSON 互转</h2>
-            <div class="converter-actions">
+        <!-- 使用通用头部组件 -->
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
                 <div class="mode-toggle">
-                    <button 
-                        class="mode-btn" 
-                        :class="{ active: mode === 'json-to-postman' }"
-                        @click="switchMode('json-to-postman')"
-                    >
+                    <button class="mode-btn" :class="{ active: mode === 'json-to-postman' }"
+                        @click="switchMode('json-to-postman')">
                         JSON → Postman
                     </button>
-                    <button 
-                        class="mode-btn" 
-                        :class="{ active: mode === 'postman-to-json' }"
-                        @click="switchMode('postman-to-json')"
-                    >
+                    <button class="mode-btn" :class="{ active: mode === 'postman-to-json' }"
+                        @click="switchMode('postman-to-json')">
                         Postman → JSON
                     </button>
                 </div>
-                <button class="action-btn" @click="clearAll" title="清空">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+
+                <!-- JSON转Postman模式的操作按钮 -->
+                <template v-if="mode === 'json-to-postman'">
+                    <HeaderActionButton icon="copy" tooltip="复制参数" :disabled="!postmanOutput"
+                        @click="copyPostmanResult" />
+                    <HeaderActionButton icon="download" tooltip="下载参数文件" :disabled="!postmanOutput"
+                        @click="downloadPostmanResult" />
+                </template>
+
+                <!-- Postman转JSON模式的操作按钮 -->
+                <template v-else>
+                    <HeaderActionButton icon="copy" tooltip="复制JSON" :disabled="!jsonOutput" @click="copyJsonResult" />
+                    <HeaderActionButton icon="download" tooltip="下载JSON文件" :disabled="!jsonOutput"
+                        @click="downloadJsonResult" />
+                </template>
+
+                <HeaderActionButton icon="clear" tooltip="清空" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <!-- JSON转Postman模式 -->
         <div v-if="mode === 'json-to-postman'" class="converter-content">
@@ -42,14 +40,14 @@
                     <h3>JSON数据输入</h3>
                     <div class="section-actions">
                         <div class="button-group">
-                            <button @click="loadJsonExample(1)" class="btn-group-item">用户数据</button>
-                            <button @click="loadJsonExample(2)" class="btn-group-item">商品数据</button>
-                            <button @click="formatJsonInput" class="btn-group-item">格式化</button>
+                            <button @click="loadJsonExample(1)" class="group-btn">用户数据</button>
+                            <button @click="loadJsonExample(2)" class="group-btn">商品数据</button>
+                            <button @click="formatJsonInput" class="group-btn">格式化</button>
                         </div>
                     </div>
                 </div>
                 <textarea v-model="jsonInput" class="code-textarea" placeholder="请输入JSON数据..."
-                    @input="onJsonInputChange"></textarea>
+                    @input="onJsonInputChange" @paste="onJsonPaste"></textarea>
                 <div v-if="jsonInputError" class="error-message">
                     {{ jsonInputError }}
                 </div>
@@ -58,22 +56,17 @@
             <div class="output-section">
                 <div class="section-header">
                     <h3>Postman参数输出</h3>
-                    <div class="section-actions">
-                        <div class="result-info" v-if="postmanStats">
-                            <span class="stat-item">{{ postmanStats.lines }} 行</span>
-                            <span class="stat-item">{{ postmanStats.params }} 参数</span>
-                        </div>
-                        <div class="button-group">
-                            <button @click="copyPostmanResult" class="btn-group-item">复制</button>
-                            <button @click="downloadPostmanResult" class="btn-group-item">下载</button>
-                        </div>
+                    <div class="result-info" v-if="postmanStats">
+                        <span class="stat-item">{{ postmanStats.lines }} 行</span>
+                        <span class="stat-item">{{ postmanStats.params }} 参数</span>
                     </div>
                 </div>
 
                 <div class="output-container">
                     <pre v-if="postmanOutput" class="code-output">{{ postmanOutput }}</pre>
                     <div v-else class="output-placeholder">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1">
                             <path d="M8 3L4 7l4 4" />
                             <path d="M4 7h16" />
                             <path d="m16 21 4-4-4-4" />
@@ -92,14 +85,14 @@
                     <h3>Postman参数输入</h3>
                     <div class="section-actions">
                         <div class="button-group">
-                            <button @click="loadPostmanExample(1)" class="btn-group-item">用户参数</button>
-                            <button @click="loadPostmanExample(2)" class="btn-group-item">商品参数</button>
-                            <button @click="validatePostmanInput" class="btn-group-item">验证</button>
+                            <button @click="loadPostmanExample(1)" class="group-btn">用户参数</button>
+                            <button @click="loadPostmanExample(2)" class="group-btn">商品参数</button>
+                            <button @click="validatePostmanInput" class="group-btn">验证</button>
                         </div>
                     </div>
                 </div>
                 <textarea v-model="postmanInput" class="code-textarea" placeholder="请输入Postman参数格式..."
-                    @input="onPostmanInputChange"></textarea>
+                    @input="onPostmanInputChange" @paste="onPostmanPaste"></textarea>
                 <div v-if="postmanInputError" class="error-message">
                     {{ postmanInputError }}
                 </div>
@@ -108,25 +101,17 @@
             <div class="output-section">
                 <div class="section-header">
                     <h3>JSON输出</h3>
-                    <div class="section-actions">
-                        <div class="result-info" v-if="jsonStats">
-                            <span class="stat-item">{{ jsonStats.lines }} 行</span>
-                            <span class="stat-item">{{ jsonStats.size }} 字符</span>
-                        </div>
-                        <div class="button-group">
-                            <button @click="copyJsonResult" class="btn-group-item">复制</button>
-                            <button @click="downloadJsonResult" class="btn-group-item">下载</button>
-                            <button @click="toggleJsonFormat" class="btn-group-item">
-                                {{ jsonFormat === 'pretty' ? '压缩' : '格式化' }}
-                            </button>
-                        </div>
+                    <div class="result-info" v-if="jsonStats">
+                        <span class="stat-item">{{ jsonStats.lines }} 行</span>
+                        <span class="stat-item">{{ jsonStats.size }} 字符</span>
                     </div>
                 </div>
 
                 <div class="output-container">
                     <pre v-if="jsonOutput" class="code-output" v-html="highlightedJson"></pre>
                     <div v-else class="output-placeholder">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1">
                             <polyline points="16,18 22,12 16,6" />
                             <polyline points="8,6 2,12 8,18" />
                         </svg>
@@ -136,6 +121,7 @@
             </div>
         </div>
 
+        <!-- 保持原有的消息提示样式 -->
         <div v-if="message" class="message-toast" :class="messageType">
             {{ message }}
         </div>
@@ -143,10 +129,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useDownload } from '../composables/useDownload'
+import { useClipboard } from '../composables/useClipboard'
+import { useMessage } from '../composables/useMessage'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
+import cardsConfig from '../config/cards.json'
 
 // 注册语言支持
 hljs.registerLanguage('json', json)
@@ -155,9 +147,32 @@ defineEmits<{
     back: []
 }>()
 
-// 模式切换
 // 使用页面标题管理
 usePageTitle('json-postman-converter')
+
+// 获取卡片标题
+const getCardTitle = (cardId: string): string => {
+    // 遍历所有分类查找对应的卡片
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
+const pageTitle = getCardTitle('json-postman-converter')
+
+// 使用下载功能
+const { downloadText, downloadJson } = useDownload()
+
+// 使用剪贴板功能
+const { copyToClipboard } = useClipboard()
+
+// 使用消息提示
+const { message, messageType, showMessage } = useMessage()
 
 const mode = ref<'json-to-postman' | 'postman-to-json'>('json-to-postman')
 
@@ -170,12 +185,8 @@ const jsonInputError = ref('')
 const postmanInput = ref('')
 const jsonOutput = ref('')
 const postmanInputError = ref('')
-const jsonFormat = ref<'pretty' | 'compact'>('pretty')
 
-// 通用
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-const convertTimer = ref<number | undefined>(undefined)
+const convertTimer = ref<NodeJS.Timeout | undefined>(undefined)
 
 // Postman统计信息
 const postmanStats = computed(() => {
@@ -208,28 +219,34 @@ const switchMode = (newMode: 'json-to-postman' | 'postman-to-json') => {
     clearAll()
 }
 
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 // JSON转Postman功能
 const onJsonInputChange = () => {
     jsonInputError.value = ''
-    
+
     if (!jsonInput.value.trim()) {
         postmanOutput.value = ''
         return
     }
-    
+
     // 自动转换（添加防抖）
     clearTimeout(convertTimer.value)
     convertTimer.value = setTimeout(() => {
         convertJsonToPostman(false)
     }, 500)
+}
+
+// 粘贴时自动转换
+const onJsonPaste = async () => {
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    if (jsonInput.value.trim()) {
+        try {
+            JSON.parse(jsonInput.value)
+            convertJsonToPostman(false)
+        } catch {
+            // 如果不是有效JSON，不自动转换
+        }
+    }
 }
 
 const convertJsonToPostman = (showSuccessMessage = true) => {
@@ -305,17 +322,26 @@ const jsonToPostman = (jsonData: any): string => {
 // Postman转JSON功能
 const onPostmanInputChange = () => {
     postmanInputError.value = ''
-    
+
     if (!postmanInput.value.trim()) {
         jsonOutput.value = ''
         return
     }
-    
+
     // 自动转换（添加防抖）
     clearTimeout(convertTimer.value)
     convertTimer.value = setTimeout(() => {
         convertPostmanToJson(false)
     }, 500)
+}
+
+// 粘贴时自动转换
+const onPostmanPaste = async () => {
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    if (postmanInput.value.trim()) {
+        convertPostmanToJson(false)
+    }
 }
 
 const convertPostmanToJson = (showSuccessMessage = true) => {
@@ -330,11 +356,8 @@ const convertPostmanToJson = (showSuccessMessage = true) => {
 
     try {
         const jsonResult = postmanToJson(postmanInput.value)
-        if (jsonFormat.value === 'pretty') {
-            jsonOutput.value = JSON.stringify(jsonResult, null, 2)
-        } else {
-            jsonOutput.value = JSON.stringify(jsonResult)
-        }
+        // 始终使用格式化输出
+        jsonOutput.value = JSON.stringify(jsonResult, null, 2)
         if (showSuccessMessage) {
             showMessage('Postman参数转JSON成功', 'success')
         }
@@ -431,10 +454,7 @@ const formatJsonInput = () => {
     }
 }
 
-const toggleJsonFormat = () => {
-    jsonFormat.value = jsonFormat.value === 'pretty' ? 'compact' : 'pretty'
-    convertPostmanToJson(false)
-}
+
 
 // 复制功能
 const copyPostmanResult = async () => {
@@ -443,10 +463,10 @@ const copyPostmanResult = async () => {
         return
     }
 
-    try {
-        await navigator.clipboard.writeText(postmanOutput.value)
+    const success = await copyToClipboard(postmanOutput.value)
+    if (success) {
         showMessage('Postman参数已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
@@ -457,10 +477,10 @@ const copyJsonResult = async () => {
         return
     }
 
-    try {
-        await navigator.clipboard.writeText(jsonOutput.value)
+    const success = await copyToClipboard(jsonOutput.value)
+    if (success) {
         showMessage('JSON数据已复制到剪贴板', 'success')
-    } catch (error) {
+    } else {
         showMessage('复制失败', 'error')
     }
 }
@@ -472,17 +492,12 @@ const downloadPostmanResult = () => {
         return
     }
 
-    const blob = new Blob([postmanOutput.value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'postman-params.txt'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    showMessage('Postman参数文件已下载', 'success')
+    const success = downloadText(postmanOutput.value, 'postman-params', 'txt')
+    if (success) {
+        showMessage('Postman参数文件已下载', 'success')
+    } else {
+        showMessage('下载失败', 'error')
+    }
 }
 
 const downloadJsonResult = () => {
@@ -491,17 +506,12 @@ const downloadJsonResult = () => {
         return
     }
 
-    const blob = new Blob([jsonOutput.value], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'converted-data.json'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    showMessage('JSON文件已下载', 'success')
+    const success = downloadJson(jsonOutput.value, 'converted-data')
+    if (success) {
+        showMessage('JSON文件已下载', 'success')
+    } else {
+        showMessage('下载失败', 'error')
+    }
 }
 
 // 示例数据
@@ -617,58 +627,18 @@ const clearAll = () => {
     jsonOutput.value = ''
     jsonInputError.value = ''
     postmanInputError.value = ''
+    showMessage('已清空所有内容', 'success')
 }
-
 </script>
 
 <style scoped>
+/* 保持原有的所有样式，只是移除了 converter-header 部分 */
 .postman-json-converter {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.converter-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
 }
 
 .mode-toggle {
@@ -689,6 +659,8 @@ const clearAll = () => {
     cursor: pointer;
     transition: var(--transition);
     border-right: 1px solid var(--border-color);
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .mode-btn:last-child {
@@ -702,25 +674,6 @@ const clearAll = () => {
 
 .mode-btn:hover:not(.active) {
     background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
     color: var(--text-primary);
 }
 
@@ -741,14 +694,14 @@ const clearAll = () => {
     min-height: 0;
 }
 
-.section-header {
+.postman-json-converter .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 8px 20px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
-    min-height: 72px;
+    min-height: 48px;
     box-sizing: border-box;
 }
 
@@ -763,19 +716,24 @@ const clearAll = () => {
     display: flex;
     align-items: center;
     gap: 8px;
+    height: 32px;
+    flex-wrap: nowrap;
 }
 
 .result-info {
     display: flex;
-    gap: 8px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 11px;
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .stat-item {
-    padding: 2px 6px;
+    padding: 1px 4px;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
+    font-size: 11px;
+    line-height: 1.2;
 }
 
 .button-group {
@@ -785,7 +743,7 @@ const clearAll = () => {
     overflow: hidden;
 }
 
-.btn-group-item {
+.group-btn {
     padding: 6px 12px;
     background: var(--bg-primary);
     border: none;
@@ -796,16 +754,31 @@ const clearAll = () => {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 60px;
+    text-align: center;
 }
 
-.btn-group-item:last-child {
+.group-btn:first-child {
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.group-btn:last-child {
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
     border-right: none;
 }
 
-.btn-group-item:hover {
+.group-btn:hover {
     background: var(--bg-secondary);
     color: var(--text-primary);
 }
+
+.group-btn:active {
+    background: var(--bg-tertiary);
+}
+
+
 
 .code-textarea {
     flex: 1;
@@ -906,25 +879,6 @@ const clearAll = () => {
     .converter-content {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
-    }
-
-    .converter-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-        padding: 16px;
-    }
-
-    .mode-toggle {
-        justify-content: center;
-    }
-
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-        min-height: auto;
-        padding: 12px 16px;
     }
 }
 </style>

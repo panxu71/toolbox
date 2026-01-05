@@ -1,10 +1,23 @@
 <template>
     <div class="countdown-timer">
-        <PageHeader :title="pageTitle" @back="$emit('back')">
-            <template #actions>
-                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
-            </template>
-        </PageHeader>
+        <div class="timer-header">
+            <button class="back-btn" @click="$emit('back')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                返回
+            </button>
+            <h2 class="timer-title">倒计时器</h2>
+            <div class="timer-actions">
+                <button class="action-btn" @click="clearAll" title="清空所有">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
 
         <div class="timer-content">
             <!-- 快速定时器 -->
@@ -20,36 +33,49 @@
                         <div class="time-inputs-row">
                             <div class="time-input-group">
                                 <label>小时</label>
-                                <input v-model.number="simpleHours" type="number" min="0" max="23"
-                                    class="time-number-input" />
+                                <input 
+                                    v-model.number="simpleHours" 
+                                    type="number" 
+                                    min="0" 
+                                    max="23"
+                                    class="time-number-input"
+                                />
                             </div>
                             <div class="time-separator">:</div>
                             <div class="time-input-group">
                                 <label>分钟</label>
-                                <input v-model.number="simpleMinutes" type="number" min="0" max="59"
-                                    class="time-number-input" />
+                                <input 
+                                    v-model.number="simpleMinutes" 
+                                    type="number" 
+                                    min="0" 
+                                    max="59"
+                                    class="time-number-input"
+                                />
                             </div>
                             <div class="time-separator">:</div>
                             <div class="time-input-group">
                                 <label>秒钟</label>
-                                <input v-model.number="simpleSeconds" type="number" min="0" max="59"
-                                    class="time-number-input" />
+                                <input 
+                                    v-model.number="simpleSeconds" 
+                                    type="number" 
+                                    min="0" 
+                                    max="59"
+                                    class="time-number-input"
+                                />
                             </div>
                         </div>
-
+                        
                         <div class="quick-presets">
                             <button class="preset-btn" @click="setQuickTimer(0, 1, 0)">1分钟</button>
-                            <button class="preset-btn" @click="setQuickTimer(0, 3, 0)">3分钟</button>
                             <button class="preset-btn" @click="setQuickTimer(0, 5, 0)">5分钟</button>
                             <button class="preset-btn" @click="setQuickTimer(0, 10, 0)">10分钟</button>
                             <button class="preset-btn" @click="setQuickTimer(0, 15, 0)">15分钟</button>
                             <button class="preset-btn" @click="setQuickTimer(0, 30, 0)">30分钟</button>
-                            <button class="preset-btn" @click="setQuickTimer(0, 45, 0)">45分钟</button>
                             <button class="preset-btn" @click="setQuickTimer(1, 0, 0)">1小时</button>
                         </div>
                     </div>
-
-                    <div class="timer-display-card" ref="timerDisplayRef">
+                    
+                    <div class="timer-display-card">
                         <div class="countdown-display">
                             <div class="time-units">
                                 <div class="time-unit">
@@ -65,55 +91,48 @@
                                     <span class="time-label">秒</span>
                                 </div>
                                 <div class="time-unit">
-                                    <span class="time-value milliseconds">{{ simpleTimer.display?.milliseconds || '000'
-                                        }}</span>
+                                    <span class="time-value milliseconds">{{ simpleTimer.display?.milliseconds || '000' }}</span>
                                     <span class="time-label">毫秒</span>
                                 </div>
                             </div>
-                            <div class="timer-status"
-                                :class="{ 'expired': simpleTimer.isExpired, 'running': simpleTimer.isRunning }">
+                            <div class="timer-status" :class="{ 'expired': simpleTimer.isExpired, 'running': simpleTimer.isRunning }">
                                 {{ simpleTimer.status }}
                             </div>
                         </div>
-
+                        
                         <div class="timer-controls">
-                            <button class="control-btn start" @click="startSimpleTimer"
-                                :disabled="simpleTimer.isRunning">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                            <button 
+                                class="control-btn start" 
+                                @click="startSimpleTimer"
+                                :disabled="simpleTimer.isRunning"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5,3 19,12 5,21" />
                                 </svg>
                                 开始
                             </button>
-                            <button class="control-btn pause" @click="pauseSimpleTimer"
-                                :disabled="!simpleTimer.isRunning">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                            <button 
+                                class="control-btn pause" 
+                                @click="pauseSimpleTimer"
+                                :disabled="!simpleTimer.isRunning"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="6" y="4" width="4" height="16" />
                                     <rect x="14" y="4" width="4" height="16" />
                                 </svg>
                                 暂停
                             </button>
-                            <button class="control-btn reset" @click="resetSimpleTimer">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                            <button 
+                                class="control-btn reset" 
+                                @click="resetSimpleTimer"
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                                     <path d="M21 3v5h-5" />
                                     <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                                     <path d="M3 21v-5h5" />
                                 </svg>
                                 重置
-                            </button>
-                            <button class="control-btn fullscreen"
-                                @click="toggleFullscreen(timerDisplayRef || undefined)">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path v-if="!isFullscreen"
-                                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                                    <path v-else
-                                        d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                                </svg>
-                                {{ isFullscreen ? '退出' : '全屏' }}
                             </button>
                         </div>
                     </div>
@@ -133,18 +152,32 @@
                         <div class="datetime-inputs">
                             <div class="input-group">
                                 <label>目标日期</label>
-                                <input v-model="targetDate" type="date" @change="startTargetCountdown"
-                                    class="date-input" />
+                                <input 
+                                    v-model="targetDate" 
+                                    type="date" 
+                                    @change="startTargetCountdown"
+                                    class="date-input"
+                                />
                             </div>
                             <div class="input-group">
                                 <label>目标时间</label>
-                                <input v-model="targetTime" type="time" step="1" @change="startTargetCountdown"
-                                    class="time-input" />
+                                <input 
+                                    v-model="targetTime" 
+                                    type="time" 
+                                    step="1"
+                                    @change="startTargetCountdown"
+                                    class="time-input"
+                                />
                             </div>
                         </div>
-
-                        <input v-model="targetTitle" type="text" placeholder="倒计时标题（可选）" class="timer-title-input" />
-
+                        
+                        <input 
+                            v-model="targetTitle" 
+                            type="text" 
+                            placeholder="倒计时标题（可选）"
+                            class="timer-title-input"
+                        />
+                        
                         <div class="quick-targets">
                             <button class="preset-btn" @click="setQuickTarget(1, 'hours')">1小时后</button>
                             <button class="preset-btn" @click="setQuickTarget(1, 'days')">1天后</button>
@@ -152,7 +185,7 @@
                             <button class="preset-btn" @click="setQuickTarget(30, 'days')">1月后</button>
                         </div>
                     </div>
-
+                    
                     <div v-if="targetCountdown" class="target-display-card">
                         <div v-if="targetTitle" class="display-title">{{ targetTitle }}</div>
                         <div class="countdown-display large">
@@ -193,29 +226,41 @@
                 <div class="multiple-timers-container">
                     <div class="add-timer-card">
                         <div class="add-timer-inputs">
-                            <input v-model="newTimerTitle" type="text" placeholder="倒计时标题" class="timer-title-input" />
+                            <input 
+                                v-model="newTimerTitle" 
+                                type="text" 
+                                placeholder="倒计时标题"
+                                class="timer-title-input"
+                            />
                             <div class="datetime-inputs">
-                                <input v-model="newTimerDate" type="date" class="date-input" />
-                                <input v-model="newTimerTime" type="time" step="1" class="time-input" />
+                                <input 
+                                    v-model="newTimerDate" 
+                                    type="date" 
+                                    class="date-input"
+                                />
+                                <input 
+                                    v-model="newTimerTime" 
+                                    type="time" 
+                                    step="1"
+                                    class="time-input"
+                                />
                             </div>
                         </div>
                         <button class="add-timer-btn" @click="addTimer">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                             添加倒计时
                         </button>
                     </div>
-
+                    
                     <div v-if="multipleTimers.length > 0" class="timers-grid">
                         <div v-for="timer in multipleTimers" :key="timer.id" class="timer-card">
                             <div class="timer-card-header">
                                 <h4>{{ timer.title || '未命名倒计时' }}</h4>
                                 <button class="remove-btn" @click="removeTimer(timer.id)">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18" />
                                         <line x1="6" y1="6" x2="18" y2="18" />
                                     </svg>
@@ -257,28 +302,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
+import {  ref, onMounted, onUnmounted  } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
-import { useMessage } from '../composables/useMessage'
-import { useFullscreen } from '../composables/useFullscreen'
 
 defineEmits<{
     back: []
 }>()
 
-// 使用 composables
-usePageTitle('countdown-timer')
-const { message, messageType, showSuccess, showError } = useMessage()
-const { isFullscreen, toggleFullscreen } = useFullscreen()
-
-// 获取页面标题
-const pageTitle = '倒计时器'
-
-// 全屏和防睡眠相关
-const timerDisplayRef = ref<HTMLElement | null>(null)
 // 目标日期倒计时
+// 使用页面标题管理
+usePageTitle('countdown-timer')
+
 const targetDate = ref('')
 const targetTime = ref('')
 const targetTitle = ref('')
@@ -327,27 +361,28 @@ const multipleTimers = ref<Array<{
     }
 }>>([])
 
-let targetInterval: NodeJS.Timeout | null = null
-let simpleInterval: NodeJS.Timeout | null = null
-let multipleInterval: NodeJS.Timeout | null = null
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
+
+let targetInterval: number | null = null
+let simpleInterval: number | null = null
+let multipleInterval: number | null = null
 
 // 组件挂载时设置默认值
-onMounted(() => {
-    const now = new Date()
+onMounted(() => {const now = new Date()
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-
+    
     targetDate.value = tomorrow.toISOString().split('T')[0] || ''
     targetTime.value = '12:00:00'
     newTimerDate.value = tomorrow.toISOString().split('T')[0] || ''
     newTimerTime.value = '12:00:00'
-
+    
     startTargetCountdown()
     updateSimpleTimerDisplay()
 })
 
 // 组件卸载时清除定时器
-onUnmounted(() => {
-    if (targetInterval) clearInterval(targetInterval)
+onUnmounted(() => {if (targetInterval) clearInterval(targetInterval)
     if (simpleInterval) clearInterval(simpleInterval)
     if (multipleInterval) clearInterval(multipleInterval)
 })
@@ -361,7 +396,7 @@ const formatNumber = (num: number): string => {
 const calculateCountdown = (targetDate: Date) => {
     const now = new Date()
     const diff = targetDate.getTime() - now.getTime()
-
+    
     if (diff <= 0) {
         return {
             days: '00',
@@ -372,12 +407,12 @@ const calculateCountdown = (targetDate: Date) => {
             isExpired: true
         }
     }
-
+    
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
     const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-
+    
     return {
         days: formatNumber(days),
         hours: formatNumber(hours),
@@ -398,30 +433,30 @@ const startTargetCountdown = () => {
         }
         return
     }
-
+    
     const target = new Date(`${targetDate.value}T${targetTime.value}`)
-
+    
     if (isNaN(target.getTime())) {
-        showError('无效的目标日期时间')
+        showMessage('无效的目标日期时间', 'error')
         return
     }
-
+    
     // 立即更新一次
     targetCountdown.value = calculateCountdown(target)
-
+    
     // 清除之前的定时器
     if (targetInterval) {
         clearInterval(targetInterval)
     }
-
+    
     // 每秒更新
     targetInterval = setInterval(() => {
         if (targetCountdown.value) {
             targetCountdown.value = calculateCountdown(target)
-
+            
             // 如果时间到了，播放提醒音（如果浏览器支持）
             if (targetCountdown.value.isExpired && targetTitle.value) {
-                showSuccess(`${targetTitle.value} 时间到了！`)
+                showMessage(`${targetTitle.value} 时间到了！`, 'success')
             }
         }
     }, 1000)
@@ -431,7 +466,7 @@ const startTargetCountdown = () => {
 const setQuickTarget = (amount: number, unit: string) => {
     const now = new Date()
     let target = new Date(now)
-
+    
     switch (unit) {
         case 'hours':
             target.setHours(target.getHours() + amount)
@@ -440,7 +475,7 @@ const setQuickTarget = (amount: number, unit: string) => {
             target.setDate(target.getDate() + amount)
             break
     }
-
+    
     targetDate.value = target.toISOString().split('T')[0] || ''
     targetTime.value = target.toTimeString().split(' ')[0] || ''
     startTargetCountdown()
@@ -449,18 +484,18 @@ const setQuickTarget = (amount: number, unit: string) => {
 // 更新简单定时器显示
 const updateSimpleTimerDisplay = () => {
     const totalSeconds = simpleHours.value * 3600 + simpleMinutes.value * 60 + simpleSeconds.value
-
+    
     const hours = Math.floor(totalSeconds / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
-
+    
     simpleTimer.value.display = {
         hours: formatNumber(hours),
         minutes: formatNumber(minutes),
         seconds: formatNumber(seconds),
         milliseconds: '000'
     }
-
+    
     simpleTimer.value.totalTime = totalSeconds * 1000 // 转换为毫秒
     simpleTimer.value.remainingTime = totalSeconds * 1000
 }
@@ -468,37 +503,37 @@ const updateSimpleTimerDisplay = () => {
 // 开始简单定时器
 const startSimpleTimer = () => {
     const totalMilliseconds = (simpleHours.value * 3600 + simpleMinutes.value * 60 + simpleSeconds.value) * 1000
-
+    
     if (totalMilliseconds <= 0) {
-        showError('请设置有效的时间')
+        showMessage('请设置有效的时间', 'error')
         return
     }
-
+    
     simpleTimer.value.isRunning = true
     simpleTimer.value.isExpired = false
     simpleTimer.value.status = '计时中...'
     simpleTimer.value.remainingTime = totalMilliseconds
-
+    
     if (simpleInterval) {
         clearInterval(simpleInterval)
     }
-
+    
     simpleInterval = setInterval(() => {
         simpleTimer.value.remainingTime -= 10 // 每10毫秒减少
-
+        
         if (simpleTimer.value.remainingTime <= 0) {
             // 时间到了
             simpleTimer.value.isRunning = false
             simpleTimer.value.isExpired = true
             simpleTimer.value.status = '时间到了！'
             simpleTimer.value.remainingTime = 0
-
+            
             if (simpleInterval) {
                 clearInterval(simpleInterval)
                 simpleInterval = null
             }
-
-            showSuccess('定时器时间到了！')
+            
+            showMessage('定时器时间到了！', 'success')
         } else {
             // 更新显示
             const totalMs = simpleTimer.value.remainingTime
@@ -506,7 +541,7 @@ const startSimpleTimer = () => {
             const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60))
             const seconds = Math.floor((totalMs % (1000 * 60)) / 1000)
             const milliseconds = Math.floor((totalMs % 1000) / 10) * 10 // 精确到10毫秒
-
+            
             simpleTimer.value.display = {
                 hours: formatNumber(hours),
                 minutes: formatNumber(minutes),
@@ -521,7 +556,7 @@ const startSimpleTimer = () => {
 const pauseSimpleTimer = () => {
     simpleTimer.value.isRunning = false
     simpleTimer.value.status = '已暂停'
-
+    
     if (simpleInterval) {
         clearInterval(simpleInterval)
         simpleInterval = null
@@ -533,12 +568,12 @@ const resetSimpleTimer = () => {
     simpleTimer.value.isRunning = false
     simpleTimer.value.isExpired = false
     simpleTimer.value.status = '准备就绪'
-
+    
     if (simpleInterval) {
         clearInterval(simpleInterval)
         simpleInterval = null
     }
-
+    
     updateSimpleTimerDisplay()
 }
 
@@ -553,57 +588,57 @@ const setQuickTimer = (hours: number, minutes: number, seconds: number) => {
 // 添加多个倒计时
 const addTimer = () => {
     if (!newTimerDate.value || !newTimerTime.value) {
-        showError('请设置目标日期和时间')
+        showMessage('请设置目标日期和时间', 'error')
         return
     }
-
+    
     const target = new Date(`${newTimerDate.value}T${newTimerTime.value}`)
-
+    
     if (isNaN(target.getTime())) {
-        showError('无效的日期时间')
+        showMessage('无效的日期时间', 'error')
         return
     }
-
+    
     const newTimer = {
         id: Date.now(),
         title: newTimerTitle.value || '未命名倒计时',
         targetDate: target,
         countdown: calculateCountdown(target)
     }
-
+    
     multipleTimers.value.push(newTimer)
-
+    
     // 清空输入
     newTimerTitle.value = ''
-
+    
     // 开始更新多个倒计时
     if (!multipleInterval) {
         multipleInterval = setInterval(updateMultipleTimers, 1000)
     }
-
-    showSuccess('倒计时已添加')
+    
+    showMessage('倒计时已添加', 'success')
 }
 
 // 移除倒计时
 const removeTimer = (id: number) => {
     multipleTimers.value = multipleTimers.value.filter(timer => timer.id !== id)
-
+    
     if (multipleTimers.value.length === 0 && multipleInterval) {
         clearInterval(multipleInterval)
         multipleInterval = null
     }
-
-    showSuccess('倒计时已移除')
+    
+    showMessage('倒计时已移除', 'success')
 }
 
 // 更新多个倒计时
 const updateMultipleTimers = () => {
     multipleTimers.value.forEach(timer => {
         timer.countdown = calculateCountdown(timer.targetDate)
-
+        
         // 如果时间到了，显示提醒
         if (timer.countdown.isExpired) {
-            showSuccess(`${timer.title} 时间到了！`)
+            showMessage(`${timer.title} 时间到了！`, 'success')
         }
     })
 }
@@ -623,11 +658,11 @@ const clearAll = () => {
         clearInterval(multipleInterval)
         multipleInterval = null
     }
-
+    
     // 重置所有数据
     targetCountdown.value = null
     targetTitle.value = ''
-
+    
     simpleTimer.value = {
         isRunning: false,
         isExpired: false,
@@ -639,12 +674,21 @@ const clearAll = () => {
     simpleHours.value = 0
     simpleMinutes.value = 5
     simpleSeconds.value = 0
-
+    
     multipleTimers.value = []
     newTimerTitle.value = ''
-
+    
     updateSimpleTimerDisplay()
-    showSuccess('已清空所有倒计时')
+    showMessage('已清空所有倒计时', 'success')
+}
+
+// 显示消息
+const showMessage = (text: string, type: 'success' | 'error') => {
+    message.value = text
+    messageType.value = type
+    setTimeout(() => {
+        message.value = ''
+    }, 3000)
 }
 </script>
 <style scoped>
@@ -659,6 +703,67 @@ const clearAll = () => {
     overflow: hidden;
 }
 
+.timer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.back-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.timer-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.timer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
 .timer-content {
     flex: 1;
     padding: 1.5rem;
@@ -667,7 +772,7 @@ const clearAll = () => {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     min-height: 0;
@@ -686,9 +791,6 @@ const clearAll = () => {
 
 .section-header {
     margin-bottom: 1.5rem;
-    height: 48px;
-    display: flex;
-    align-items: center;
 }
 
 .section-title h3 {
@@ -709,9 +811,10 @@ const clearAll = () => {
 
 /* 快速定时器样式 */
 .quick-timer-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
 }
 
 .timer-setup {
@@ -723,12 +826,12 @@ const clearAll = () => {
 .time-inputs-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 3rem;
+    justify-content: center;
+    gap: 1rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 1rem;
-    padding: 2.5rem 3rem;
+    padding: 1.5rem;
 }
 
 .time-input-group {
@@ -745,13 +848,13 @@ const clearAll = () => {
 }
 
 .time-number-input {
-    width: 5rem;
-    padding: 1rem 0.75rem;
+    width: 4rem;
+    padding: 0.75rem;
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
     border-radius: 0.5rem;
     color: var(--text-primary);
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     text-align: center;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -765,17 +868,17 @@ const clearAll = () => {
 }
 
 .time-separator {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-secondary);
-    margin: 0 1rem;
+    margin: 0 0.5rem;
 }
 
 .quick-presets {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: space-between;
+    gap: 0.5rem;
+    justify-content: center;
 }
 
 .preset-btn {
@@ -824,84 +927,6 @@ const clearAll = () => {
     gap: 1.5rem;
 }
 
-.display-header {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: -0.5rem;
-}
-
-/* 全屏模式样式 */
-.timer-display-card:fullscreen {
-    background: var(--bg-primary);
-    border: none;
-    border-radius: 0;
-    padding: 2rem;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.timer-display-card:fullscreen .countdown-display {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.timer-display-card:fullscreen .time-units {
-    gap: 6rem;
-    margin-bottom: 0;
-    flex: 0 0 auto;
-}
-
-.timer-display-card:fullscreen .time-unit {
-    min-width: auto;
-}
-
-.timer-display-card:fullscreen .time-value {
-    font-size: 12rem !important;
-    font-weight: 900 !important;
-    line-height: 0.9 !important;
-}
-
-.timer-display-card:fullscreen .time-value.milliseconds {
-    font-size: 8rem !important;
-    font-weight: 800 !important;
-}
-
-.timer-display-card:fullscreen .time-label {
-    font-size: 2.5rem !important;
-    margin-top: 1rem !important;
-    font-weight: 600 !important;
-}
-
-.timer-display-card:fullscreen .timer-status {
-    font-size: 3rem !important;
-    font-weight: 600 !important;
-    margin-top: 3rem !important;
-    flex: 0 0 auto;
-}
-
-.timer-display-card:fullscreen .timer-controls {
-    position: absolute;
-    bottom: 4rem;
-    left: 50%;
-    transform: translateX(-50%);
-    gap: 2rem;
-    flex: 0 0 auto;
-}
-
-.timer-display-card:fullscreen .control-btn {
-    padding: 1.5rem 3rem;
-    font-size: 1.5rem;
-    border-radius: 1rem;
-}
-
 .countdown-display {
     text-align: center;
 }
@@ -910,39 +935,36 @@ const clearAll = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .time-unit {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 8rem;
+    min-width: 4rem;
 }
 
 .time-value {
-    font-size: 6rem;
-    font-weight: 800;
+    font-size: 2.5rem;
+    font-weight: 700;
     color: var(--primary-color);
     line-height: 1;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .time-value.milliseconds {
-    font-size: 3.5rem;
-    font-weight: 700;
+    font-size: 1.5rem;
     color: var(--text-secondary);
 }
 
 .countdown-display.large .time-value {
-    font-size: 7rem;
-    font-weight: 900;
+    font-size: 3rem;
 }
 
 .countdown-display.compact .time-value {
-    font-size: 3rem;
-    font-weight: 700;
+    font-size: 1.5rem;
 }
 
 .time-label {
@@ -970,9 +992,8 @@ const clearAll = () => {
 
 .timer-controls {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: center;
-    align-items: center;
 }
 
 .control-btn {
@@ -1030,18 +1051,6 @@ const clearAll = () => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.control-btn.fullscreen {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.control-btn.fullscreen:hover {
-    background: var(--primary-color-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--primary-color-alpha);
-}
-
 /* 目标日期倒计时样式 */
 .target-timer-container {
     display: flex;
@@ -1095,7 +1104,7 @@ const clearAll = () => {
 .quick-targets {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.5rem;
     justify-content: center;
 }
 
@@ -1104,14 +1113,6 @@ const clearAll = () => {
     border: 1px solid var(--primary-color);
     border-radius: 1rem;
     padding: 2rem;
-}
-
-.display-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    text-align: center;
-    margin-bottom: 1rem;
 }
 
 /* 多个倒计时样式 */
@@ -1171,6 +1172,12 @@ const clearAll = () => {
     border-radius: 1rem;
     padding: 1.5rem;
     transition: all 0.2s ease;
+}
+
+.timer-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
 }
 
 .timer-card-header {
@@ -1234,7 +1241,6 @@ const clearAll = () => {
         transform: translateX(100%);
         opacity: 0;
     }
-
     to {
         transform: translateX(0);
         opacity: 1;
@@ -1242,126 +1248,107 @@ const clearAll = () => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1024px) {
+    .quick-timer-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .datetime-inputs {
+        flex-direction: column;
+    }
+}
+
 @media (max-width: 768px) {
     .timer-content {
         padding: 1rem;
         padding-bottom: 4rem;
         gap: 1.5rem;
     }
-
+    
     .quick-timer-section,
     .target-timer-section,
     .multiple-timers-section {
         padding: 1.5rem;
     }
-
+    
     .time-inputs-row {
         flex-direction: column;
         gap: 0.75rem;
         padding: 1rem;
     }
-
+    
     .time-separator {
         display: none;
     }
-
+    
     .timer-display-card {
         padding: 1.5rem;
     }
-
+    
     .time-units {
         gap: 0.5rem;
         flex-wrap: wrap;
         justify-content: center;
     }
-
+    
     .time-value {
         font-size: 2rem;
     }
-
+    
     .time-value.milliseconds {
         font-size: 1.25rem;
     }
-
+    
     .countdown-display.large .time-value {
         font-size: 2.5rem;
     }
-
+    
     .timer-controls {
         flex-direction: column;
         gap: 0.5rem;
     }
-
+    
     .timers-grid {
         grid-template-columns: 1fr;
     }
-
+    
     .quick-presets,
     .quick-targets {
         justify-content: flex-start;
     }
-
-    /* 移动设备全屏模式 */
-    .timer-display-card:fullscreen .countdown-display {
-        height: 100vh;
-        padding: 2rem 1rem;
-    }
-
-    .timer-display-card:fullscreen .time-value {
-        font-size: 8rem !important;
-    }
-
-    .timer-display-card:fullscreen .time-value.milliseconds {
-        font-size: 5rem !important;
-    }
-
-    .timer-display-card:fullscreen .time-label {
-        font-size: 1.8rem !important;
-    }
-
-    .timer-display-card:fullscreen .timer-status {
-        font-size: 2rem !important;
-        margin-top: 2rem !important;
-    }
-
-    .timer-display-card:fullscreen .time-units {
-        gap: 3rem;
-        flex-wrap: wrap;
-    }
-
-    .timer-display-card:fullscreen .timer-controls {
-        bottom: 2rem;
-        gap: 1rem;
-    }
-
-    .timer-display-card:fullscreen .control-btn {
-        padding: 1rem 2rem;
-        font-size: 1.2rem;
-    }
 }
 
 @media (max-width: 480px) {
+    .timer-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .timer-title {
+        font-size: 1.125rem;
+    }
+    
     .time-number-input {
         width: 3rem;
         font-size: 1rem;
     }
-
+    
     .time-value {
         font-size: 1.5rem;
     }
-
+    
     .time-value.milliseconds {
         font-size: 1rem;
     }
-
+    
     .countdown-display.large .time-value {
         font-size: 2rem;
     }
-
+    
     .time-units {
         gap: 0.25rem;
     }
-
+    
     .message-toast {
         bottom: 1rem;
         right: 1rem;
