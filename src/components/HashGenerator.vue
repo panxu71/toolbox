@@ -1,23 +1,10 @@
 <template>
     <div class="hash-generator">
-        <div class="generator-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="generator-title">哈希生成器</h2>
-            <div class="generator-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="generator-content">
             <!-- 文本哈希生成 -->
@@ -287,25 +274,41 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本状态
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('md5-hash')
+const cardTitle = getCardTitle('md5-hash')
 
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
+
+// 基本状态
 const inputText = ref('')
 const isUpperCase = ref(false)
 const selectedFile = ref<File | null>(null)
@@ -376,15 +379,10 @@ const algorithmInfo = [
     }
 ]
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
 // 获取字符串字节长度
 const getByteLength = (str: string): number => {
     return new Blob([str]).size
 }
-
 // 正确的MD5实现
 const md5 = (text: string): string => {
     // MD5算法的完整实现
@@ -629,7 +627,7 @@ const generateHashes = async () => {
 const toggleCase = async () => {
     isUpperCase.value = !isUpperCase.value
     await generateHashes()
-    showMessage(`已切换为${isUpperCase.value ? '大写' : '小写'}`, 'success')
+    showSuccess(`已切换为${isUpperCase.value ? '大写' : '小写'}`)
 }
 
 // 粘贴文本
@@ -638,9 +636,9 @@ const pasteText = async () => {
         const text = await navigator.clipboard.readText()
         inputText.value = text
         await generateHashes()
-        showMessage('已粘贴文本', 'success')
+        showSuccess('已粘贴文本')
     } catch (error) {
-        showMessage('粘贴失败', 'error')
+        showError('粘贴失败')
     }
 }
 
@@ -650,21 +648,21 @@ const clearInput = () => {
     hashResults.value.forEach(hash => {
         hash.value = ''
     })
-    showMessage('已清空输入', 'success')
+    showSuccess('已清空输入')
 }
 
 // 复制哈希值
 const copyHash = async (hash: { type: string; value: string }) => {
     if (!hash.value) {
-        showMessage('没有可复制的哈希值', 'error')
+        showError('没有可复制的哈希值')
         return
     }
 
     try {
         await navigator.clipboard.writeText(hash.value)
-        showMessage(`${hash.type} 哈希值已复制`, 'success')
+        showSuccess(`${hash.type} 哈希值已复制`)
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -685,7 +683,7 @@ const clearAll = () => {
         fileInput.value.value = ''
     }
 
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
 
 // 处理文件选择
@@ -694,12 +692,12 @@ const handleFileSelect = (event: Event) => {
     const file = target.files?.[0]
     if (file) {
         if (file.size > 100 * 1024 * 1024) { // 100MB限制
-            showMessage('文件大小不能超过100MB', 'error')
+            showError('文件大小不能超过100MB')
             return
         }
         selectedFile.value = file
         fileHashResults.value = []
-        showMessage('文件已选择', 'success')
+        showSuccess('文件已选择')
     }
 }
 
@@ -709,12 +707,12 @@ const handleFileDrop = (event: DragEvent) => {
     const file = event.dataTransfer?.files[0]
     if (file) {
         if (file.size > 100 * 1024 * 1024) {
-            showMessage('文件大小不能超过100MB', 'error')
+            showError('文件大小不能超过100MB')
             return
         }
         selectedFile.value = file
         fileHashResults.value = []
-        showMessage('文件已选择', 'success')
+        showSuccess('文件已选择')
     }
 }
 
@@ -725,7 +723,7 @@ const removeFile = () => {
     if (fileInput.value) {
         fileInput.value.value = ''
     }
-    showMessage('文件已移除', 'success')
+    showSuccess('文件已移除')
 }
 
 // 生成文件哈希
@@ -755,9 +753,9 @@ const generateFileHashes = async () => {
             }
         }
 
-        showMessage('文件哈希生成完成', 'success')
+        showSuccess('文件哈希生成完成')
     } catch (error) {
-        showMessage('文件哈希生成失败', 'error')
+        showError('文件哈希生成失败')
     } finally {
         isProcessing.value = false
     }
@@ -792,7 +790,7 @@ const exportFileHashes = () => {
     a.download = `${selectedFile.value?.name || 'file'}-hashes.txt`
     a.click()
     URL.revokeObjectURL(url)
-    showMessage('哈希结果已导出', 'success')
+    showSuccess('哈希结果已导出')
 }
 
 // 更新验证哈希
@@ -841,16 +839,6 @@ const formatFileSize = (bytes: number): string => {
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 </script>
 
 <style scoped>
@@ -864,73 +852,10 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     overflow: hidden;
 }
 
-.generator-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.generator-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.generator-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
 .generator-content {
     flex: 1;
-    padding: 1.5rem;
     overflow-y: auto;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -969,6 +894,9 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .info-text {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
 }
 
 /* 文本哈希样式 */
@@ -1722,40 +1650,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     flex: 1;
 }
 
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 1200px) {
     .text-hash-container {
@@ -1864,14 +1758,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 @media (max-width: 480px) {
-    .generator-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .generator-title {
-        font-size: 1.125rem;
-    }
-
     .generator-content {
         padding: 0.75rem;
         gap: 1rem;

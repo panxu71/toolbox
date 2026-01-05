@@ -1,23 +1,10 @@
 <template>
     <div class="rsa-generator">
-        <div class="generator-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="generator-title">RSA公私钥生成器</h2>
-            <div class="generator-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="generator-content">
             <!-- 密钥生成配置 -->
@@ -130,6 +117,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- 密钥结果显示 -->
             <div v-if="keyPair" class="generator-section">
                 <div class="section-header">
@@ -224,6 +212,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- 密钥验证工具 -->
             <div class="generator-section">
                 <div class="section-header">
@@ -323,24 +312,41 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
+
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本状态
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('rsa-key-generator')
+const cardTitle = getCardTitle('rsa-key-generator')
 
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
+
+// 基本状态
 const keySize = ref('2048')
 const outputFormat = ref('pem')
 const keyUsage = ref('both')
@@ -418,10 +424,6 @@ const rsaInfo = [
     }
 ]
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
 // 计算密码强度
 const passwordStrength = computed(() => {
     const password = privateKeyPassword.value
@@ -458,7 +460,6 @@ const passwordStrength = computed(() => {
         return { level: 'very-strong', percentage: 100, text: '很强' }
     }
 })
-
 // 生成RSA密钥对
 const generateKeyPair = async () => {
     isGenerating.value = true
@@ -520,7 +521,7 @@ const generateKeyPair = async () => {
         const successMessage = usePassword.value && privateKeyPassword.value 
             ? 'RSA密钥对生成成功（私钥已加密保护）' 
             : 'RSA密钥对生成成功'
-        showMessage(successMessage, 'success')
+        showSuccess(successMessage)
     } catch (error) {
         console.error('密钥生成失败:', error)
         // 生成模拟密钥对作为fallback
@@ -528,7 +529,7 @@ const generateKeyPair = async () => {
         const fallbackMessage = usePassword.value && privateKeyPassword.value 
             ? '使用模拟密钥对（私钥已加密保护，浏览器不支持Web Crypto API）' 
             : '使用模拟密钥对（浏览器不支持Web Crypto API）'
-        showMessage(fallbackMessage, 'success')
+        showSuccess(fallbackMessage)
     } finally {
         isGenerating.value = false
     }
@@ -598,9 +599,9 @@ const copyKey = async (keyType: 'public' | 'private') => {
     
     try {
         await navigator.clipboard.writeText(keyValue)
-        showMessage(`${keyType === 'public' ? '公钥' : '私钥'}已复制`, 'success')
+        showSuccess(`${keyType === 'public' ? '公钥' : '私钥'}已复制`)
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -619,7 +620,7 @@ const downloadKey = (keyType: 'public' | 'private') => {
     a.click()
     URL.revokeObjectURL(url)
     
-    showMessage(`${keyType === 'public' ? '公钥' : '私钥'}已下载`, 'success')
+    showSuccess(`${keyType === 'public' ? '公钥' : '私钥'}已下载`)
 }
 
 // 验证密钥
@@ -651,7 +652,7 @@ const validateSingleKey = (keyValue: string, keyType: 'public' | 'private'): boo
         return keyValue.includes('BEGIN PUBLIC KEY') && keyValue.includes('END PUBLIC KEY')
     } else {
         return keyValue.includes('BEGIN PRIVATE KEY') && keyValue.includes('END PRIVATE KEY') ||
-               keyValue.includes('BEGIN RSA PRIVATE KEY') && keyValue.includes('END RSA PRIVATE KEY')
+               keyValue.includes('BEGIN ENCRYPTED PRIVATE KEY') && keyValue.includes('END ENCRYPTED PRIVATE KEY')
     }
 }
 
@@ -718,24 +719,10 @@ const clearAll = () => {
     usePassword.value = false
     privateKeyPassword.value = ''
     showPassword.value = false
-    showMessage('已清空所有内容', 'success')
+    showSuccess('已清空所有内容')
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
-// 生命周期钩子
-onMounted(() => {
-    // 页面初始化逻辑
-})
-
 </script>
+
 <style scoped>
 .rsa-generator {
     width: 100%;
@@ -747,69 +734,6 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.generator-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.generator-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.generator-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
 .generator-content {
     flex: 1;
     padding: 1.5rem;
@@ -817,7 +741,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
@@ -852,6 +776,9 @@ onMounted(() => {
 .info-text {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
 }
 
 /* 密钥配置样式 */
@@ -1209,8 +1136,8 @@ onMounted(() => {
     border-radius: 0.5rem;
     word-break: break-all;
     margin-bottom: 1rem;
-    min-height: 8rem;
-    max-height: 12rem;
+    min-height: 10rem;
+    max-height: 14rem;
     overflow-y: auto;
     line-height: 1.4;
     white-space: pre-wrap;
@@ -1388,15 +1315,15 @@ onMounted(() => {
 
 .algorithm-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
 }
 
 .algorithm-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
     transition: all 0.2s ease;
 }
 
@@ -1414,14 +1341,14 @@ onMounted(() => {
 }
 
 .algorithm-header h4 {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
 }
 
 .algorithm-icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
 }
 
 .algorithm-description {
@@ -1453,39 +1380,6 @@ onMounted(() => {
     font-size: 0.75rem;
     color: var(--text-secondary);
     line-height: 1.4;
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
 }
 
 /* 响应式设计 */

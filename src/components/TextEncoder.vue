@@ -1,67 +1,73 @@
 <template>
     <div class="text-encoder">
-        <div class="encoder-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="encoder-title">文本编码转换</h2>
-            <div class="encoding-selector">
-                <select v-model="selectedEncoding" class="encoding-select" @change="convertText">
-                    <option value="base64">Base64</option>
-                    <option value="url">URL编码</option>
-                    <option value="html">HTML实体</option>
-                    <option value="unicode">Unicode</option>
-                    <option value="ascii">ASCII码</option>
-                </select>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="encoding-selector">
+                    <select v-model="selectedEncoding" class="encoding-select" @change="convertText">
+                        <option value="base64">Base64</option>
+                        <option value="url">URL编码</option>
+                        <option value="html">HTML实体</option>
+                        <option value="unicode">Unicode</option>
+                        <option value="ascii">ASCII码</option>
+                    </select>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn-small" @click="copyTextResult" title="复制结果"
+                        :disabled="!textOutput">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg>
+                    </button>
+                    <button class="action-btn-small" @click="reverseConvert" title="反向转换"
+                        :disabled="!textOutput">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="m3 16 4 4 4-4" />
+                            <path d="M7 20V4" />
+                            <path d="m21 8-4-4-4 4" />
+                            <path d="M17 4v16" />
+                        </svg>
+                    </button>
+                    <button class="action-btn-small" @click="clearOutput" title="清空结果" :disabled="!textOutput">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+            </template>
+        </PageHeader>
 
         <div class="encoder-content">
             <div class="main-workspace">
                 <div class="input-section">
                     <div class="section-header">
-                        <div class="header-left">
-                            <h3>文本输入</h3>
-                            <div class="quick-examples-inline">
-                                <button class="example-btn-small" @click="setExample('Hello World!')" title="基础文本示例">
+                        <h3>文本输入</h3>
+                        <div class="quick-examples">
+                            <ButtonGroup>
+                                <button class="group-btn" @click="setExample('Hello World!')" title="基础文本示例">
                                     Hello
                                 </button>
-                                <button class="example-btn-small" @click="setExample('你好，世界！')" title="中文文本示例">
+                                <button class="group-btn" @click="setExample('你好，世界！')" title="中文文本示例">
                                     中文
                                 </button>
-                                <button class="example-btn-small"
+                                <button class="group-btn"
                                     @click="setExample('https://example.com/path?param=value&other=123')"
                                     title="URL链接示例">
                                     URL
                                 </button>
-                                <button class="example-btn-small"
+                                <button class="group-btn"
                                     @click="setExample('<div class=&quot;container&quot;>Content</div>')"
                                     title="HTML代码示例">
                                     HTML
                                 </button>
-                            </div>
-                        </div>
-                        <div class="header-actions">
-                            <button class="action-btn-small" @click="pasteText" title="粘贴文本">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                    <path
-                                        d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearText" title="清空文本">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
+                            </ButtonGroup>
                         </div>
                     </div>
+                    
                     <div class="text-editor">
                         <textarea v-model="textInput" class="text-input" placeholder="输入要转换的文本..."
                             @input="convertText"></textarea>
@@ -80,33 +86,7 @@
                 <div class="output-section">
                     <div class="section-header">
                         <h3>转换结果 ({{ getEncodingName() }})</h3>
-                        <div class="header-actions">
-                            <button class="action-btn-small" @click="copyTextResult" title="复制结果"
-                                :disabled="!textOutput">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="reverseConvert" title="反向转换"
-                                :disabled="!textOutput">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="m3 16 4 4 4-4" />
-                                    <path d="M7 20V4" />
-                                    <path d="m21 8-4-4-4 4" />
-                                    <path d="M17 4v16" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearOutput" title="清空结果" :disabled="!textOutput">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
+                        <div class="header-placeholder"></div>
                     </div>
                     <div class="text-editor">
                         <textarea v-model="textOutput" class="text-output" readonly
@@ -147,32 +127,43 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import ButtonGroup from './common/ButtonGroup.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 文本编码转换
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('text-encoder')
+const cardTitle = getCardTitle('text-encoder')
+
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const textInput = ref('')
 const textOutput = ref('')
 const selectedEncoding = ref('base64')
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 文本统计
 const textStats = computed(() => {
@@ -222,7 +213,10 @@ const convertText = () => {
     try {
         switch (selectedEncoding.value) {
             case 'base64':
-                textOutput.value = btoa(unescape(encodeURIComponent(textInput.value)))
+                // 使用 TextEncoder 替代 deprecated escape/unescape
+                const encoder = new TextEncoder()
+                const data = encoder.encode(textInput.value)
+                textOutput.value = btoa(String.fromCharCode(...data))
                 break
             case 'url':
                 textOutput.value = encodeURIComponent(textInput.value)
@@ -250,7 +244,7 @@ const convertText = () => {
         }
     } catch (error) {
         textOutput.value = '转换失败'
-        showMessage('转换失败', 'error')
+        showError('转换失败')
     }
 }
 
@@ -262,7 +256,14 @@ const reverseConvert = () => {
         let reversed = ''
         switch (selectedEncoding.value) {
             case 'base64':
-                reversed = decodeURIComponent(escape(atob(textOutput.value)))
+                // 使用 TextDecoder 替代 deprecated escape/unescape
+                const binaryString = atob(textOutput.value)
+                const bytes = new Uint8Array(binaryString.length)
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i)
+                }
+                const decoder = new TextDecoder()
+                reversed = decoder.decode(bytes)
                 break
             case 'url':
                 reversed = decodeURIComponent(textOutput.value)
@@ -288,9 +289,9 @@ const reverseConvert = () => {
                 break
         }
         textInput.value = reversed
-        showMessage('反向转换完成', 'success')
+        showSuccess('反向转换完成')
     } catch (error) {
-        showMessage('反向转换失败', 'error')
+        showError('反向转换失败')
     }
 }
 
@@ -300,100 +301,38 @@ const copyTextResult = async () => {
 
     try {
         await navigator.clipboard.writeText(textOutput.value)
-        showMessage('结果已复制到剪贴板', 'success')
+        showSuccess('结果已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
-}
-
-// 粘贴文本
-const pasteText = async () => {
-    try {
-        const text = await navigator.clipboard.readText()
-        textInput.value = text
-        convertText()
-        showMessage('文本已粘贴', 'success')
-    } catch (error) {
-        showMessage('粘贴失败', 'error')
-    }
-}
-
-// 清空文本
-const clearText = () => {
-    textInput.value = ''
-    textOutput.value = ''
-    showMessage('文本已清空', 'success')
 }
 
 // 清空输出
 const clearOutput = () => {
     textOutput.value = ''
-    showMessage('输出已清空', 'success')
+    showSuccess('输出已清空')
 }
 
 // 设置示例
 const setExample = (text: string) => {
     textInput.value = text
     convertText()
-    showMessage('已设置示例文本', 'success')
-}
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showSuccess('已设置示例文本')
 }
 
 // 初始化
 convertText()
-
 </script>
 
 <style scoped>
 .text-encoder {
     width: 100%;
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
     color: var(--text-primary);
     overflow: hidden;
-}
-
-.encoder-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-}
-
-.encoder-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
 }
 
 .encoding-selector {
@@ -402,21 +341,31 @@ convertText()
     gap: 0.5rem;
 }
 
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .encoding-select {
     padding: 0.5rem;
-    background: var(--bg-primary);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.375rem;
     color: var(--text-primary);
     font-size: 0.875rem;
 }
 
+.encoding-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
 .encoder-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    padding-bottom: 4rem;
+    padding: 1.5rem;
     overflow: hidden;
 }
 
@@ -424,8 +373,8 @@ convertText()
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1px 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
     overflow: hidden;
     min-height: 400px;
 }
@@ -445,18 +394,12 @@ convertText()
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 0.5rem;
     flex-shrink: 0;
     gap: 1rem;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
+    min-height: 3rem;
 }
 
 .section-header h3 {
@@ -467,30 +410,15 @@ convertText()
     white-space: nowrap;
 }
 
-.quick-examples-inline {
+.quick-examples {
     display: flex;
     gap: 0.5rem;
     align-items: center;
 }
 
-.example-btn-small {
-    padding: 0.375rem 0.75rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.example-btn-small:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
+.header-placeholder {
+    height: 2rem;
+    min-width: 1px;
 }
 
 .header-actions {
@@ -504,7 +432,7 @@ convertText()
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    background: var(--bg-primary);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.375rem;
     color: var(--text-primary);
@@ -547,10 +475,14 @@ convertText()
     outline: none;
 }
 
+.text-input:focus {
+    outline: none;
+}
+
 .section-footer {
-    padding: 0.5rem 0;
+    padding-top: 0.75rem;
     border-top: 1px solid var(--border-color);
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     flex-shrink: 0;
 }
 
@@ -577,7 +509,6 @@ convertText()
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     flex-shrink: 0;
-    margin-bottom: 2rem;
 }
 
 .description-content {
@@ -597,44 +528,11 @@ convertText()
     font-weight: 600;
 }
 
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 @media (max-width: 1024px) {
     .main-workspace {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1px 1fr;
-        gap: 0.5rem;
+        gap: 1rem;
         min-height: 300px;
     }
 
@@ -651,23 +549,20 @@ convertText()
     .quick-examples-inline {
         flex-wrap: wrap;
     }
+
+    :deep(.button-group) {
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 768px) {
     .encoder-content {
-        padding: 0.5rem;
-        padding-bottom: 3rem;
-    }
-
-    .encoder-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
         padding: 1rem;
     }
 
     .main-workspace {
         min-height: 250px;
+        gap: 0.75rem;
     }
 
     .description-content {
@@ -685,9 +580,10 @@ convertText()
         gap: 0.375rem;
     }
 
-    .example-btn-small {
+    :deep(.group-btn) {
         font-size: 0.6875rem;
         padding: 0.25rem 0.5rem;
+        min-width: 50px;
     }
 }
 </style>
