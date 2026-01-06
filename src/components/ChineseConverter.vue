@@ -1,191 +1,32 @@
 <template>
     <div class="chinese-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">简繁体转换</h2>
-            <div class="converter-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="mode-toggle">
+                    <button class="mode-btn" :class="{ active: conversionMode === 'toTraditional' }"
+                        @click="setMode('toTraditional')">
+                        简→繁
+                    </button>
+                    <button class="mode-btn" :class="{ active: conversionMode === 'toSimplified' }"
+                        @click="setMode('toSimplified')">
+                        繁→简
+                    </button>
+                    <button class="mode-btn" :class="{ active: conversionMode === 'auto' }" @click="setMode('auto')">
+                        智能
+                    </button>
+                </div>
+                <HeaderActionButton icon="copy" tooltip="复制结果" @click="copyOutput" :disabled="!outputText" />
+                <HeaderActionButton icon="download" tooltip="下载文件" @click="downloadResult" :disabled="!outputText" />
+                <HeaderActionButton icon="swap" tooltip="交换输入输出" @click="swapText" :disabled="!outputText" />
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
-            <!-- 转换模式选择 -->
-            <div class="mode-section">
-                <div class="mode-tabs">
-                    <button class="mode-tab" :class="{ active: conversionMode === 'toTraditional' }"
-                        @click="setMode('toTraditional')">
-                        <span class="mode-icon">简</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="9,18 15,12 9,6" />
-                        </svg>
-                        <span class="mode-icon">繁</span>
-                        <span class="mode-text">简转繁</span>
-                    </button>
-                    <button class="mode-tab" :class="{ active: conversionMode === 'toSimplified' }"
-                        @click="setMode('toSimplified')">
-                        <span class="mode-icon">繁</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="9,18 15,12 9,6" />
-                        </svg>
-                        <span class="mode-icon">简</span>
-                        <span class="mode-text">繁转简</span>
-                    </button>
-                    <button class="mode-tab" :class="{ active: conversionMode === 'auto' }" @click="setMode('auto')">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                            <path d="M21 3v5h-5" />
-                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                            <path d="M3 21v-5h5" />
-                        </svg>
-                        <span class="mode-text">智能转换</span>
-                    </button>
-                </div>
-
-                <!-- 繁体标准选择 -->
-                <div v-if="conversionMode === 'toTraditional' || conversionMode === 'auto'" class="standard-selection">
-                    <span class="standard-label">繁体标准：</span>
-                    <div class="standard-tabs">
-                        <button class="standard-tab" :class="{ active: traditionalStandard === 'tw' }"
-                            @click="setTraditionalStandard('tw')">
-                            台湾标准
-                        </button>
-                        <button class="standard-tab" :class="{ active: traditionalStandard === 'hk' }"
-                            @click="setTraditionalStandard('hk')">
-                            香港标准
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 转换区域 -->
-            <div class="convert-section">
-                <div class="input-panel">
-                    <div class="panel-header">
-                        <div class="panel-title-info">
-                            <h3>{{ getInputTitle() }}</h3>
-                            <div class="panel-info">
-                                <span class="char-count" v-if="inputText">{{ inputText.length }} 字符</span>
-                                <span class="chinese-count" v-if="chineseCharCount > 0">{{ chineseCharCount }} 个中文字符</span>
-                            </div>
-                        </div>
-                        <div class="panel-actions">
-                            <button class="action-btn-small" @click="pasteText" title="粘贴">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                    <path
-                                        d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="loadSample" title="示例">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14,2 14,8 20,8" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearInput" title="清空">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="inputText" class="text-input" :placeholder="getInputPlaceholder()"
-                            @input="handleConvert"></textarea>
-                    </div>
-                </div>
-
-                <div class="output-panel">
-                    <div class="panel-header">
-                        <div class="panel-title-info">
-                            <h3>{{ getOutputTitle() }}</h3>
-                            <div class="panel-info">
-                                <span class="conversion-count" v-if="conversionCount > 0">
-                                    转换了 {{ conversionCount }} 个字符
-                                </span>
-                                <span class="no-conversion" v-else-if="inputText && outputText">
-                                    无需转换
-                                </span>
-                            </div>
-                        </div>
-                        <div class="panel-actions">
-                            <button class="action-btn-small" @click="copyOutput" title="复制">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="downloadResult" title="下载">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="7,10 12,15 17,10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small primary" @click="swapText" title="交换文本">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M8 3L4 7l4 4" />
-                                    <path d="M4 7h16" />
-                                    <path d="M16 21l4-4-4-4" />
-                                    <path d="M20 17H4" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="panel-content">
-                        <textarea v-model="outputText" class="text-output" placeholder="转换结果将显示在这里..."
-                            readonly></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 转换详情 -->
-            <div v-if="conversionDetails.length > 0" class="details-section">
-                <div class="section-header">
-                    <h3>转换详情</h3>
-                    <span class="details-count">共 {{ conversionDetails.length }} 个字符被转换</span>
-                </div>
-                <div class="details-list">
-                    <div v-for="(detail, index) in conversionDetails.slice(0, 20)" :key="index" class="detail-item">
-                        <span class="original-char">{{ detail.original }}</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="9,18 15,12 9,6" />
-                        </svg>
-                        <span class="converted-char">{{ detail.converted }}</span>
-                        <span class="char-count">{{ detail.count }}次</span>
-                    </div>
-                </div>
-                <div v-if="conversionDetails.length > 20" class="more-details">
-                    还有 {{ conversionDetails.length - 20 }} 个字符未显示...
-                </div>
-            </div>
-
             <!-- 快速示例 -->
             <div class="examples-section">
-                <div class="section-header">
-                    <h3>快速示例</h3>
+                <div class="examples-header">
+                    <h3>📝 快速示例</h3>
                 </div>
                 <div class="examples-grid">
                     <button class="example-btn" @click="loadExample('tech')">
@@ -207,10 +48,94 @@
                 </div>
             </div>
 
+            <!-- 转换区域 -->
+            <div class="convert-section">
+                <div class="input-panel">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>{{ getInputTitle() }}</h3>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <textarea v-model="inputText" class="text-input" :placeholder="getInputPlaceholder()"
+                            @input="handleConvert"></textarea>
+                    </div>
+                </div>
+
+                <div class="output-panel">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>{{ getOutputTitle() }}</h3>
+                            <div v-if="conversionMode === 'toTraditional' || conversionMode === 'auto'"
+                                class="standard-selector">
+                                <button class="standard-btn" :class="{ active: traditionalStandard === 'tw' }"
+                                    @click="setTraditionalStandard('tw')">
+                                    台湾
+                                </button>
+                                <button class="standard-btn" :class="{ active: traditionalStandard === 'hk' }"
+                                    @click="setTraditionalStandard('hk')">
+                                    香港
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <textarea v-model="outputText" class="text-output" placeholder="转换结果将显示在这里..."
+                            readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换详情 -->
+            <div v-if="inputText || conversionDetails.length > 0" class="details-section">
+                <div class="details-header">
+                    <h3>📊 转换统计 <span class="details-subtitle">文本分析和转换详情</span></h3>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="stats-info">
+                    <div class="stat-item" v-if="inputText">
+                        <span class="stat-label">总字符数</span>
+                        <span class="stat-value">{{ inputText.length }}</span>
+                    </div>
+                    <div class="stat-item" v-if="chineseCharCount > 0">
+                        <span class="stat-label">中文字符</span>
+                        <span class="stat-value">{{ chineseCharCount }}</span>
+                    </div>
+                    <div class="stat-item" v-if="conversionCount > 0">
+                        <span class="stat-label">转换字符</span>
+                        <span class="stat-value">{{ conversionCount }}</span>
+                    </div>
+                    <div class="stat-item" v-else-if="inputText && outputText">
+                        <span class="stat-label">转换状态</span>
+                        <span class="stat-value no-conversion">无需转换</span>
+                    </div>
+                </div>
+
+                <!-- 转换详情列表 -->
+                <div v-if="conversionDetails.length > 0" class="conversion-details">
+                    <h4>转换详情（共 {{ conversionDetails.length }} 个字符）</h4>
+                    <div class="details-list">
+                        <div v-for="(detail, index) in conversionDetails.slice(0, 20)" :key="index" class="detail-item">
+                            <span class="original-char">{{ detail.original }}</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="9,18 15,12 9,6" />
+                            </svg>
+                            <span class="converted-char">{{ detail.converted }}</span>
+                            <span class="char-count">{{ detail.count }}次</span>
+                        </div>
+                    </div>
+                    <div v-if="conversionDetails.length > 20" class="more-details">
+                        还有 {{ conversionDetails.length - 20 }} 个字符未显示...
+                    </div>
+                </div>
+            </div>
+
             <!-- 使用说明 -->
             <div class="help-section">
-                <div class="section-header">
-                    <h3>使用说明</h3>
+                <div class="help-header">
+                    <h3>💡 使用说明</h3>
                 </div>
                 <div class="help-content">
                     <div class="help-grid">
@@ -251,15 +176,20 @@
             </div>
         </div>
 
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
+        <!-- 通知容器 -->
+        <NotificationContainer />
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import NotificationContainer from './common/NotificationContainer.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import { useClipboard } from '../composables/useClipboard'
+import { useDownload } from '../composables/useDownload'
 
 // 动态导入 OpenCC
 let Converter: any = null
@@ -280,20 +210,22 @@ defineEmits<{
     back: []
 }>()
 
-// 状态管理
-// 使用页面标题管理
+// 使用 composables
 usePageTitle('chinese-converter')
+const { success, error: showError } = useNotification()
+const { copyToClipboard } = useClipboard()
+const { downloadText } = useDownload()
 
+// 获取页面标题
+const pageTitle = '简繁体转换'
+
+// 状态管理
 const conversionMode = ref<'toTraditional' | 'toSimplified' | 'auto'>('toTraditional')
 const traditionalStandard = ref<'tw' | 'hk'>('tw') // 繁体标准：台湾或香港
 const inputText = ref('')
 const outputText = ref('')
 const conversionCount = ref(0)
 const conversionDetails = ref<Array<{ original: string, converted: string, count: number }>>([])
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // OpenCC 转换器实例
 let converters: {
@@ -307,7 +239,7 @@ let converters: {
 const initConverters = async () => {
     const loaded = await loadOpenCC()
     if (!loaded || !Converter) {
-        showMessage('OpenCC 加载失败，将使用基础转换功能', 'error')
+        showError('OpenCC 加载失败，将使用基础转换功能')
         return
     }
 
@@ -320,7 +252,7 @@ const initConverters = async () => {
         }
     } catch (error) {
         console.error('OpenCC 初始化失败:', error)
-        showMessage('转换器初始化失败', 'error')
+        showError('转换器初始化失败')
     }
 }
 
@@ -349,10 +281,10 @@ const setTraditionalStandard = (standard: 'tw' | 'hk') => {
 // 获取输入标题
 const getInputTitle = (): string => {
     switch (conversionMode.value) {
-        case 'toTraditional': return '简体中文'
-        case 'toSimplified': return '繁体中文'
-        case 'auto': return '输入文本'
-        default: return '输入文本'
+        case 'toTraditional': return '📝 简体中文输入'
+        case 'toSimplified': return '📝 繁体中文输入'
+        case 'auto': return '📝 智能识别输入'
+        default: return '📝 文本输入'
     }
 }
 
@@ -360,10 +292,10 @@ const getInputTitle = (): string => {
 const getOutputTitle = (): string => {
     switch (conversionMode.value) {
         case 'toTraditional':
-            return traditionalStandard.value === 'tw' ? '繁体中文（台湾）' : '繁体中文（香港）'
-        case 'toSimplified': return '简体中文'
-        case 'auto': return '转换结果'
-        default: return '转换结果'
+            return traditionalStandard.value === 'tw' ? '📄 繁体中文（台湾）' : '📄 繁体中文（香港）'
+        case 'toSimplified': return '📄 简体中文输出'
+        case 'auto': return '📄 智能转换结果'
+        default: return '📄 转换结果'
     }
 }
 
@@ -515,32 +447,7 @@ const handleConvert = () => {
     conversionDetails.value = details.sort((a, b) => b.count - a.count)
 }
 
-// 粘贴文本
-const pasteText = async () => {
-    try {
-        const text = await navigator.clipboard.readText()
-        inputText.value = text
-        handleConvert()
-        showMessage('已粘贴文本', 'success')
-    } catch (error) {
-        showMessage('粘贴失败', 'error')
-    }
-}
-
 // 加载示例
-const loadSample = () => {
-    const samples = [
-        '这是一个简体中文转换繁体中文的示例。我们可以看到汉字的转换效果。',
-        '這是一個繁體中文轉換簡體中文的示例。我們可以看到漢字的轉換效果。'
-    ]
-
-    const randomIndex = Math.floor(Math.random() * samples.length)
-    const randomSample = samples[randomIndex] || samples[0] || ''
-    inputText.value = randomSample
-    handleConvert()
-    showMessage('已加载示例文本', 'success')
-}
-
 // 加载特定示例
 const loadExample = (type: string) => {
     const examples = {
@@ -552,45 +459,43 @@ const loadExample = (type: string) => {
 
     inputText.value = examples[type as keyof typeof examples] || examples.daily
     handleConvert()
-    showMessage('已加载示例文本', 'success')
+    success('已加载示例文本')
 }
 
 // 复制输出
 const copyOutput = async () => {
     if (!outputText.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
-    try {
-        await navigator.clipboard.writeText(outputText.value)
-        showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+    const result = await copyToClipboard(outputText.value)
+    if (result) {
+        success('转换结果已复制')
+    } else {
+        showError('复制失败')
     }
 }
 
 // 下载结果
 const downloadResult = () => {
     if (!outputText.value) {
-        showMessage('没有可下载的内容', 'error')
+        showError('没有可下载的内容')
         return
     }
 
-    const blob = new Blob([outputText.value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `converted-text-${Date.now()}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-    showMessage('文件已下载', 'success')
+    const result = downloadText(outputText.value, 'converted-text', 'txt')
+    if (result) {
+        success('文件已下载')
+    } else {
+        showError('下载失败')
+    }
 }
 
 // 交换文本
 const swapText = () => {
     if (!outputText.value) {
-        showMessage('没有可交换的内容', 'error')
+        showError('没有可交换的内容')
         return
     }
 
@@ -604,15 +509,7 @@ const swapText = () => {
     }
 
     handleConvert()
-    showMessage('已交换文本', 'success')
-}
-
-// 清空输入
-const clearInput = () => {
-    inputText.value = ''
-    outputText.value = ''
-    conversionCount.value = 0
-    conversionDetails.value = []
+    success('已交换文本')
 }
 
 // 清空所有
@@ -621,306 +518,252 @@ const clearAll = () => {
     outputText.value = ''
     conversionCount.value = 0
     conversionDetails.value = []
-    showMessage('已清空所有内容', 'success')
+    success('已清空所有内容')
 }
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 </script>
 <style scoped>
+/* 模式切换 */
+.mode-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-primary);
+}
+
+.mode-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border-right: 1px solid var(--border-color);
+    height: 36px;
+    box-sizing: border-box;
+}
+
+.mode-btn:last-child {
+    border-right: none;
+}
+
+.mode-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.mode-btn:hover:not(.active) {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
 .chinese-converter {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
     color: var(--text-primary);
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-}
-
-.converter-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.converter-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
+    overflow: hidden;
 }
 
 .converter-content {
     flex: 1;
-    padding: 1.5rem 1.5rem 6rem 1.5rem;
+    padding: 1.5rem;
+    padding-bottom: 3rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    min-height: 0;
 }
 
 /* 通用区域样式 */
-.mode-section,
 .convert-section,
 .details-section,
 .examples-section,
 .help-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
+    margin-bottom: 1.5rem;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
 }
 
-.section-header h3 {
-    font-size: 1.125rem;
+.help-header {
+    margin-bottom: 1rem;
+}
+
+.help-header h3 {
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
-}
-
-/* 模式选择 */
-.mode-tabs {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.mode-tab {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
 }
 
-.mode-tab:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+.details-header {
+    margin-bottom: 1rem;
 }
 
-.mode-tab.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.mode-icon {
-    font-size: 1.125rem;
+.details-header h3 {
+    font-size: 1.1rem;
     font-weight: 600;
-}
-
-.mode-text {
-    font-size: 0.875rem;
-}
-
-/* 繁体标准选择 */
-.standard-selection {
+    color: var(--text-primary);
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.standard-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.standard-tabs {
-    display: flex;
     gap: 0.5rem;
 }
 
-.standard-tab {
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+.details-subtitle {
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 400;
+    margin-left: 0.5rem;
 }
 
-.standard-tab:hover {
-    background: var(--bg-hover);
+.section-title h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.standard-tab.active {
-    background: var(--primary-color-alpha);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
+.section-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 /* 转换区域 */
 .convert-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 1.5rem;
+    gap: 1.5rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 .input-panel,
 .output-panel {
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
 }
 
-.panel-header {
+.input-panel .section-header,
+.output-panel .section-header {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    margin-bottom: 0;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    gap: 1rem;
 }
 
-.panel-title-info {
+.section-title {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
     flex: 1;
+    width: 100%;
 }
 
-.panel-header h3 {
-    font-size: 1rem;
+.section-title h3 {
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     white-space: nowrap;
 }
 
-.panel-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+/* 标准选择器 */
+.standard-selector {
+    display: inline-flex;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg-primary);
 }
 
-.panel-actions {
-    display: flex;
-    gap: 0.375rem;
-    flex-shrink: 0;
-}
-
-.char-count,
-.chinese-count {
-    padding: 0.25rem 0.5rem;
-    background: var(--primary-color-alpha);
-    color: var(--primary-color);
-    border-radius: 0.25rem;
+.standard-btn {
+    padding: 0.375rem 0.75rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border-right: 1px solid var(--border-color);
+    height: 28px;
+    box-sizing: border-box;
 }
 
-.conversion-count {
-    padding: 0.25rem 0.5rem;
-    background: var(--success-color);
+.standard-btn:last-child {
+    border-right: none;
+}
+
+.standard-btn.active {
+    background: var(--primary-color);
     color: white;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
 }
 
-.no-conversion {
-    padding: 0.25rem 0.5rem;
-    background: var(--warning-color);
-    color: white;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
+.standard-btn:hover:not(.active) {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .panel-content {
     position: relative;
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .text-input,
 .text-output {
     width: 100%;
-    min-height: 300px;
-    padding: 1rem;
+    min-height: 240px;
+    padding: 1.5rem;
     background: var(--bg-primary);
     border: none;
     color: var(--text-primary);
@@ -928,11 +771,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     line-height: 1.6;
     resize: vertical;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    box-sizing: border-box;
+    flex: 1;
 }
 
 .text-input:focus,
 .text-output:focus {
     outline: none;
+    background: var(--bg-primary);
 }
 
 .text-input::placeholder,
@@ -941,47 +787,52 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 .text-output {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-}
-
-.action-btn-small {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
     background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.25rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn-small:hover {
-    background: var(--bg-hover);
     color: var(--text-primary);
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
-}
-
-.action-btn-small.primary {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.action-btn-small.primary:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
-    transform: translateY(-1px);
 }
 
 /* 转换详情 */
-.details-count {
-    font-size: 0.875rem;
+.stats-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
     color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.stat-value.no-conversion {
+    color: var(--warning-color);
+    font-size: 0.875rem;
+}
+
+.conversion-details h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
 }
 
 .details-list {
@@ -1033,6 +884,28 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 }
 
 /* 示例区域 */
+.examples-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.examples-header {
+    margin-bottom: 1rem;
+}
+
+.examples-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .examples-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1043,8 +916,8 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
+    gap: 0.375rem;
+    padding: 0.875rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
@@ -1068,7 +941,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 .example-preview {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 /* 帮助区域 */
@@ -1081,7 +954,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 .help-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
 }
 
@@ -1159,41 +1032,6 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     margin: 0;
 }
 
-/* 消息提示 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-    color: white;
-}
-
-.message-toast.error {
-    background: var(--error-color);
-    color: white;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 1024px) {
     .convert-section {
@@ -1204,28 +1042,46 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 
 @media (max-width: 768px) {
     .converter-content {
-        padding: 1rem 1rem 4rem 1rem;
+        padding: 1rem;
+        padding-bottom: 4rem;
         gap: 1.5rem;
     }
 
-    .mode-section,
     .details-section,
     .examples-section,
     .help-section {
+        padding: 1.25rem;
+    }
+
+    .input-panel .section-header,
+    .output-panel .section-header {
         padding: 1rem;
+        height: auto;
+        min-height: 48px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
-    .mode-tabs {
-        flex-direction: column;
+    .section-title {
+        flex-wrap: wrap;
+        min-width: 0;
+        gap: 0.5rem;
     }
 
-    .mode-tab {
+    .section-title h3 {
+        font-size: 1rem;
+    }
+
+    .standard-selector {
+        order: 2;
+        width: 100%;
         justify-content: center;
     }
 
     .text-input,
     .text-output {
-        min-height: 200px;
+        min-height: 180px;
+        padding: 1rem;
         font-size: 0.875rem;
     }
 
@@ -1239,57 +1095,23 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     }
 
     .help-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
-    }
-
-    .message-toast {
-        bottom: 1rem;
-        right: 1rem;
-        left: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .converter-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .converter-title {
-        font-size: 1.125rem;
-    }
-
-    .mode-tab {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-    }
-
-    .mode-icon {
-        font-size: 1rem;
-    }
-
     .examples-grid {
         grid-template-columns: 1fr;
     }
 
-    .panel-header {
-        flex-wrap: wrap;
-        gap: 0.75rem;
-    }
-
-    .panel-title-info {
-        flex-wrap: wrap;
-        gap: 0.75rem;
-    }
-
-    .panel-actions {
-        justify-content: center;
-        order: 3;
-        width: 100%;
-    }
-
     .details-list {
         grid-template-columns: 1fr;
+    }
+
+    .help-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 }
 </style>

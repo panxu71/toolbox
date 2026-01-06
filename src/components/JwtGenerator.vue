@@ -1,33 +1,31 @@
 <template>
     <div class="jwt-generator">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">JWT 生成器</h2>
-        </div>
-
-        <div class="converter-content">
-            <!-- 模式选择 -->
-            <div class="mode-section">
-                <div class="mode-selector">
-                    <button :class="['mode-btn', { active: mode === 'generate' }]" @click="setMode('generate')">
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="mode-toggle">
+                    <button class="mode-btn" :class="{ active: mode === 'generate' }" @click="setMode('generate')">
                         生成 JWT
                     </button>
-                    <button :class="['mode-btn', { active: mode === 'decode' }]" @click="setMode('decode')">
+                    <button class="mode-btn" :class="{ active: mode === 'decode' }" @click="setMode('decode')">
                         解析 JWT
                     </button>
                 </div>
-            </div>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
+
+        <div class="converter-content">
 
             <!-- 生成模式 -->
             <div v-if="mode === 'generate'" class="generate-section">
                 <!-- Header 配置 -->
                 <div class="config-section">
-                    <h3 class="section-title">Header 配置</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>📋 Header 配置</h3>
+                            <span class="section-subtitle">设置 JWT 头部信息</span>
+                        </div>
+                    </div>
                     <div class="config-grid">
                         <div class="config-item">
                             <label>算法 (alg)</label>
@@ -42,14 +40,26 @@
                         </div>
                         <div class="config-item">
                             <label>类型 (typ)</label>
-                            <input v-model="header.typ" class="config-input" placeholder="JWT" />
+                            <select v-model="header.typ" class="config-select">
+                                <option value="JWT">JWT</option>
+                                <option value="JWS">JWS</option>
+                                <option value="JWE">JWE</option>
+                                <option value="custom">自定义...</option>
+                            </select>
+                            <input v-if="header.typ === 'custom'" v-model="customTyp" class="config-input"
+                                placeholder="请输入自定义类型" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Payload 配置 -->
                 <div class="config-section">
-                    <h3 class="section-title">Payload 配置</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>📦 Payload 配置</h3>
+                            <span class="section-subtitle">设置 JWT 载荷信息</span>
+                        </div>
+                    </div>
                     <div class="config-grid">
                         <div class="config-item">
                             <label>发行者 (iss)</label>
@@ -82,13 +92,18 @@
                         <label>自定义载荷 (JSON格式)</label>
                         <textarea v-model="customPayload" class="payload-textarea"
                             placeholder='{"userId": 123, "role": "admin", "permissions": ["read", "write"]}' rows="6">
-                        </textarea>
+                </textarea>
                     </div>
                 </div>
 
                 <!-- 密钥配置 -->
                 <div class="config-section">
-                    <h3 class="section-title">密钥配置</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>🔐 密钥配置</h3>
+                            <span class="section-subtitle">设置签名密钥</span>
+                        </div>
+                    </div>
                     <div class="secret-input-wrapper">
                         <input v-model="secret" :type="showSecret ? 'text' : 'password'" class="secret-input"
                             placeholder="请输入密钥" />
@@ -111,7 +126,7 @@
                                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                                 <path d="M21 3v5h-5" />
                                 <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                                <path d="M8 16H3v5" />
+                                <path d="M3 21v-5h5" />
                             </svg>
                         </button>
                     </div>
@@ -130,7 +145,13 @@
 
                 <!-- 生成结果 -->
                 <div v-if="generatedJWT" class="result-section">
-                    <h3 class="section-title">生成结果</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>✅ 生成结果</h3>
+                            <span class="section-subtitle">JWT Token 已生成</span>
+                        </div>
+                        <HeaderActionButton icon="copy" tooltip="复制完整Token" @click="copyJWT" />
+                    </div>
                     <div class="jwt-result">
                         <div class="jwt-parts">
                             <div class="jwt-part header-part">
@@ -169,24 +190,28 @@
             <!-- 解析模式 -->
             <div v-if="mode === 'decode'" class="decode-section">
                 <div class="input-section">
-                    <h3 class="section-title">JWT Token 输入</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>📥 JWT Token 输入</h3>
+                            <span class="section-subtitle">粘贴要解析的 JWT Token</span>
+                        </div>
+                        <HeaderActionButton v-if="inputJWT" icon="clear" tooltip="清空输入" @click="clearInput" />
+                    </div>
                     <div class="jwt-input-wrapper">
                         <textarea v-model="inputJWT" class="jwt-input" placeholder="请粘贴 JWT Token..." rows="4"
                             @input="decodeJWT">
-                        </textarea>
-                        <button v-if="inputJWT" class="clear-btn" @click="clearInput" title="清空">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
+                </textarea>
                     </div>
                 </div>
 
                 <!-- 解析结果 -->
                 <div v-if="decodedJWT" class="decode-result-section">
-                    <h3 class="section-title">解析结果</h3>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h3>📊 解析结果</h3>
+                            <span class="section-subtitle">JWT Token 解析详情</span>
+                        </div>
+                    </div>
 
                     <!-- Header -->
                     <div class="decode-result-card">
@@ -277,25 +302,33 @@
             </div>
         </div>
 
-        <!-- 消息提示 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-        </div>
+        <!-- 通知容器 -->
+        <NotificationContainer />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import NotificationContainer from './common/NotificationContainer.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import { useClipboard } from '../composables/useClipboard'
 
 defineEmits<{
     back: []
 }>()
 
-// 模式
-// 使用页面标题管理
+// 使用 composables
 usePageTitle('jwt-generator')
+const { success, error: showError } = useNotification()
+const { copyToClipboard } = useClipboard()
 
+// 获取页面标题
+const pageTitle = 'JWT 生成器'
+
+// 模式
 const mode = ref<'generate' | 'decode'>('generate')
 
 // 生成模式数据
@@ -303,6 +336,8 @@ const header = ref({
     alg: 'HS256',
     typ: 'JWT'
 })
+
+const customTyp = ref('')
 
 const payload = ref({
     iss: '',
@@ -327,10 +362,6 @@ const issuedAtTime = ref('')
 const inputJWT = ref('')
 const decodedJWT = ref<any>(null)
 const decodeError = ref('')
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // JWT 部分
 const jwtParts = computed(() => {
@@ -400,7 +431,7 @@ const generateRandomSecret = () => {
         result += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     secret.value = result
-    showMessage('已生成随机密钥', 'success')
+    success('已生成随机密钥')
 }
 
 // 生成 JWT
@@ -426,7 +457,7 @@ const generateJWT = async () => {
                 const custom = JSON.parse(customPayload.value)
                 Object.assign(finalPayload, custom)
             } catch (error) {
-                showMessage('自定义载荷 JSON 格式错误', 'error')
+                showError('自定义载荷 JSON 格式错误')
                 return
             }
         }
@@ -449,9 +480,9 @@ const generateJWT = async () => {
         // 生成完整 JWT
         generatedJWT.value = `${data}.${signature}`
 
-        showMessage('JWT 生成成功', 'success')
-    } catch (error) {
-        showMessage('JWT 生成失败: ' + (error as Error).message, 'error')
+        success('JWT 生成成功')
+    } catch (err) {
+        showError('JWT 生成失败: ' + (err as Error).message)
     }
 }
 
@@ -488,16 +519,21 @@ const formatTimestamp = (timestamp: number | undefined): string => {
 
 // 复制 JWT
 const copyJWT = async () => {
-    await copyText(generatedJWT.value)
+    const result = await copyToClipboard(generatedJWT.value)
+    if (result) {
+        success('JWT Token 已复制到剪贴板')
+    } else {
+        showError('复制失败，请手动复制')
+    }
 }
 
 // 复制文本
 const copyText = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text)
-        showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+    const result = await copyToClipboard(text)
+    if (result) {
+        success('已复制到剪贴板')
+    } else {
+        showError('复制失败，请手动复制')
     }
 }
 
@@ -508,13 +544,37 @@ const clearInput = () => {
     decodeError.value = ''
 }
 
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+// 清空所有
+const clearAll = () => {
+    // 重置生成模式数据
+    header.value = {
+        alg: 'HS256',
+        typ: 'JWT'
+    }
+    customTyp.value = ''
+    payload.value = {
+        iss: '',
+        sub: '',
+        aud: '',
+        exp: null,
+        nbf: null,
+        iat: null
+    }
+    customPayload.value = ''
+    secret.value = ''
+    generatedJWT.value = ''
+    expireTime.value = ''
+    notBeforeTime.value = ''
+    issuedAtTime.value = ''
+
+    // 重置解析模式数据
+    inputJWT.value = ''
+    decodedJWT.value = null
+    decodeError.value = ''
+
+    // 初始化当前时间
+    initCurrentTime()
+    success('已清空所有数据')
 }
 
 // 监听时间输入变化
@@ -527,6 +587,20 @@ watch([expireTime, notBeforeTime, issuedAtTime], () => {
     }
     if (issuedAtTime.value) {
         payload.value.iat = Math.floor(new Date(issuedAtTime.value).getTime() / 1000)
+    }
+})
+
+// 监听自定义类型变化
+watch(customTyp, (newValue) => {
+    if (header.value.typ === 'custom' && newValue) {
+        header.value.typ = newValue
+    }
+})
+
+// 监听类型选择变化
+watch(() => header.value.typ, (newValue) => {
+    if (newValue !== 'custom' && newValue !== customTyp.value) {
+        customTyp.value = ''
     }
 })
 
@@ -543,127 +617,114 @@ const initCurrentTime = () => {
 
 // 初始化
 initCurrentTime()
-
 </script>
-
 <style scoped>
+/* 模式切换 */
+.mode-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-primary);
+}
+
+.mode-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border-right: 1px solid var(--border-color);
+    height: 36px;
+    box-sizing: border-box;
+}
+
+.mode-btn:last-child {
+    border-right: none;
+}
+
+.mode-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.mode-btn:hover:not(.active) {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
 .jwt-generator {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem 2rem;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
-}
-
-.converter-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: #1e293b;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
 }
 
 .converter-content {
     flex: 1;
-    padding: 2rem;
-    padding-bottom: 6rem;
+    padding: 1.5rem;
+    padding-bottom: 3rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    min-height: 0;
 }
 
-/* 模式选择 */
-.mode-section {
-    background: white;
-    border: 1px solid #e2e8f0;
+/* 通用区域样式 */
+.mode-section,
+.config-section,
+.input-section,
+.result-section,
+.decode-result-section,
+.error-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.mode-selector {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    background: #f1f5f9;
-    border-radius: 0.75rem;
-}
-
-.mode-btn {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background: transparent;
-    border: none;
-    border-radius: 0.5rem;
-    color: #64748b;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-}
-
-.mode-btn:hover {
-    color: #475569;
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.mode-btn.active {
-    background: white;
-    color: #3b82f6;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* 配置区域 */
-.config-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.section-header {
     margin-bottom: 1.5rem;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.section-title {
+.section-title h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin: 0 0 1.5rem 0;
-    color: #1e293b;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #f1f5f9;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 生成和解析模式 */
+.generate-section,
+.decode-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .config-grid {
@@ -682,16 +743,16 @@ initCurrentTime()
 .config-item label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
 }
 
 .config-input,
 .config-select {
     padding: 0.875rem 1rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #1f2937;
+    color: var(--text-primary);
     font-size: 0.875rem;
     transition: all 0.2s;
 }
@@ -699,32 +760,32 @@ initCurrentTime()
 .config-input:focus,
 .config-select:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
 .custom-payload {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border-color);
 }
 
 .custom-payload label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     margin-bottom: 0.75rem;
 }
 
 .payload-textarea {
     width: 100%;
     padding: 1rem;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     resize: vertical;
     transition: all 0.2s;
@@ -734,9 +795,8 @@ initCurrentTime()
 
 .payload-textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
 /* 密钥输入 */
@@ -750,19 +810,19 @@ initCurrentTime()
 .secret-input {
     flex: 1;
     padding: 0.875rem 1rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     transition: all 0.2s;
 }
 
 .secret-input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
 .toggle-secret-btn,
@@ -773,19 +833,19 @@ initCurrentTime()
     width: 2.75rem;
     height: 2.75rem;
     padding: 0;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #6b7280;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .toggle-secret-btn:hover,
 .generate-secret-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-    border-color: #d1d5db;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
 }
 
 /* 生成按钮 */
@@ -801,7 +861,7 @@ initCurrentTime()
     align-items: center;
     gap: 0.75rem;
     padding: 1.25rem 2.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--primary-color);
     border: none;
     border-radius: 1rem;
     color: white;
@@ -809,42 +869,33 @@ initCurrentTime()
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px var(--primary-color-alpha);
 }
 
 .generate-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: var(--primary-color-dark);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 6px 16px var(--primary-color-alpha);
 }
 
 .generate-btn:disabled {
-    background: #9ca3af;
+    background: var(--text-disabled);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
 /* JWT 结果 */
-.result-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 2.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-top: 1.5rem;
-}
-
 .jwt-parts {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 2.5rem;
     padding: 1.5rem;
-    background: #f8fafc;
+    background: var(--bg-tertiary);
     border-radius: 1rem;
     overflow-x: auto;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
 }
 
 .jwt-part {
@@ -858,19 +909,19 @@ initCurrentTime()
 .part-label {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #6b7280;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .part-content {
     padding: 0.75rem 1rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
     border-radius: 0.5rem;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.75rem;
-    color: #374151;
+    color: var(--text-primary);
     word-break: break-all;
     text-align: center;
     max-width: 140px;
@@ -878,41 +929,41 @@ initCurrentTime()
 }
 
 .header-part .part-content {
-    border-color: #ef4444;
-    background: #fef2f2;
-    color: #dc2626;
+    border-color: var(--error-color);
+    background: var(--error-color-alpha);
+    color: var(--error-color);
 }
 
 .payload-part .part-content {
-    border-color: #8b5cf6;
-    background: #f5f3ff;
-    color: #7c3aed;
+    border-color: var(--warning-color);
+    background: var(--warning-color-alpha);
+    color: var(--warning-color);
 }
 
 .signature-part .part-content {
-    border-color: #06b6d4;
-    background: #ecfeff;
-    color: #0891b2;
+    border-color: var(--success-color);
+    background: var(--success-color-alpha);
+    color: var(--success-color);
 }
 
 .jwt-separator {
     font-size: 1.75rem;
     font-weight: bold;
-    color: #9ca3af;
+    color: var(--text-secondary);
     margin: 0 0.5rem;
 }
 
 .jwt-full {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border-color);
 }
 
 .jwt-full label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     margin-bottom: 0.75rem;
 }
 
@@ -925,11 +976,11 @@ initCurrentTime()
     height: 140px;
     padding: 1.25rem;
     padding-right: 3.5rem;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     resize: vertical;
     box-sizing: border-box;
@@ -946,31 +997,22 @@ initCurrentTime()
     width: 2.25rem;
     height: 2.25rem;
     padding: 0;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
     border-radius: 0.5rem;
-    color: #6b7280;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .copy-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-    border-color: #d1d5db;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
 }
 
 /* 解析区域 */
-.input-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 2.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
-}
-
 .jwt-input-wrapper {
     position: relative;
     margin-top: 0.5rem;
@@ -979,12 +1021,11 @@ initCurrentTime()
 .jwt-input {
     width: 100%;
     padding: 1.25rem;
-    padding-right: 3.5rem;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     resize: vertical;
     transition: all 0.2s;
@@ -994,51 +1035,21 @@ initCurrentTime()
 
 .jwt-input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background: white;
-}
-
-.clear-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0;
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.5rem;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.clear-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-    border-color: #d1d5db;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
 /* 解析结果 */
-.decode-result-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 2.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
 .decode-result-card {
-    margin-bottom: 2rem;
-    border: 2px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--border-color);
     border-radius: 1rem;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.decode-result-card:last-child {
+    margin-bottom: 0;
 }
 
 .card-header {
@@ -1046,22 +1057,22 @@ initCurrentTime()
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem 1.75rem;
-    background: #f9fafb;
-    border-bottom: 2px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--border-color);
 }
 
 .card-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-primary);
 }
 
 .json-content {
     padding: 1.75rem;
     margin: 0;
-    background: white;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
     line-height: 1.6;
     overflow-x: auto;
@@ -1070,18 +1081,18 @@ initCurrentTime()
 .token-info {
     margin-top: 2.5rem;
     padding: 2rem;
-    background: #f8fafc;
+    background: var(--bg-tertiary);
     border-radius: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
 }
 
 .token-info h4 {
     margin: 0 0 1.5rem 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-primary);
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .info-grid {
@@ -1095,86 +1106,43 @@ initCurrentTime()
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 0.75rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .info-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .info-value {
     font-size: 0.875rem;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     text-align: right;
     max-width: 150px;
     word-break: break-all;
 }
 
 .info-value.expired {
-    color: #ef4444;
+    color: var(--error-color);
     font-weight: 600;
 }
 
 /* 错误信息 */
-.error-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
 .error-message {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 1.5rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--error-color-alpha);
+    border: 1px solid var(--error-color);
     border-radius: 0.75rem;
-    color: #dc2626;
+    color: var(--error-color);
     font-size: 0.875rem;
-}
-
-/* 消息提示 */
-.message {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    z-index: 9998;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* 响应式设计 */
@@ -1185,10 +1153,12 @@ initCurrentTime()
         gap: 1.5rem;
     }
 
+    .mode-section,
     .config-section,
     .input-section,
     .result-section,
-    .decode-result-section {
+    .decode-result-section,
+    .error-section {
         padding: 1.5rem;
     }
 
@@ -1216,6 +1186,17 @@ initCurrentTime()
 
     .info-grid {
         grid-template-columns: 1fr;
+    }
+
+    .secret-input-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toggle-secret-btn,
+    .generate-secret-btn {
+        width: 100%;
+        height: 2.5rem;
     }
 }
 </style>

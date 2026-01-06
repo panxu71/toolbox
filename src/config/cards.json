@@ -220,11 +220,27 @@
                 }
             },
             {
+                "id": "number-format",
+                "title": "数字格式转换",
+                "description": "阿拉伯数字转罗马数字、中文数字等格式",
+                "icon": "🏛️",
+                "action": "convertNumber",
+                "color": "#8b5cf6"
+            },
+            {
                 "id": "code-formatter",
                 "title": "JS/HTML格式化",
                 "description": "JavaScript、HTML、CSS代码格式化和压缩",
                 "icon": "💻",
                 "action": "formatCode",
+                "color": "#6366f1"
+            },
+            {
+                "id": "code-formatter-new",
+                "title": "JS/HTML格式化（新版）",
+                "description": "JavaScript、HTML、CSS代码格式化和压缩 - 使用公共组件",
+                "icon": "💻",
+                "action": "formatCodeNew",
                 "color": "#6366f1"
             },
             {

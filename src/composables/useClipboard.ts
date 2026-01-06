@@ -1,28 +1,32 @@
+import { ref } from 'vue'
+
 /**
  * 通用剪贴板功能 composable
  */
 export const useClipboard = () => {
+    const isLoading = ref(false)
+    const error = ref<string | null>(null)
     /**
-     * 复制文本到剪贴板
+     * 复制文本到剪贴板 - 新的接口，兼容 CopyButton 组件
      * @param text 要复制的文本
-     * @param successMessage 成功提示消息（可选）
-     * @param errorMessage 失败提示消息（可选）
      * @returns Promise<boolean> 是否复制成功
      */
-    const copyToClipboard = async (
-        text: string,
-        successMessage?: string,
-        errorMessage?: string
-    ): Promise<boolean> => {
+    const copy = async (text: string): Promise<boolean> => {
         if (!text) {
+            error.value = '没有内容可复制'
             return false
         }
 
+        isLoading.value = true
+        error.value = null
+
         try {
             await navigator.clipboard.writeText(text)
+            isLoading.value = false
             return true
-        } catch (error) {
-            console.error('复制失败:', error)
+        } catch (err) {
+            console.error('复制失败:', err)
+            error.value = '复制失败'
 
             // 降级方案：使用传统的 document.execCommand
             try {
@@ -38,12 +42,33 @@ export const useClipboard = () => {
                 const successful = document.execCommand('copy')
                 document.body.removeChild(textArea)
 
+                isLoading.value = false
+                if (!successful) {
+                    error.value = '复制失败'
+                }
                 return successful
             } catch (fallbackError) {
                 console.error('降级复制方案也失败:', fallbackError)
+                error.value = '复制失败'
+                isLoading.value = false
                 return false
             }
         }
+    }
+
+    /**
+     * 复制文本到剪贴板 - 原有接口，保持向后兼容
+     * @param text 要复制的文本
+     * @param successMessage 成功提示消息（可选）
+     * @param errorMessage 失败提示消息（可选）
+     * @returns Promise<boolean> 是否复制成功
+     */
+    const copyToClipboard = async (
+        text: string,
+        successMessage?: string,
+        errorMessage?: string
+    ): Promise<boolean> => {
+        return await copy(text)
     }
 
     /**
@@ -136,6 +161,9 @@ export const useClipboard = () => {
     }
 
     return {
+        copy,
+        isLoading,
+        error,
         copyToClipboard,
         copyJson,
         copyArray,

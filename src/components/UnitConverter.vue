@@ -1,24 +1,47 @@
 <template>
     <div class="unit-converter">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">单位转换工具</h2>
-        </div>
+        <PageHeader :title="title" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="copy" tooltip="复制结果" @click="copyResult" />
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <!-- 单位类型选择 -->
             <div class="category-selector">
-                <div class="category-tabs">
-                    <button v-for="category in categories" :key="category.id" class="category-tab"
-                        :class="{ active: selectedCategory === category.id }" @click="selectCategory(category.id)">
-                        <span class="tab-icon">{{ category.icon }}</span>
-                        <span class="tab-label">{{ category.name }}</span>
-                    </button>
+                <button class="scroll-btn scroll-left" @click="scrollLeft" :disabled="!canScrollLeft">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                </button>
+                <div class="category-tabs-container">
+                    <div class="category-tabs" ref="tabsContainer">
+                        <button v-for="category in categories" :key="category.id" class="category-tab"
+                            :class="{ active: selectedCategory === category.id }" @click="selectCategory(category.id)">
+                            <span class="tab-icon">{{ category.icon }}</span>
+                            <span class="tab-label">{{ category.name }}</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="scroll-btn scroll-right" @click="scrollRight" :disabled="!canScrollRight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 快速示例 -->
+            <div class="examples-section">
+                <div class="section-header">
+                    <h3>快速示例</h3>
+                </div>
+                <div class="conversions-grid">
+                    <div v-for="conversion in getQuickConversions()" :key="conversion.id" class="conversion-item"
+                        @click="applyQuickConversion(conversion)">
+                        <div class="conversion-label">{{ conversion.label }}</div>
+                        <div class="conversion-formula">{{ conversion.formula }}</div>
+                    </div>
                 </div>
             </div>
 
@@ -48,15 +71,7 @@
 
                     <!-- 转换箭头 -->
                     <div class="conversion-arrow">
-                        <button class="swap-btn" @click="swapUnits" title="交换单位">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M8 3L4 7l4 4" />
-                                <path d="M4 7h16" />
-                                <path d="m16 21 4-4-4-4" />
-                                <path d="M20 17H4" />
-                            </svg>
-                        </button>
+                        <HeaderActionButton icon="swap" tooltip="交换单位" @click="swapUnits" />
                     </div>
 
                     <!-- 输出区域 -->
@@ -73,71 +88,61 @@
                         </div>
                         <div class="output-area">
                             <input :value="outputValue" class="value-output" readonly />
-                            <button class="copy-btn" @click="copyResult" title="复制结果">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="output-info">
-                            <div class="unit-info">{{ getUnitInfo(toUnit) }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 常用转换 -->
-                <div class="quick-conversions">
-                    <h3>常用转换</h3>
-                    <div class="conversions-grid">
-                        <div v-for="conversion in getQuickConversions()" :key="conversion.id" class="conversion-item"
-                            @click="applyQuickConversion(conversion)">
-                            <div class="conversion-label">{{ conversion.label }}</div>
-                            <div class="conversion-formula">{{ conversion.formula }}</div>
+                            <div class="output-info">
+                                <div class="unit-info">{{ getUnitInfo(toUnit) }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 转换公式说明 -->
                 <div class="formula-section">
-                    <h3>转换公式</h3>
-                    <div class="formula-info">
-                        <div class="formula-text">{{ getConversionFormula() }}</div>
-                        <div class="formula-example">{{ getFormulaExample() }}</div>
+                    <div class="formula-header">
+                        <h3>{{ getCurrentCategoryIcon() }} 转换公式</h3>
+                    </div>
+                    <div class="formula-content">
+                        <div class="formula-info">
+                            <div class="formula-text">{{ getConversionFormula() }}</div>
+                            <div v-if="getFormulaExample()" class="formula-example">{{ getFormulaExample() }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 消息提示 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import { useClipboard } from '../composables/useClipboard'
 
 defineEmits<{
     back: []
 }>()
 
-// 当前选择的类别
-// 使用页面标题管理
+// 使用 composables
 usePageTitle('unit-convert')
+const { success, error } = useNotification()
+const { copy } = useClipboard()
 
+// 页面标题
+const title = ref('单位转换')
+
+// 滑动相关
+const tabsContainer = ref<HTMLElement>()
+const canScrollLeft = ref(false)
+const canScrollRight = ref(false)
+
+// 当前选择的类别
 const selectedCategory = ref('length')
 const inputValue = ref('')
 const fromUnit = ref('')
 const toUnit = ref('')
 const outputValue = ref('')
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 单位类别定义
 const categories = [
@@ -148,7 +153,11 @@ const categories = [
     { id: 'volume', name: '体积', icon: '🥤' },
     { id: 'speed', name: '速度', icon: '🚗' },
     { id: 'pressure', name: '压力', icon: '💨' },
-    { id: 'energy', name: '能量', icon: '⚡' }
+    { id: 'energy', name: '能量', icon: '⚡' },
+    { id: 'power', name: '功率', icon: '🔌' },
+    { id: 'frequency', name: '频率', icon: '📡' },
+    { id: 'angle', name: '角度', icon: '📐' },
+    { id: 'data', name: '数据', icon: '💾' }
 ]
 
 // 单位定义
@@ -216,9 +225,41 @@ const units = {
         { id: 'kcal', name: '千卡', symbol: 'kcal', toJ: 4184, info: '1千卡 = 1000卡路里' },
         { id: 'kwh', name: '千瓦时', symbol: 'kWh', toJ: 3600000, info: '1千瓦时 = 3.6兆焦' },
         { id: 'btu', name: '英热单位', symbol: 'BTU', toJ: 1055.06, info: '1BTU ≈ 1055焦耳' }
+    ],
+    power: [
+        { id: 'w', name: '瓦特', symbol: 'W', toW: 1, info: '国际标准功率单位' },
+        { id: 'kw', name: '千瓦', symbol: 'kW', toW: 1000, info: '1千瓦 = 1000瓦特' },
+        { id: 'mw', name: '兆瓦', symbol: 'MW', toW: 1000000, info: '1兆瓦 = 100万瓦特' },
+        { id: 'hp', name: '马力', symbol: 'hp', toW: 745.7, info: '1马力 ≈ 745.7瓦特' },
+        { id: 'ps', name: '公制马力', symbol: 'PS', toW: 735.5, info: '1公制马力 ≈ 735.5瓦特' },
+        { id: 'btu_h', name: 'BTU/小时', symbol: 'BTU/h', toW: 0.293, info: '1BTU/h ≈ 0.293瓦特' }
+    ],
+    frequency: [
+        { id: 'hz', name: '赫兹', symbol: 'Hz', toHz: 1, info: '国际标准频率单位' },
+        { id: 'khz', name: '千赫', symbol: 'kHz', toHz: 1000, info: '1千赫 = 1000赫兹' },
+        { id: 'mhz', name: '兆赫', symbol: 'MHz', toHz: 1000000, info: '1兆赫 = 100万赫兹' },
+        { id: 'ghz', name: '吉赫', symbol: 'GHz', toHz: 1000000000, info: '1吉赫 = 10亿赫兹' },
+        { id: 'rpm', name: '转/分', symbol: 'rpm', toHz: 0.0167, info: '1转/分 ≈ 0.0167赫兹' },
+        { id: 'rps', name: '转/秒', symbol: 'rps', toHz: 1, info: '1转/秒 = 1赫兹' }
+    ],
+    angle: [
+        { id: 'deg', name: '度', symbol: '°', toDeg: 1, info: '角度的常用单位' },
+        { id: 'rad', name: '弧度', symbol: 'rad', toDeg: 57.2958, info: '1弧度 ≈ 57.296度' },
+        { id: 'grad', name: '百分度', symbol: 'grad', toDeg: 0.9, info: '1百分度 = 0.9度' },
+        { id: 'turn', name: '圈', symbol: 'turn', toDeg: 360, info: '1圈 = 360度' },
+        { id: 'arcmin', name: '角分', symbol: "'", toDeg: 0.0167, info: '1角分 = 1/60度' },
+        { id: 'arcsec', name: '角秒', symbol: '"', toDeg: 0.000278, info: '1角秒 = 1/3600度' }
+    ],
+    data: [
+        { id: 'b', name: '字节', symbol: 'B', toByte: 1, info: '计算机存储基本单位' },
+        { id: 'kb', name: '千字节', symbol: 'KB', toByte: 1024, info: '1KB = 1024字节' },
+        { id: 'mb', name: '兆字节', symbol: 'MB', toByte: 1048576, info: '1MB = 1024KB' },
+        { id: 'gb', name: '吉字节', symbol: 'GB', toByte: 1073741824, info: '1GB = 1024MB' },
+        { id: 'tb', name: '太字节', symbol: 'TB', toByte: 1099511627776, info: '1TB = 1024GB' },
+        { id: 'pb', name: '拍字节', symbol: 'PB', toByte: 1125899906842624, info: '1PB = 1024TB' },
+        { id: 'bit', name: '比特', symbol: 'bit', toByte: 0.125, info: '1字节 = 8比特' }
     ]
 }
-
 // 当前类别的单位
 const currentUnits = computed(() => {
     return units[selectedCategory.value as keyof typeof units] || []
@@ -232,6 +273,11 @@ const selectCategory = (categoryId: string) => {
     fromUnit.value = firstUnit?.id || ''
     toUnit.value = secondUnit?.id || ''
     convert()
+
+    // 滚动到活跃标签
+    nextTick(() => {
+        scrollToActiveTab()
+    })
 }
 
 // 交换单位
@@ -300,7 +346,11 @@ const getConversionKey = (): string => {
         volume: 'toLiter',
         speed: 'toMs',
         pressure: 'toPa',
-        energy: 'toJ'
+        energy: 'toJ',
+        power: 'toW',
+        frequency: 'toHz',
+        angle: 'toDeg',
+        data: 'toByte'
     }
     return keyMap[selectedCategory.value] || ''
 }
@@ -341,7 +391,7 @@ const getUnitInfo = (unitId: string): string => {
     const unit = currentUnits.value.find(u => u.id === unitId)
     return unit?.info || ''
 }
-
+// 获取常用转换
 // 获取常用转换
 const getQuickConversions = () => {
     const conversions: Record<string, any[]> = {
@@ -362,6 +412,60 @@ const getQuickConversions = () => {
             { id: 2, label: '100°C → 华氏度', formula: '100°C = 212°F', from: 'c', to: 'f', value: 100 },
             { id: 3, label: '0°C → 开尔文', formula: '0°C = 273.15K', from: 'c', to: 'k', value: 0 },
             { id: 4, label: '室温 → 各单位', formula: '20°C = 68°F = 293K', from: 'c', to: 'f', value: 20 }
+        ],
+        area: [
+            { id: 1, label: '1平方米 → 平方厘米', formula: '1 m² = 10000 cm²', from: 'm2', to: 'cm2', value: 1 },
+            { id: 2, label: '1公顷 → 平方米', formula: '1 ha = 10000 m²', from: 'hectare', to: 'm2', value: 1 },
+            { id: 3, label: '1英亩 → 平方米', formula: '1 ac ≈ 4047 m²', from: 'acre', to: 'm2', value: 1 },
+            { id: 4, label: '1平方千米 → 公顷', formula: '1 km² = 100 ha', from: 'km2', to: 'hectare', value: 1 }
+        ],
+        volume: [
+            { id: 1, label: '1升 → 毫升', formula: '1 L = 1000 ml', from: 'l', to: 'ml', value: 1 },
+            { id: 2, label: '1立方米 → 升', formula: '1 m³ = 1000 L', from: 'm3', to: 'l', value: 1 },
+            { id: 3, label: '1加仑 → 升', formula: '1 gal ≈ 3.785 L', from: 'gallon', to: 'l', value: 1 },
+            { id: 4, label: '1品脱 → 毫升', formula: '1 pt ≈ 473 ml', from: 'pint', to: 'ml', value: 1 }
+        ],
+        speed: [
+            { id: 1, label: '1米/秒 → 千米/时', formula: '1 m/s = 3.6 km/h', from: 'ms', to: 'kmh', value: 1 },
+            { id: 2, label: '100千米/时 → 英里/时', formula: '100 km/h ≈ 62.1 mph', from: 'kmh', to: 'mph', value: 100 },
+            { id: 3, label: '1马赫 → 千米/时', formula: '1 Ma ≈ 1235 km/h', from: 'mach', to: 'kmh', value: 1 },
+            { id: 4, label: '1节 → 千米/时', formula: '1 kn ≈ 1.852 km/h', from: 'knot', to: 'kmh', value: 1 }
+        ],
+        pressure: [
+            { id: 1, label: '1大气压 → 千帕', formula: '1 atm ≈ 101.3 kPa', from: 'atm', to: 'kpa', value: 1 },
+            { id: 2, label: '1巴 → 帕斯卡', formula: '1 bar = 100000 Pa', from: 'bar', to: 'pa', value: 1 },
+            { id: 3, label: '1psi → 千帕', formula: '1 psi ≈ 6.895 kPa', from: 'psi', to: 'kpa', value: 1 },
+            { id: 4, label: '760毫米汞柱 → 大气压', formula: '760 mmHg = 1 atm', from: 'mmhg', to: 'atm', value: 760 }
+        ],
+        energy: [
+            { id: 1, label: '1千焦 → 焦耳', formula: '1 kJ = 1000 J', from: 'kj', to: 'j', value: 1 },
+            { id: 2, label: '1千卡 → 焦耳', formula: '1 kcal = 4184 J', from: 'kcal', to: 'j', value: 1 },
+            { id: 3, label: '1千瓦时 → 兆焦', formula: '1 kWh = 3.6 MJ', from: 'kwh', to: 'kj', value: 1 },
+            { id: 4, label: '1BTU → 焦耳', formula: '1 BTU ≈ 1055 J', from: 'btu', to: 'j', value: 1 }
+        ],
+        power: [
+            { id: 1, label: '1千瓦 → 瓦特', formula: '1 kW = 1000 W', from: 'kw', to: 'w', value: 1 },
+            { id: 2, label: '1马力 → 瓦特', formula: '1 hp ≈ 745.7 W', from: 'hp', to: 'w', value: 1 },
+            { id: 3, label: '1兆瓦 → 千瓦', formula: '1 MW = 1000 kW', from: 'mw', to: 'kw', value: 1 },
+            { id: 4, label: '1公制马力 → 瓦特', formula: '1 PS ≈ 735.5 W', from: 'ps', to: 'w', value: 1 }
+        ],
+        frequency: [
+            { id: 1, label: '1千赫 → 赫兹', formula: '1 kHz = 1000 Hz', from: 'khz', to: 'hz', value: 1 },
+            { id: 2, label: '1兆赫 → 千赫', formula: '1 MHz = 1000 kHz', from: 'mhz', to: 'khz', value: 1 },
+            { id: 3, label: '1吉赫 → 兆赫', formula: '1 GHz = 1000 MHz', from: 'ghz', to: 'mhz', value: 1 },
+            { id: 4, label: '60转/分 → 赫兹', formula: '60 rpm = 1 Hz', from: 'rpm', to: 'hz', value: 60 }
+        ],
+        angle: [
+            { id: 1, label: '180度 → 弧度', formula: '180° = π rad', from: 'deg', to: 'rad', value: 180 },
+            { id: 2, label: '1弧度 → 度', formula: '1 rad ≈ 57.3°', from: 'rad', to: 'deg', value: 1 },
+            { id: 3, label: '1圈 → 度', formula: '1 turn = 360°', from: 'turn', to: 'deg', value: 1 },
+            { id: 4, label: '90度 → 百分度', formula: '90° = 100 grad', from: 'deg', to: 'grad', value: 90 }
+        ],
+        data: [
+            { id: 1, label: '1KB → 字节', formula: '1 KB = 1024 B', from: 'kb', to: 'b', value: 1 },
+            { id: 2, label: '1MB → KB', formula: '1 MB = 1024 KB', from: 'mb', to: 'kb', value: 1 },
+            { id: 3, label: '1GB → MB', formula: '1 GB = 1024 MB', from: 'gb', to: 'mb', value: 1 },
+            { id: 4, label: '1字节 → 比特', formula: '1 B = 8 bit', from: 'b', to: 'bit', value: 1 }
         ]
     }
     return conversions[selectedCategory.value] || []
@@ -373,7 +477,74 @@ const applyQuickConversion = (conversion: any) => {
     toUnit.value = conversion.to
     inputValue.value = conversion.value.toString()
     convert()
-    showMessage(`已应用转换: ${conversion.label}`, 'success')
+    success(`已应用转换: ${conversion.label}`)
+}
+
+// 获取当前类别图标
+const getCurrentCategoryIcon = (): string => {
+    const category = categories.find(c => c.id === selectedCategory.value)
+    return category?.icon || '📐'
+}
+
+// 检查滑动状态
+const checkScrollState = () => {
+    if (!tabsContainer.value) return
+
+    const container = tabsContainer.value
+    const scrollLeft = container.scrollLeft
+    const scrollWidth = container.scrollWidth
+    const clientWidth = container.clientWidth
+    const maxScroll = scrollWidth - clientWidth
+
+    canScrollLeft.value = scrollLeft > 5
+    canScrollRight.value = maxScroll > 10 && scrollLeft < maxScroll - 5
+}
+
+// 向左滑动
+const scrollLeft = () => {
+    if (!tabsContainer.value) return
+
+    const scrollAmount = 200
+    tabsContainer.value.scrollBy({
+        left: -scrollAmount,
+        behavior: 'smooth'
+    })
+
+    setTimeout(checkScrollState, 300)
+}
+
+// 向右滑动
+const scrollRight = () => {
+    if (!tabsContainer.value) return
+
+    const scrollAmount = 200
+    tabsContainer.value.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
+    })
+
+    setTimeout(checkScrollState, 300)
+}
+
+// 滚动到活跃标签
+const scrollToActiveTab = () => {
+    if (!tabsContainer.value || !tabsWrapper.value) return
+
+    const activeTab = tabsWrapper.value.querySelector('.category-tab.active') as HTMLElement
+    if (!activeTab) return
+
+    const containerRect = tabsContainer.value.getBoundingClientRect()
+    const tabRect = activeTab.getBoundingClientRect()
+
+    if (tabRect.left < containerRect.left || tabRect.right > containerRect.right) {
+        const scrollLeft = activeTab.offsetLeft - (tabsContainer.value.clientWidth - activeTab.clientWidth) / 2
+        tabsContainer.value.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+        })
+    }
+
+    setTimeout(checkScrollState, 300)
 }
 
 // 获取转换公式
@@ -436,34 +607,46 @@ const getFormulaExample = (): string => {
 // 复制结果
 const copyResult = async () => {
     if (!outputValue.value) {
-        showMessage('没有可复制的结果', 'error')
+        error('没有可复制的结果')
         return
     }
 
-    try {
-        await navigator.clipboard.writeText(outputValue.value)
-        showMessage('结果已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+    const copySuccess = await copy(outputValue.value)
+    if (copySuccess) {
+        success('结果已复制到剪贴板')
+    } else {
+        error('复制失败')
     }
 }
 
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+// 清空所有
+const clearAll = () => {
+    inputValue.value = ''
+    outputValue.value = ''
+    success('已清空所有内容')
 }
 
 // 初始化
+// 初始化
 onMounted(() => {
     selectCategory('length')
+
+    // 初始化滑动状态，增加延迟确保DOM完全渲染
+    setTimeout(() => {
+        checkScrollState()
+
+        // 监听容器滚动事件
+        if (tabsContainer.value) {
+            tabsContainer.value.addEventListener('scroll', checkScrollState)
+        }
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', () => {
+            setTimeout(checkScrollState, 100)
+        })
+    }, 100)
 })
-
 </script>
-
 <style scoped>
 .unit-converter {
     width: 100%;
@@ -473,78 +656,96 @@ onMounted(() => {
     background: var(--bg-primary);
 }
 
-.converter-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-}
-
 .converter-content {
     flex: 1;
-    padding: 1.5rem;
+    padding: 24px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    max-width: 1400px;
+    gap: 24px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    min-height: 0;
 }
 
 /* 类别选择器 */
 .category-selector {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    padding: 1rem;
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.scroll-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.scroll-btn:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+.scroll-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.category-tabs-container {
+    flex: 1;
+    position: relative;
+    min-width: 0;
 }
 
 .category-tabs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.5rem;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 2px 8px 2px 2px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .category-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 0.75rem;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    box-sizing: border-box;
 }
 
 .category-tab:hover {
@@ -559,25 +760,101 @@ onMounted(() => {
 }
 
 .tab-icon {
-    font-size: 1.5rem;
+    font-size: 20px;
+    line-height: 1;
 }
 
 .tab-label {
-    font-size: 0.875rem;
+    font-size: 10px;
     font-weight: 500;
+    line-height: 1;
+    text-align: center;
+}
+
+/* 快速示例 */
+.examples-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    height: 48px;
+    box-sizing: border-box;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.conversions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    padding: 16px;
+}
+
+.conversion-item {
+    padding: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.conversion-item:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-tertiary);
+}
+
+.conversion-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.conversion-formula {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.no-conversions {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 /* 转换器主体 */
 .converter-main {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 24px;
+    flex-shrink: 0;
 }
 
 .conversion-panel {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    gap: 2rem;
+    gap: 24px;
     align-items: start;
 }
 
@@ -585,63 +862,46 @@ onMounted(() => {
 .output-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.section-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
 }
 
 .unit-selector {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .unit-select {
-    padding: 0.5rem 0.75rem;
+    padding: 8px 12px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 14px;
     cursor: pointer;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .input-area,
 .output-area {
-    padding: 1.5rem;
+    padding: 20px;
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .value-input,
 .value-output {
-    flex: 1;
-    padding: 1rem 1.25rem;
+    padding: 16px 20px;
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
-    font-size: 1.25rem;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 18px;
+    font-family: var(--font-mono);
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: var(--transition);
 }
 
 .value-input:focus {
@@ -655,29 +915,25 @@ onMounted(() => {
     cursor: default;
 }
 
-.copy-btn {
-    padding: 0.75rem;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 0.5rem;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.copy-btn:hover {
-    background: var(--primary-color-dark, #4f46e5);
-}
-
 .input-info,
 .output-info {
-    padding: 0 1.5rem 1rem 1.5rem;
+    margin-top: 8px;
+    padding: 8px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    height: 32px;
 }
 
 .unit-info {
-    font-size: 0.875rem;
+    font-size: 12px;
     color: var(--text-secondary);
     font-style: italic;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
+    line-height: 1.2;
 }
 
 /* 转换箭头 */
@@ -685,149 +941,71 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 4rem;
-}
-
-.swap-btn {
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.swap-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    transform: rotate(180deg);
-}
-
-/* 常用转换 */
-.quick-conversions {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    padding: 1.5rem;
-}
-
-.quick-conversions h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.conversions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.conversion-item {
-    padding: 1rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.conversion-item:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-tertiary);
-}
-
-.conversion-label {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.conversion-formula {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-family: monospace;
+    padding-top: 60px;
 }
 
 /* 公式说明 */
 .formula-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    flex-shrink: 0;
 }
 
-.formula-section h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.125rem;
+.formula-header {
+    margin-bottom: 16px;
+}
+
+.formula-header h3 {
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.formula-content {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
 }
 
 .formula-info {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 12px;
 }
 
 .formula-text {
-    font-family: monospace;
-    font-size: 1rem;
+    font-family: var(--font-mono);
+    font-size: 16px;
     color: var(--text-primary);
     background: var(--bg-primary);
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .formula-example {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-secondary);
     font-style: italic;
-}
-
-/* 消息提示 */
-.message {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 1rem 1.5rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
 }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
     .conversion-panel {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 20px;
     }
 
     .conversion-arrow {
@@ -838,68 +1016,56 @@ onMounted(() => {
     .output-section {
         order: 3;
     }
-
-    .swap-btn:hover {
-        transform: rotate(90deg);
-    }
 }
 
 @media (max-width: 768px) {
     .converter-content {
-        padding: 1rem;
-        gap: 1.5rem;
-    }
-
-    .category-tabs {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        padding: 16px;
+        gap: 20px;
     }
 
     .category-tab {
-        padding: 0.75rem 0.5rem;
+        width: 56px;
+        height: 56px;
+        padding: 6px;
+        gap: 2px;
     }
 
     .tab-icon {
-        font-size: 1.25rem;
+        font-size: 18px;
     }
 
     .tab-label {
-        font-size: 0.75rem;
+        font-size: 9px;
     }
 
     .conversions-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        padding: 12px;
+        gap: 6px;
+    }
+
+    .conversion-item {
+        padding: 10px;
+    }
+
+    .conversion-label {
+        font-size: 12px;
+    }
+
+    .conversion-formula {
+        font-size: 10px;
     }
 
     .unit-select {
         min-width: 150px;
-        font-size: 0.75rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .converter-header {
-        padding: 1rem;
+        font-size: 12px;
     }
 
-    .converter-title {
-        font-size: 1.25rem;
-    }
-
-    .section-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-    }
-
-    .input-area,
-    .output-area {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .copy-btn {
-        align-self: flex-end;
-        margin-top: 0.5rem;
+    .value-input,
+    .value-output {
+        font-size: 16px;
+        padding: 12px 16px;
     }
 }
 </style>

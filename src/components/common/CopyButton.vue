@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useClipboard } from '../../composables/useClipboard'
 import { useNotification } from '../../composables/useNotification'
 import ActionButton from './ActionButton.vue'
