@@ -201,14 +201,6 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'api-tester': 'api-tester',
         'uuid-generator': 'uuid-generator',
         'password-generator': 'password-generator',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
-        'password-generator-new': 'password-generator-new',
         'qr-generator': 'qr-generator',
         'crontab-generator': 'crontab-generator',
         'markdown-editor': 'markdown-editor',
@@ -322,60 +314,6 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'generatePassword':
                 openPage('password-generator')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
-                return // 不需要loading状态
-            case 'generatePasswordNew':
-                openPage('password-generator-new')
                 return // 不需要loading状态
             case 'generateRsaKeys':
                 openPage('rsa-key-generator')

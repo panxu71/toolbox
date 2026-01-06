@@ -1,23 +1,10 @@
 <template>
     <div class="password-generator">
-        <div class="generator-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="generator-title">密码生成器</h2>
-            <div class="generator-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="generator-content">
             <!-- 密码生成设置 -->
@@ -134,16 +121,16 @@
                         <div class="password-actions">
                             <button class="password-action-btn" @click="togglePasswordVisibility"
                                 :title="hidePassword ? '显示密码' : '隐藏密码'">
-                                <svg v-if="hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                <svg v-if="hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path
                                         d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                                     <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
                                 </svg>
                             </button>
                             <button class="password-action-btn" @click="copyPassword" title="复制密码">
@@ -153,7 +140,7 @@
                                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                 </svg>
                             </button>
-                            <button class="password-action-btn" @click="generatePassword" title="重新生成">
+                            <button class="password-action-btn" @click="generatePassword(true)" title="重新生成">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
@@ -317,16 +304,16 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import cardsData from '../config/cards.json'
 
 defineEmits<{
     back: []
@@ -334,6 +321,21 @@ defineEmits<{
 
 // 使用页面标题管理
 usePageTitle('password-generator')
+
+// 使用公共通知系统
+const { success, error } = useNotification()
+
+// 获取卡片标题
+const cardTitle = computed(() => {
+    // 遍历所有分类的卡片
+    for (const categoryCards of Object.values(cardsData.cards)) {
+        const card = categoryCards.find((card: any) => card.id === 'password-generator')
+        if (card) {
+            return card.title
+        }
+    }
+    return '密码生成器'
+})
 
 // 密码设置
 const passwordLength = ref(16)
@@ -346,16 +348,12 @@ const excludeAmbiguous = ref(false)
 
 // 生成的密码
 const generatedPassword = ref('')
-const hidePassword = ref(false)
+const hidePassword = ref(true)
 
 // 批量生成
 const batchCount = ref(10)
 const batchPasswords = ref<string[]>([])
 const hideBatchPasswords = ref(true)
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 字符集定义
 const characterSets = {
@@ -427,11 +425,11 @@ const crackTime = computed(() => {
 })
 
 // 生成密码
-const generatePassword = () => {
+const generatePassword = (showNotification = false) => {
     const chars = availableCharacters.value
 
     if (chars.length === 0) {
-        showMessage('请至少选择一种字符类型', 'error')
+        error('请至少选择一种字符类型')
         return
     }
 
@@ -458,6 +456,11 @@ const generatePassword = () => {
 
     // 打乱密码字符顺序
     generatedPassword.value = shuffleString(password)
+    
+    // 如果是手动重新生成，显示通知
+    if (showNotification) {
+        success('密码已重新生成')
+    }
 }
 
 // 获取随机字符
@@ -519,7 +522,13 @@ const applyPreset = (preset: string) => {
             break
     }
     generatePassword()
-    showMessage(`已应用${preset === 'simple' ? '简单' : preset === 'standard' ? '标准' : preset === 'secure' ? '安全' : 'PIN码'}预设`, 'success')
+    const presetNames = {
+        simple: '简单',
+        standard: '标准', 
+        secure: '安全',
+        pin: 'PIN码'
+    }
+    success(`已应用${presetNames[preset as keyof typeof presetNames]}预设`)
 }
 
 // 切换密码可见性
@@ -530,28 +539,28 @@ const togglePasswordVisibility = () => {
 // 复制密码
 const copyPassword = async () => {
     if (!generatedPassword.value) {
-        showMessage('没有可复制的密码', 'error')
+        error('没有可复制的密码')
         return
     }
 
     try {
         await navigator.clipboard.writeText(generatedPassword.value)
-        showMessage('密码已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+        success('密码已复制到剪贴板')
+    } catch (err) {
+        error('复制失败')
     }
 }
 
 // 批量生成密码
 const generateBatchPasswords = () => {
     if (batchCount.value < 1 || batchCount.value > 100) {
-        showMessage('生成数量必须在1-100之间', 'error')
+        error('生成数量必须在1-100之间')
         return
     }
 
     const chars = availableCharacters.value
     if (chars.length === 0) {
-        showMessage('请至少选择一种字符类型', 'error')
+        error('请至少选择一种字符类型')
         return
     }
 
@@ -583,16 +592,16 @@ const generateBatchPasswords = () => {
         batchPasswords.value.push(shuffleString(password))
     }
 
-    showMessage(`已生成 ${batchCount.value} 个密码`, 'success')
+    success(`已生成 ${batchCount.value} 个密码`)
 }
 
 // 复制批量密码
 const copyBatchPassword = async (password: string) => {
     try {
         await navigator.clipboard.writeText(password)
-        showMessage('密码已复制', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+        success('密码已复制')
+    } catch (err) {
+        error('复制失败')
     }
 }
 
@@ -608,16 +617,16 @@ const copyAllPasswords = async () => {
     const allPasswords = batchPasswords.value.join('\n')
     try {
         await navigator.clipboard.writeText(allPasswords)
-        showMessage('所有密码已复制', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+        success('所有密码已复制')
+    } catch (err) {
+        error('复制失败')
     }
 }
 
 // 清空批量密码
 const clearBatch = () => {
     batchPasswords.value = []
-    showMessage('已清空批量密码', 'success')
+    success('已清空批量密码')
 }
 
 // 导出密码
@@ -647,31 +656,20 @@ const exportPasswords = () => {
     a.download = `passwords-${Date.now()}.txt`
     a.click()
     URL.revokeObjectURL(url)
-    showMessage('密码已导出', 'success')
+    success('密码已导出')
 }
 
 // 清空所有
 const clearAll = () => {
     generatedPassword.value = ''
     batchPasswords.value = []
-    showMessage('已清空所有内容', 'success')
-}
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    success('已清空所有内容')
 }
 
 // 组件挂载时生成初始密码
 onMounted(() => {
     generatePassword()
 })
-
-
 </script>
 <style scoped>
 .password-generator {
@@ -684,77 +682,14 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.generator-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.generator-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.generator-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
 .generator-content {
     flex: 1;
-    padding: 1.5rem;
+    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    max-width: 1400px;
+    gap: 20px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
@@ -762,19 +697,19 @@ onMounted(() => {
 .generator-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 16px;
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
+    margin-bottom: 16px;
 }
 
 .section-header h3 {
-    font-size: 1.125rem;
+    font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -783,11 +718,11 @@ onMounted(() => {
 .section-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .info-text {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-secondary);
 }
 
@@ -795,7 +730,7 @@ onMounted(() => {
 .password-strength {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
 }
 
 .strength-indicator {
@@ -833,7 +768,7 @@ onMounted(() => {
 }
 
 .strength-text {
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -861,23 +796,23 @@ onMounted(() => {
 .password-settings {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 20px;
 }
 
 .settings-grid {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 20px;
 }
 
 .setting-group {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 12px;
 }
 
 .setting-label {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -885,7 +820,7 @@ onMounted(() => {
 .length-controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 16px;
 }
 
 .length-slider {
@@ -919,13 +854,13 @@ onMounted(() => {
 
 .length-input {
     width: 80px;
-    padding: 0.5rem;
+    padding: 8px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 6px;
     color: var(--text-primary);
     text-align: center;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .length-input:focus {
@@ -936,19 +871,19 @@ onMounted(() => {
 
 .character-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
 }
 
 .checkbox-label {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 8px;
     cursor: pointer;
-    padding: 0.75rem;
+    padding: 8px 12px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 6px;
     transition: all 0.2s ease;
 }
 
@@ -966,45 +901,46 @@ onMounted(() => {
 .checkbox-content {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 2px;
     flex: 1;
 }
 
 .checkbox-text {
-    font-size: 0.875rem;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-primary);
 }
 
 .character-preview {
-    font-size: 0.75rem;
+    font-size: 11px;
     color: var(--text-secondary);
     font-family: 'Courier New', monospace;
     word-break: break-all;
+    line-height: 1.2;
 }
 
 .quick-presets h4 {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 1rem 0;
+    margin: 0 0 16px 0;
 }
 
 .preset-buttons {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.75rem;
+    gap: 12px;
 }
 
 .preset-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
-    padding: 1rem;
+    gap: 4px;
+    padding: 16px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1020,12 +956,12 @@ onMounted(() => {
 }
 
 .preset-name {
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 600;
 }
 
 .preset-desc {
-    font-size: 0.75rem;
+    font-size: 12px;
     opacity: 0.8;
 }
 
@@ -1033,17 +969,17 @@ onMounted(() => {
 .password-result {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 16px;
 }
 
 .password-display {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
     background: var(--bg-tertiary);
     border: 2px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 16px;
     transition: all 0.2s ease;
 }
 
@@ -1055,7 +991,7 @@ onMounted(() => {
 .password-value {
     flex: 1;
     font-family: 'Courier New', monospace;
-    font-size: 1.125rem;
+    font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
     word-break: break-all;
@@ -1069,18 +1005,18 @@ onMounted(() => {
 
 .password-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .password-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 40px;
+    height: 40px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1097,28 +1033,28 @@ onMounted(() => {
 .password-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
+    gap: 16px;
 }
 
 .info-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    padding: 1rem;
+    gap: 4px;
+    padding: 16px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     text-align: center;
 }
 
 .info-label {
-    font-size: 0.75rem;
+    font-size: 12px;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
 .info-value {
-    font-size: 1rem;
+    font-size: 16px;
     color: var(--text-primary);
     font-weight: 600;
 }
@@ -1127,36 +1063,36 @@ onMounted(() => {
 .batch-generator {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 16px;
 }
 
 .batch-controls {
     display: flex;
     align-items: end;
-    gap: 1rem;
+    gap: 16px;
 }
 
 .batch-input-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .batch-input-group label {
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
 }
 
 .batch-count-input {
     width: 100px;
-    padding: 0.75rem;
+    padding: 12px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     color: var(--text-primary);
     text-align: center;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .batch-count-input:focus {
@@ -1169,13 +1105,13 @@ onMounted(() => {
 .batch-export-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    gap: 8px;
+    padding: 12px 24px;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -1209,19 +1145,19 @@ onMounted(() => {
 .batch-results {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 16px;
 }
 
 .batch-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 16px;
 }
 
 .batch-header h4 {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -1230,15 +1166,15 @@ onMounted(() => {
 .clear-batch-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: 8px;
+    padding: 8px 16px;
     background: var(--error-color);
     color: white;
     border: none;
-    border-radius: 0.375rem;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .clear-batch-btn:hover {
@@ -1248,31 +1184,31 @@ onMounted(() => {
 .batch-password-list {
     max-height: 300px;
     overflow-y: auto;
-    margin-bottom: 1rem;
+    margin-bottom: 16px;
 }
 
 .batch-password-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
+    gap: 16px;
+    padding: 12px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 8px;
 }
 
 .batch-password-index {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-secondary);
     font-weight: 500;
-    min-width: 2rem;
+    min-width: 32px;
 }
 
 .batch-password-value {
     flex: 1;
     font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-primary);
     word-break: break-all;
 }
@@ -1285,11 +1221,11 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 32px;
+    height: 32px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: 6px;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1303,7 +1239,7 @@ onMounted(() => {
 
 .batch-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 12px;
     justify-content: center;
 }
 
@@ -1311,15 +1247,15 @@ onMounted(() => {
 .copy-all-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    gap: 8px;
+    padding: 12px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -1334,21 +1270,21 @@ onMounted(() => {
 .security-tips {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 16px;
 }
 
 .tips-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
+    gap: 16px;
 }
 
 .tip-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
+    border-radius: 8px;
+    padding: 16px;
     text-align: center;
     transition: all 0.2s ease;
 }
@@ -1360,67 +1296,33 @@ onMounted(() => {
 }
 
 .tip-icon {
-    font-size: 2rem;
-    margin-bottom: 0.75rem;
+    font-size: 32px;
+    margin-bottom: 12px;
 }
 
 .tip-card h4 {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 12px 0;
 }
 
 .tip-card p {
-    font-size: 0.875rem;
+    font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0;
 }
 
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     .generator-content {
-        padding: 1rem;
-        gap: 1.5rem;
+        padding: 16px;
+        gap: 24px;
     }
 
     .generator-section {
-        padding: 1rem;
+        padding: 16px;
     }
 
     .character-options {
@@ -1443,7 +1345,7 @@ onMounted(() => {
     .password-display {
         flex-direction: column;
         align-items: stretch;
-        gap: 1rem;
+        gap: 16px;
     }
 
     .password-actions {
