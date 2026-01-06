@@ -1,35 +1,37 @@
 <template>
     <div class="uuid-generator">
-        <div class="generator-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="generator-title">UUID生成器</h2>
-            <div class="generator-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="formatter-actions">
+                    <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+                    <HeaderActionButton icon="copy" tooltip="复制全部" @click="copyAllUuids" :disabled="uuids.length === 0" />
+                    <HeaderActionButton icon="format" tooltip="复制JSON" @click="copyAllAsJson" :disabled="uuids.length === 0" />
+                    <HeaderActionButton icon="download" tooltip="导出文件" @click="exportUuids" :disabled="uuids.length === 0" />
+                </div>
+            </template>
+        </PageHeader>
 
         <div class="generator-content">
             <!-- UUID生成器 -->
             <div class="generator-section">
+                <div class="section-header">
+                    <div class="header-content">
+                        <div class="header-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                <path d="M2 17l10 5 10-5" />
+                                <path d="M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <div class="header-text">
+                            <h3>UUID生成器</h3>
+                            <p>生成各种版本的UUID（通用唯一标识符）</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="uuid-container">
                     <div class="uuid-controls">
-                        <div class="section-header">
-                            <h3>UUID生成器</h3>
-                            <div class="section-info">
-                                <span class="info-text">生成各种版本的UUID（通用唯一标识符）</span>
-                            </div>
-                        </div>
                         <div class="control-group">
                             <label>UUID版本</label>
                             <select v-model="selectedVersion" @change="generateUuid" class="version-select">
@@ -38,19 +40,20 @@
                                 <option value="v7">UUID v7 (时间戳+随机)</option>
                             </select>
                         </div>
+                        
                         <div class="control-group">
                             <label>生成数量</label>
                             <div class="quantity-controls">
-                                <input v-model.number="quantity" type="number" min="1" max="1000"
-                                    class="quantity-input" />
+                                <input v-model.number="quantity" type="number" min="1" max="1000" class="quantity-input" />
                                 <div class="quantity-buttons">
-                                    <button @click="setQuantity(1)" :class="{ active: quantity === 1 }">1</button>
-                                    <button @click="setQuantity(10)" :class="{ active: quantity === 10 }">10</button>
-                                    <button @click="setQuantity(50)" :class="{ active: quantity === 50 }">50</button>
-                                    <button @click="setQuantity(100)" :class="{ active: quantity === 100 }">100</button>
+                                    <button class="quantity-btn" @click="setQuantity(1)" :class="{ active: quantity === 1 }">1</button>
+                                    <button class="quantity-btn" @click="setQuantity(10)" :class="{ active: quantity === 10 }">10</button>
+                                    <button class="quantity-btn" @click="setQuantity(50)" :class="{ active: quantity === 50 }">50</button>
+                                    <button class="quantity-btn" @click="setQuantity(100)" :class="{ active: quantity === 100 }">100</button>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="control-group">
                             <label>格式选项</label>
                             <div class="format-options">
@@ -68,71 +71,40 @@
                                 </label>
                             </div>
                         </div>
+                        
                         <div class="generate-actions">
                             <button class="generate-btn" @click="generateUuid">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                     <path d="M2 17l10 5 10-5" />
                                     <path d="M2 12l10 5 10-5" />
                                 </svg>
                                 生成UUID
                             </button>
-                            <div class="copy-actions">
-                                <button class="copy-all-btn" @click="copyAllUuids" :disabled="uuids.length === 0">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                    复制全部
-                                </button>
-                                <button class="copy-json-btn" @click="copyAllAsJson" :disabled="uuids.length === 0">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                        <polyline points="14,2 14,8 20,8" />
-                                        <path d="M16 13H8" />
-                                        <path d="M16 17H8" />
-                                        <path d="M10 9H8" />
-                                    </svg>
-                                    复制JSON
-                                </button>
-                            </div>
                         </div>
                     </div>
 
                     <div class="uuid-results">
-                        <div class="section-header">
-                            <h3>生成结果</h3>
-                            <div class="section-info">
-                                <span class="count-info">共 {{ uuids.length }} 个UUID</span>
-                                <button v-if="uuids.length > 0" class="export-btn" @click="exportUuids" title="导出为文件">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="7,10 12,15 17,10" />
-                                        <line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                </button>
-                            </div>
+                        <div class="results-header">
+                            <h4>生成结果</h4>
+                            <span class="count-info">共 {{ uuids.length }} 个UUID</span>
                         </div>
+                        
                         <div v-if="uuids.length === 0" class="empty-state">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                 <path d="M2 17l10 5 10-5" />
                                 <path d="M2 12l10 5 10-5" />
                             </svg>
                             <p>点击"生成UUID"按钮开始生成</p>
                         </div>
+                        
                         <div v-else class="uuid-list">
                             <div v-for="(uuid, index) in uuids" :key="index" class="uuid-item">
                                 <div class="uuid-index">{{ index + 1 }}</div>
                                 <div class="uuid-value">{{ uuid }}</div>
                                 <button class="copy-uuid-btn" @click="copyUuid(uuid)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -146,27 +118,34 @@
             <!-- UUID验证器 -->
             <div class="generator-section">
                 <div class="section-header">
-                    <h3>UUID验证器</h3>
-                    <div class="section-info">
-                        <span class="info-text">验证UUID格式和版本信息</span>
+                    <div class="header-content">
+                        <div class="header-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20,6 9,17 4,12" />
+                            </svg>
+                        </div>
+                        <div class="header-text">
+                            <h3>UUID验证器</h3>
+                            <p>验证UUID格式和版本信息</p>
+                        </div>
                     </div>
                 </div>
+                
                 <div class="uuid-validator">
                     <div class="validator-input">
                         <label>输入UUID</label>
-                        <textarea v-model="validateInput" placeholder="请输入要验证的UUID..." class="validate-textarea"
-                            @input="validateUuid"></textarea>
+                        <input v-model="validateInput" placeholder="请输入要验证的UUID..." 
+                            class="validate-input" @input="validateUuid" />
                     </div>
+                    
                     <div v-if="validationResult" class="validation-result">
                         <div class="validation-header">
                             <h4>验证结果</h4>
                             <div class="validation-status" :class="validationResult.isValid ? 'valid' : 'invalid'">
-                                <svg v-if="validationResult.isValid" width="16" height="16" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2">
+                                <svg v-if="validationResult.isValid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="20,6 9,17 4,12" />
                                 </svg>
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="18" y1="6" x2="6" y2="18" />
                                     <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
@@ -195,14 +174,24 @@
                 </div>
             </div>
 
-            <!-- UUID信息说明 -->
+            <!-- UUID版本说明 -->
             <div class="generator-section">
                 <div class="section-header">
-                    <h3>UUID版本说明</h3>
-                    <div class="section-info">
-                        <span class="info-text">了解不同UUID版本的特点和用途</span>
+                    <div class="header-content">
+                        <div class="header-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <path d="M12 17h.01" />
+                            </svg>
+                        </div>
+                        <div class="header-text">
+                            <h3>UUID版本说明</h3>
+                            <p>了解不同UUID版本的特点和用途</p>
+                        </div>
                     </div>
                 </div>
+                
                 <div class="uuid-info">
                     <div class="info-grid">
                         <div v-for="info in uuidVersionInfo" :key="info.version" class="info-card">
@@ -236,24 +225,40 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, onUnmounted  } from 'vue'
+import { ref } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import ButtonGroup from './common/ButtonGroup.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本状态
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('uuid-generator')
+const cardTitle = getCardTitle('uuid-generator')
+
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const selectedVersion = ref<'v1' | 'v4' | 'v7'>('v4')
 const quantity = ref(10)
@@ -310,10 +315,6 @@ const uuidVersionInfo = [
         usage: '现代应用、分布式系统'
     }
 ]
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 生成UUID v4
 const generateUuidV4 = (): string => {
@@ -392,7 +393,7 @@ const generateUuid = () => {
     }
 
     uuids.value = newUuids
-    showMessage(`已生成 ${quantity.value} 个 ${selectedVersion.value.toUpperCase()} UUID`, 'success')
+    showSuccess(`已生成 ${quantity.value} 个 ${selectedVersion.value.toUpperCase()} UUID`)
 }
 
 // 设置数量
@@ -422,9 +423,9 @@ const updateFormat = () => {
 const copyUuid = async (uuid: string) => {
     try {
         await navigator.clipboard.writeText(uuid)
-        showMessage('UUID已复制', 'success')
+        showSuccess('UUID已复制')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -435,9 +436,9 @@ const copyAllAsJson = async () => {
     try {
         const jsonData = JSON.stringify(uuids.value, null, 2)
         await navigator.clipboard.writeText(jsonData)
-        showMessage(`已复制 ${uuids.value.length} 个UUID为JSON格式`, 'success')
+        showSuccess(`已复制 ${uuids.value.length} 个UUID为JSON格式`)
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -448,9 +449,9 @@ const copyAllUuids = async () => {
     try {
         const text = uuids.value.join('\n')
         await navigator.clipboard.writeText(text)
-        showMessage(`已复制 ${uuids.value.length} 个UUID`, 'success')
+        showSuccess(`已复制 ${uuids.value.length} 个UUID`)
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -477,7 +478,7 @@ const exportUuids = () => {
     a.click()
     URL.revokeObjectURL(url)
 
-    showMessage('UUID列表已导出', 'success')
+    showSuccess('UUID列表已导出')
 }
 
 // 验证UUID
@@ -560,21 +561,11 @@ const clearAll = () => {
     uuids.value = []
     validateInput.value = ''
     validationResult.value = null
-    showMessage('已清空所有内容', 'success')
-}
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showSuccess('已清空所有内容')
 }
 
 // 初始化生成一些UUID
 generateUuid()
-
 </script>
 
 <style scoped>
@@ -588,67 +579,9 @@ generateUuid()
     overflow: hidden;
 }
 
-.generator-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.generator-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.generator-actions {
+.formatter-actions {
     display: flex;
     gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
 }
 
 .generator-content {
@@ -658,7 +591,7 @@ generateUuid()
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
@@ -666,48 +599,52 @@ generateUuid()
 .generator-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
 }
 
 .section-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 1.5rem;
 }
 
-.section-header h3 {
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.header-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color-alpha);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.header-text h3 {
+    margin: 0 0 0.25rem 0;
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.header-text p {
     margin: 0;
-}
-
-.section-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.count-info {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    background: var(--bg-tertiary);
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.375rem;
-    border: 1px solid var(--border-color);
-}
-
-.info-text {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    color: var(--text-muted);
 }
 
 /* UUID生成器样式 */
 .uuid-container {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
+    grid-template-columns: 350px 1fr;
     gap: 2rem;
     align-items: start;
 }
@@ -716,12 +653,13 @@ generateUuid()
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    position: sticky;
-    top: 0;
 }
 
-.uuid-controls .control-group:first-of-type {
-    margin-top: 0;
+.uuid-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-self: start;
 }
 
 .control-group {
@@ -740,9 +678,11 @@ generateUuid()
     padding: 0.75rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
 .version-select:focus {
@@ -757,13 +697,41 @@ generateUuid()
     gap: 0.75rem;
 }
 
+.quantity-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.875rem;
+}
+
+.quantity-btn:hover {
+    background: var(--bg-hover);
+}
+
+.quantity-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
 .quantity-input {
     padding: 0.75rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 0.875rem;
+    transition: var(--transition);
 }
 
 .quantity-input:focus {
@@ -772,38 +740,10 @@ generateUuid()
     box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
-.quantity-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-}
-
-.quantity-buttons button {
-    padding: 0.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-
-.quantity-buttons button:hover {
-    background: var(--bg-hover);
-}
-
-.quantity-buttons button.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
 .format-options {
     display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .checkbox-label {
@@ -826,100 +766,47 @@ generateUuid()
     gap: 0.75rem;
 }
 
-.copy-actions {
-    display: flex;
-    flex-direction: row;
-    gap: 0.75rem;
-}
-
-.copy-actions .copy-all-btn,
-.copy-actions .copy-json-btn {
-    flex: 1;
-}
-
-.generate-btn,
-.copy-all-btn,
-.copy-json-btn {
+.generate-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
     font-size: 0.875rem;
     font-weight: 500;
-}
-
-.generate-btn {
     background: var(--primary-color);
     color: white;
 }
 
 .generate-btn:hover {
-    background: var(--primary-color-dark);
+    background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
 }
 
-.copy-all-btn,
-.copy-json-btn {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.copy-all-btn:hover:not(:disabled) {
-    background: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
-}
-
-.copy-json-btn:hover:not(:disabled) {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.copy-all-btn:disabled,
-.copy-json-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.uuid-results {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.uuid-results .empty-state,
-.uuid-results .uuid-list {
-    margin-top: 0;
-}
-
-
-
-.export-btn {
+.results-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    justify-content: space-between;
 }
 
-.export-btn:hover {
-    background: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
+.results-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.count-info {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
 }
 
 .empty-state {
@@ -929,7 +816,7 @@ generateUuid()
     justify-content: center;
     padding: 3rem 1rem;
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .empty-state svg {
@@ -946,7 +833,7 @@ generateUuid()
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-height: 400px;
+    max-height: 380px;
     overflow-y: auto;
 }
 
@@ -954,11 +841,11 @@ generateUuid()
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4375rem 0.75rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
 }
 
 .uuid-item:hover {
@@ -968,17 +855,17 @@ generateUuid()
 
 .uuid-index {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     min-width: 2rem;
     text-align: center;
     background: var(--bg-secondary);
     padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
 }
 
 .uuid-value {
     flex: 1;
-    font-family: 'Courier New', monospace;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 0.875rem;
     color: var(--text-primary);
     word-break: break-all;
@@ -992,10 +879,10 @@ generateUuid()
     height: 2rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
     flex-shrink: 0;
 }
 
@@ -1024,20 +911,18 @@ generateUuid()
     color: var(--text-primary);
 }
 
-.validate-textarea {
-    height: 120px;
+.validate-input {
     padding: 0.75rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 0.875rem;
-    font-family: 'Courier New', monospace;
-    resize: vertical;
-    min-height: 80px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    transition: var(--transition);
 }
 
-.validate-textarea:focus {
+.validate-input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--primary-color-alpha);
@@ -1046,7 +931,7 @@ generateUuid()
 .validation-result {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
 }
 
@@ -1069,7 +954,7 @@ generateUuid()
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 500;
 }
@@ -1107,29 +992,26 @@ generateUuid()
     flex: 1;
     font-size: 0.875rem;
     color: var(--text-secondary);
-    font-family: 'Courier New', monospace;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 /* UUID信息样式 */
 .uuid-info {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    margin-top: 0;
 }
 
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
 }
 
 .info-card {
-    background: var(--bg-secondary);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     padding: 1.25rem;
-    transition: all 0.2s ease;
+    transition: var(--transition);
 }
 
 .info-card:hover {
@@ -1155,7 +1037,7 @@ generateUuid()
 .info-badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-sm);
     font-weight: 500;
 }
 
@@ -1209,7 +1091,7 @@ generateUuid()
 
 .feature-bar {
     height: 0.25rem;
-    border-radius: 0.125rem;
+    border-radius: var(--radius-sm);
     flex: 1;
     max-width: 4rem;
 }
@@ -1237,49 +1119,11 @@ generateUuid()
     flex: 1;
 }
 
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 1024px) {
     .uuid-container {
         grid-template-columns: 1fr;
         gap: 1.5rem;
-    }
-
-    .uuid-controls {
-        position: static;
     }
 
     .info-grid {
@@ -1297,36 +1141,17 @@ generateUuid()
         padding: 1rem;
     }
 
-    .quantity-buttons {
-        grid-template-columns: repeat(2, 1fr);
+    .copy-actions {
+        flex-direction: column;
     }
 
-    .generate-actions {
-        flex-direction: row;
-        gap: 0.5rem;
-    }
-
-    .generate-btn,
-    .copy-all-btn {
-        flex: 1;
-    }
-
-    .export-menu {
-        right: auto;
-        left: 0;
-        min-width: 120px;
+    .copy-all-btn,
+    .copy-json-btn {
+        flex: none;
     }
 }
 
 @media (max-width: 480px) {
-    .generator-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .generator-title {
-        font-size: 1.125rem;
-    }
-
     .generator-content {
         padding: 0.75rem;
         gap: 1rem;
@@ -1348,6 +1173,11 @@ generateUuid()
 
     .copy-uuid-btn {
         align-self: flex-end;
+    }
+
+    .format-options {
+        flex-direction: column;
+        gap: 0.5rem;
     }
 }
 </style>

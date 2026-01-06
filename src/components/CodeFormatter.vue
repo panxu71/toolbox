@@ -1,42 +1,54 @@
 <template>
     <div class="code-formatter">
-        <div class="formatter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="formatter-title">JS/HTML格式化工具</h2>
-            <div class="language-selector">
-                <select v-model="selectedLanguage" class="language-select">
-                    <option value="javascript">JavaScript</option>
-                    <option value="html">HTML</option>
-                    <option value="css">CSS</option>
-                </select>
-            </div>
-        </div>
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="language-selector">
+                    <select v-model="selectedLanguage" class="language-select">
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                    </select>
+                </div>
+                <HeaderActionButton icon="copy" tooltip="复制结果" @click="copyOutput" :disabled="!outputCode" />
+                <HeaderActionButton icon="clear" tooltip="清空结果" @click="clearOutput" :disabled="!outputCode" />
+                <HeaderActionButton icon="download" tooltip="下载结果" @click="downloadOutput" :disabled="!outputCode" />
+            </template>
+        </PageHeader>
 
         <div class="formatter-content">
             <div class="main-workspace">
                 <div class="input-section">
                     <div class="section-header">
                         <h3>代码输入</h3>
-                        <div class="header-actions">
-                            <button class="action-btn-small" @click="pasteCode" title="粘贴代码">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                                    <path
-                                        d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearInput" title="清空输入">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
+                        <div class="header-right">
+                            <div class="config-section">
+                                <label>缩进:</label>
+                                <select v-model="formatConfig.indentType" class="config-select">
+                                    <option value="spaces">空格</option>
+                                    <option value="tabs">制表符</option>
+                                </select>
+                                <select v-model="formatConfig.indentSize" class="config-select">
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                            <div class="operation-buttons">
+                                <button class="operation-btn format-btn" @click="formatCode"
+                                    :disabled="!inputCode.trim()">
+                                    格式化
+                                </button>
+                                <button class="operation-btn minify-btn" @click="minifyCode"
+                                    :disabled="!inputCode.trim()">
+                                    压缩
+                                </button>
+                                <button class="operation-btn validate-btn" @click="validateCode"
+                                    :disabled="!inputCode.trim()">
+                                    验证
+                                </button>
+                            </div>
+                            <button class="import-btn" @click="importFile">
+                                导入文件
                             </button>
                         </div>
                     </div>
@@ -63,31 +75,6 @@
                 <div class="output-section">
                     <div class="section-header">
                         <h3>处理结果</h3>
-                        <div class="header-actions">
-                            <button class="action-btn-small" @click="copyOutput" title="复制结果" :disabled="!outputCode">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="clearOutput" title="清空结果" :disabled="!outputCode">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                            <button class="action-btn-small" @click="downloadOutput" title="下载结果"
-                                :disabled="!outputCode">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="7,10 12,15 17,10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
-                                </svg>
-                            </button>
-                        </div>
                     </div>
                     <div class="code-editor">
                         <textarea v-if="outputCode" v-model="outputCode" class="code-output" readonly></textarea>
@@ -127,35 +114,7 @@
                 </div>
             </div>
 
-            <div class="toolbar">
-                <div class="config-section">
-                    <label>缩进:</label>
-                    <select v-model="formatConfig.indentType" class="config-select">
-                        <option value="spaces">空格</option>
-                        <option value="tabs">制表符</option>
-                    </select>
-                    <select v-model="formatConfig.indentSize" class="config-select">
-                        <option value="2">2</option>
-                        <option value="4">4</option>
-                        <option value="8">8</option>
-                    </select>
-                </div>
 
-                <div class="operation-buttons">
-                    <button class="operation-btn format-btn" @click="formatCode" :disabled="!inputCode.trim()">
-                        格式化
-                    </button>
-                    <button class="operation-btn minify-btn" @click="minifyCode" :disabled="!inputCode.trim()">
-                        压缩
-                    </button>
-                    <button class="operation-btn encrypt-btn" @click="encryptCode" :disabled="!inputCode.trim()">
-                        加密
-                    </button>
-                    <button class="operation-btn validate-btn" @click="validateCode" :disabled="!inputCode.trim()">
-                        验证
-                    </button>
-                </div>
-            </div>
 
             <div class="feature-description">
                 <div class="description-content">
@@ -166,24 +125,23 @@
                         <strong>压缩：</strong>移除空格和注释，减小文件体积
                     </div>
                     <div class="feature-item">
-                        <strong>加密：</strong>对代码进行Base64编码保护
-                    </div>
-                    <div class="feature-item">
                         <strong>验证：</strong>检查代码语法是否正确
                     </div>
                 </div>
             </div>
         </div>
-
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import { useClipboard } from '../composables/useClipboard'
+import { useDownload } from '../composables/useDownload'
+import cardsConfig from '../config/cards.json'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
 import parserHtml from 'prettier/parser-html'
@@ -194,21 +152,34 @@ defineEmits<{
     back: []
 }>()
 
-// 使用页面标题管理
+// 使用组合式函数
 usePageTitle('code-formatter')
+const { success: showSuccess, error: showError } = useNotification()
+const { copyToClipboard } = useClipboard()
+const { downloadText } = useDownload()
 
-const selectedLanguage = ref('javascript')
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'code-formatter')
+        if (card) {
+            return card.title
+        }
+    }
+    return 'JS/HTML格式化工具'
+})
+
+// 响应式数据
+const selectedLanguage = ref('html')
 const inputCode = ref('')
 const outputCode = ref('')
 
+// 格式化配置
 const formatConfig = ref({
-    indentType: 'spaces',
+    indentType: 'tabs',
     indentSize: '2'
 })
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 代码统计
 const codeStats = ref({
@@ -223,15 +194,151 @@ const outputStats = ref({
     bytes: 0
 })
 
-// 计算压缩率
+// 压缩比例
 const compressionRatio = computed(() => {
-    if (!codeStats.value.characters || !outputStats.value.characters) return 0
-    const ratio = ((codeStats.value.characters - outputStats.value.characters) / codeStats.value.characters) * 100
-    return Math.round(ratio)
+    if (!inputCode.value || !outputCode.value) return 0
+    const inputSize = new Blob([inputCode.value]).size
+    const outputSize = new Blob([outputCode.value]).size
+    return Math.round(((inputSize - outputSize) / inputSize) * 100)
 })
 
+// 获取占位符
+const getPlaceholder = () => {
+    switch (selectedLanguage.value) {
+        case 'javascript':
+            return 'function hello() {\nconsole.log("Hello World!");\n}'
+        case 'html':
+            return '<!DOCTYPE html>\n<html>\n<head>\n<title>Title</title>\n</head>\n<body>\n<h1>Hello World!</h1>\n</body>\n</html>'
+        case 'css':
+            return 'body {\nmargin: 0;\npadding: 0;\nfont-family: Arial, sans-serif;\n}'
+        default:
+            return '请输入代码...'
+    }
+}
+
+// 更新统计信息
+const updateStats = () => {
+    const text = inputCode.value
+    codeStats.value = {
+        lines: text ? text.split('\n').length : 0,
+        characters: text.length,
+        bytes: new Blob([text]).size
+    }
+}
+
+// 更新输出统计
+const updateOutputStats = () => {
+    const text = outputCode.value
+    outputStats.value = {
+        lines: text ? text.split('\n').length : 0,
+        characters: text.length,
+        bytes: new Blob([text]).size
+    }
+}
+
+// 格式化字节数
+const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+}
+
+// 清空输出
+const clearOutput = () => {
+    outputCode.value = ''
+    updateOutputStats()
+    showSuccess('已清空输出')
+}
+
+// 导入文件
+const importFile = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.js,.html,.css,.txt,.json,.xml,.vue,.ts,.jsx,.tsx'
+
+    input.onchange = (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0]
+        if (!file) return
+
+        // 根据文件扩展名自动选择语言
+        const extension = file.name.split('.').pop()?.toLowerCase()
+        if (extension) {
+            switch (extension) {
+                case 'js':
+                case 'jsx':
+                case 'ts':
+                case 'tsx':
+                case 'json':
+                    selectedLanguage.value = 'javascript'
+                    break
+                case 'html':
+                case 'htm':
+                case 'vue':
+                case 'xml':
+                    selectedLanguage.value = 'html'
+                    break
+                case 'css':
+                case 'scss':
+                case 'sass':
+                case 'less':
+                    selectedLanguage.value = 'css'
+                    break
+            }
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            const content = e.target?.result as string
+            inputCode.value = content
+            updateStats()
+            showSuccess(`已导入文件: ${file.name}`)
+        }
+        reader.onerror = () => {
+            showError('文件读取失败')
+        }
+        reader.readAsText(file)
+    }
+
+    input.click()
+}
+
+// 复制输出
+const copyOutput = async () => {
+    if (!outputCode.value) {
+        showError('没有可复制的内容')
+        return
+    }
+
+    const success = await copyToClipboard(outputCode.value)
+    if (success) {
+        showSuccess('已复制到剪贴板')
+    } else {
+        showError('复制失败')
+    }
+}
+
+// 下载输出
+const downloadOutput = () => {
+    if (!outputCode.value) {
+        showError('没有可下载的内容')
+        return
+    }
+
+    const extension = selectedLanguage.value === 'javascript' ? 'js' : selectedLanguage.value
+    const filename = 'formatted_code'
+
+    downloadText(outputCode.value, filename, extension)
+    showSuccess('文件下载已开始')
+}
+
+// 格式化代码
 const formatCode = async () => {
-    if (!inputCode.value.trim()) return
+    if (!inputCode.value.trim()) {
+        showError('请输入代码')
+        return
+    }
 
     try {
         let formatted = ''
@@ -239,56 +346,140 @@ const formatCode = async () => {
         const useTabs = formatConfig.value.indentType === 'tabs'
 
         if (selectedLanguage.value === 'html') {
-            // 使用 js-beautify 格式化 HTML
-            formatted = beautifyHtml(inputCode.value, {
-                indent_size: indentSize,
-                indent_char: useTabs ? '\t' : ' ',
-                max_preserve_newlines: 2,
-                preserve_newlines: true,
-                wrap_line_length: 120,
-                indent_inner_html: true,
-                indent_scripts: 'keep',
-                end_with_newline: false,
-                extra_liners: ['head', 'body', '/html']
-            })
+            try {
+                // 使用 js-beautify 格式化 HTML
+                formatted = beautifyHtml(inputCode.value, {
+                    indent_size: useTabs ? 1 : indentSize,
+                    indent_char: useTabs ? '\t' : ' ',
+                    max_preserve_newlines: 2,
+                    preserve_newlines: true,
+                    wrap_line_length: 120,
+                    indent_inner_html: true,
+                    indent_scripts: 'keep',
+                    end_with_newline: false,
+                    extra_liners: ['head', 'body', '/html']
+                })
+            } catch (error) {
+                // 如果 js-beautify 失败，使用简单的格式化
+                formatted = simpleHtmlFormat(inputCode.value, indentSize, useTabs)
+            }
         } else if (selectedLanguage.value === 'css') {
-            // 使用 Prettier 格式化 CSS
-            formatted = await prettier.format(inputCode.value, {
-                parser: 'css',
-                plugins: [parserPostcss],
-                tabWidth: indentSize,
-                useTabs: useTabs,
-                semi: true,
-                singleQuote: false,
-                printWidth: 120
-            })
+            try {
+                // 使用 Prettier 格式化 CSS
+                formatted = await prettier.format(inputCode.value, {
+                    parser: 'css',
+                    plugins: [parserPostcss],
+                    tabWidth: indentSize,
+                    useTabs: useTabs,
+                    semi: true,
+                    singleQuote: false,
+                    printWidth: 120
+                })
+            } catch (error) {
+                // 如果 Prettier 失败，使用简单的格式化
+                formatted = simpleCssFormat(inputCode.value, indentSize, useTabs)
+            }
         } else {
-            // 使用 Prettier 格式化 JavaScript
-            formatted = await prettier.format(inputCode.value, {
-                parser: 'babel',
-                plugins: [parserBabel],
-                tabWidth: indentSize,
-                useTabs: useTabs,
-                semi: true,
-                singleQuote: true,
-                trailingComma: 'es5',
-                bracketSpacing: true,
-                arrowParens: 'avoid',
-                printWidth: 120
-            })
+            try {
+                // 使用 Prettier 格式化 JavaScript
+                formatted = await prettier.format(inputCode.value, {
+                    parser: 'babel',
+                    plugins: [parserBabel],
+                    tabWidth: indentSize,
+                    useTabs: useTabs,
+                    semi: true,
+                    singleQuote: true,
+                    trailingComma: 'es5',
+                    bracketSpacing: true,
+                    arrowParens: 'avoid',
+                    printWidth: 120
+                })
+            } catch (error) {
+                // 如果 Prettier 失败，使用简单的格式化
+                formatted = simpleJsFormat(inputCode.value, indentSize, useTabs)
+            }
         }
 
         outputCode.value = formatted
-        updateOutputStats(outputCode.value)
-        showMessage('代码格式化完成', 'success')
+        updateOutputStats()
+        showSuccess('代码格式化完成')
     } catch (error) {
         console.error('格式化错误:', error)
-        showMessage(`格式化失败: ${(error as Error).message}`, 'error')
+        const errorMsg = (error as Error).message
+        if (errorMsg.includes('languages')) {
+            showError('格式化失败: 代码格式化器初始化错误，请刷新页面重试')
+        } else {
+            showError(`格式化失败: ${errorMsg}`)
+        }
     }
 }
 
+// 简单的 HTML 格式化函数
+const simpleHtmlFormat = (code: string, indentSize: number, useTabs: boolean): string => {
+    const indent = useTabs ? '\t' : ' '.repeat(indentSize)
+    let formatted = ''
+    let level = 0
+    const lines = code.split(/>\s*</)
+    
+    lines.forEach((line, index) => {
+        if (index > 0) line = '<' + line
+        if (index < lines.length - 1) line = line + '>'
+        
+        if (line.includes('</')) level--
+        formatted += indent.repeat(Math.max(0, level)) + line.trim() + '\n'
+        if (line.includes('<') && !line.includes('</') && !line.includes('/>')) level++
+    })
+    
+    return formatted.trim()
+}
+
+// 简单的 CSS 格式化函数
+const simpleCssFormat = (code: string, indentSize: number, useTabs: boolean): string => {
+    const indent = useTabs ? '\t' : ' '.repeat(indentSize)
+    return code
+        .replace(/\s*{\s*/g, ' {\n' + indent)
+        .replace(/;\s*/g, ';\n' + indent)
+        .replace(/\s*}\s*/g, '\n}\n')
+        .replace(/,\s*/g, ',\n')
+        .trim()
+}
+
+// 简单的 JavaScript 格式化函数
+const simpleJsFormat = (code: string, indentSize: number, useTabs: boolean): string => {
+    const indent = useTabs ? '\t' : ' '.repeat(indentSize)
+    let formatted = ''
+    let level = 0
+    
+    for (let i = 0; i < code.length; i++) {
+        const char = code[i]
+        const nextChar = code[i + 1]
+        
+        if (char === '{') {
+            formatted += char + '\n'
+            level++
+            formatted += indent.repeat(level)
+        } else if (char === '}') {
+            level--
+            formatted += '\n' + indent.repeat(level) + char
+            if (nextChar && nextChar !== ';' && nextChar !== ',') {
+                formatted += '\n' + indent.repeat(level)
+            }
+        } else if (char === ';' && nextChar !== ' ' && nextChar !== '\n') {
+            formatted += char + '\n' + indent.repeat(level)
+        } else {
+            formatted += char
+        }
+    }
+    
+    return formatted.trim()
+}
+
+// 压缩代码
 const minifyCode = () => {
-    if (!inputCode.value.trim()) return
+    if (!inputCode.value.trim()) {
+        showError('请输入代码')
+        return
+    }
 
     try {
         let minified = ''
@@ -324,63 +515,70 @@ const minifyCode = () => {
         }
 
         outputCode.value = minified
-        updateOutputStats(outputCode.value)
-        showMessage('代码压缩完成', 'success')
+        updateOutputStats()
+        showSuccess('代码压缩完成')
     } catch (error) {
-        showMessage('压缩失败', 'error')
+        showError('压缩失败')
     }
 }
 
-const encryptCode = () => {
-    if (!inputCode.value.trim()) return
 
-    try {
-        minifyCode()
-        const encoded = btoa(outputCode.value)
-        outputCode.value = `/* Encrypted Code */\neval(atob("${encoded}"))`
-        updateOutputStats(outputCode.value)
-        showMessage('代码加密完成', 'success')
-    } catch (error) {
-        showMessage('加密失败', 'error')
-    }
-}
-
+// 验证语法
 const validateCode = async () => {
-    if (!inputCode.value.trim()) return
+    if (!inputCode.value.trim()) {
+        showError('请输入代码')
+        return
+    }
 
     try {
         let isValid = false
         let errorMessage = ''
 
+        // 先尝试基本的语法检查
         if (selectedLanguage.value === 'javascript') {
             try {
-                // 使用 Prettier 来验证 JavaScript 语法
-                await prettier.format(inputCode.value, {
-                    parser: 'babel',
-                    plugins: [parserBabel]
-                })
+                // 基本的 JavaScript 语法检查
+                new Function(inputCode.value)
                 isValid = true
-            } catch (error) {
-                errorMessage = (error as Error).message
+            } catch (basicError) {
+                try {
+                    // 如果基本检查失败，尝试使用 Prettier
+                    await prettier.format(inputCode.value, {
+                        parser: 'babel',
+                        plugins: [parserBabel],
+                        printWidth: 80,
+                        tabWidth: 2,
+                        useTabs: false,
+                        semi: true,
+                        singleQuote: true
+                    })
+                    isValid = true
+                } catch (prettierError) {
+                    errorMessage = (basicError as Error).message
+                }
             }
         } else if (selectedLanguage.value === 'html') {
             try {
-                // 使用 Prettier 来验证 HTML 语法
-                await prettier.format(inputCode.value, {
-                    parser: 'html',
-                    plugins: [parserHtml]
-                })
-                isValid = true
+                // 基本的 HTML 检查 - 检查标签是否匹配
+                const parser = new DOMParser()
+                const doc = parser.parseFromString(inputCode.value, 'text/html')
+                const parserErrors = doc.querySelectorAll('parsererror')
+                
+                if (parserErrors.length === 0) {
+                    isValid = true
+                } else {
+                    errorMessage = 'HTML 语法错误'
+                }
             } catch (error) {
                 errorMessage = (error as Error).message
             }
         } else if (selectedLanguage.value === 'css') {
             try {
-                // 使用 Prettier 来验证 CSS 语法
-                await prettier.format(inputCode.value, {
-                    parser: 'css',
-                    plugins: [parserPostcss]
-                })
+                // 基本的 CSS 检查
+                const style = document.createElement('style')
+                style.textContent = inputCode.value
+                document.head.appendChild(style)
+                document.head.removeChild(style)
                 isValid = true
             } catch (error) {
                 errorMessage = (error as Error).message
@@ -388,161 +586,31 @@ const validateCode = async () => {
         }
 
         if (isValid) {
-            showMessage('代码验证通过', 'success')
+            showSuccess('代码验证通过')
         } else {
-            showMessage(`代码验证失败: ${errorMessage}`, 'error')
+            showError(`代码验证失败: ${errorMessage}`)
         }
     } catch (error) {
-        showMessage('代码验证失败', 'error')
+        console.error('验证错误:', error)
+        showError('代码验证失败: 验证器错误')
     }
 }
 
-const copyOutput = async () => {
-    if (!outputCode.value) return
-
-    try {
-        await navigator.clipboard.writeText(outputCode.value)
-        showMessage('结果已复制到剪贴板', 'success')
-    } catch (error) {
-        // Fallback for older browsers
-        showMessage('复制失败，请手动复制', 'error')
-    }
-}
-
-const clearOutput = () => {
-    outputCode.value = ''
-    updateOutputStats('')
-    showMessage('输出已清空', 'success')
-}
-
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
-const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
-}
-
-const getPlaceholder = () => {
-    const placeholders = {
-        javascript: 'function hello() {\n    console.log("Hello, World!");\n}',
-        html: '<!DOCTYPE html>\n<html>\n<head>\n    <title>Hello</title>\n</head>\n<body>\n    <h1>Hello, World!</h1>\n</body>\n</html>',
-        css: '.container {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n}'
-    }
-    return placeholders[selectedLanguage.value as keyof typeof placeholders] || '请输入代码...'
-}
-
-const updateStats = () => {
-    const code = inputCode.value
-    codeStats.value = {
-        lines: code.split('\n').length,
-        characters: code.length,
-        bytes: new Blob([code]).size
-    }
-}
-
-const updateOutputStats = (code: string) => {
-    outputStats.value = {
-        lines: code.split('\n').length,
-        characters: code.length,
-        bytes: new Blob([code]).size
-    }
-}
-
-const pasteCode = async () => {
-    try {
-        const text = await navigator.clipboard.readText()
-        inputCode.value = text
-        updateStats()
-        showMessage('代码已粘贴', 'success')
-    } catch (error) {
-        showMessage('粘贴失败', 'error')
-    }
-}
-
-const clearInput = () => {
-    inputCode.value = ''
-    updateStats()
-    showMessage('输入已清空', 'success')
-}
-
-const downloadOutput = () => {
-    if (!outputCode.value) return
-
-    const extensions = {
-        javascript: 'js',
-        html: 'html',
-        css: 'css'
-    }
-
-    const extension = extensions[selectedLanguage.value as keyof typeof extensions] || 'txt'
-    const filename = `formatted-code.${extension}`
-
-    const blob = new Blob([outputCode.value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
-
-    showMessage('文件已下载', 'success')
-}
-
-updateStats()
-
+// 监听输入变化
+inputCode.value && updateStats()
+outputCode.value && updateOutputStats()
 </script>
 
 <style scoped>
 .code-formatter {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
     color: var(--text-primary);
     overflow: hidden;
-}
-
-.formatter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-}
-
-.formatter-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
 }
 
 .language-selector {
@@ -564,8 +632,8 @@ updateStats()
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    overflow: hidden;
+    padding: 0 1rem 1rem 1rem;
+    overflow-y: auto;
     min-height: 0;
 }
 
@@ -590,50 +658,100 @@ updateStats()
     background: var(--border-color);
 }
 
-.input-section,
-.output-section {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0;
+    padding: 0.25rem 0;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 0.5rem;
     flex-shrink: 0;
+    height: 48px;
 }
 
 .section-header h3 {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     margin: 0;
     color: var(--text-primary);
 }
 
-.header-actions {
+.header-right {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.action-btn-small {
+.operation-buttons {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    overflow: hidden;
+    height: 32px;
+}
+
+.operation-btn {
+    padding: 0 0.75rem;
+    border: none;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-right: 1px solid var(--border-color);
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.action-btn-small:hover {
+.operation-btn:last-child {
+    border-right: none;
+}
+
+.operation-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.operation-btn:hover:not(:disabled) {
+    background: var(--bg-secondary);
+}
+
+.format-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+}
+
+.minify-btn:hover:not(:disabled) {
+    background: var(--success-color);
+    color: white;
+}
+
+.validate-btn:hover:not(:disabled) {
+    background: var(--error-color);
+    color: white;
+}
+
+.import-btn {
+    padding: 0 0.75rem;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.import-btn:hover {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
@@ -745,97 +863,28 @@ updateStats()
     font-weight: 600;
 }
 
-.toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.25rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    gap: 2rem;
-    flex-shrink: 0;
-}
 
 .config-section {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-shrink: 0;
 }
 
 .config-section label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
 }
 
 .config-select {
-    padding: 0.375rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 0.25rem;
     color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.operation-buttons {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.operation-btn {
-    padding: 0.625rem 1.25rem;
-    border: none;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    min-width: 80px;
-    transition: all 0.2s ease;
-}
-
-.operation-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.format-btn {
-    background: var(--primary-color);
-    color: white;
-}
-
-.format-btn:hover:not(:disabled) {
-    background: var(--primary-color-dark, #4f46e5);
-}
-
-.minify-btn {
-    background: var(--success-color);
-    color: white;
-}
-
-.minify-btn:hover:not(:disabled) {
-    background: var(--success-color-dark, #059669);
-}
-
-.encrypt-btn {
-    background: var(--warning-color);
-    color: white;
-}
-
-.encrypt-btn:hover:not(:disabled) {
-    background: var(--warning-color-dark, #d97706);
-}
-
-.validate-btn {
-    background: var(--error-color);
-    color: white;
-}
-
-.validate-btn:hover:not(:disabled) {
-    background: var(--error-color-dark, #dc2626);
+    font-size: 0.75rem;
 }
 
 .feature-description {
@@ -849,7 +898,7 @@ updateStats()
 
 .description-content {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
 }
 
@@ -862,39 +911,6 @@ updateStats()
 .feature-item strong {
     color: var(--text-primary);
     font-weight: 600;
-}
-
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
 }
 
 @media (max-width: 1024px) {

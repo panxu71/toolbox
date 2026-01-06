@@ -1,32 +1,20 @@
 <template>
     <div class="api-tester">
-        <div class="tester-header">
-            <button class="back-btn" @click="$emit('back')" title="返回">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m12 19-7-7 7-7"></path>
-                    <path d="m19 12H5"></path>
-                </svg>
-                返回
-            </button>
-            <h2 class="tester-title">API接口测试</h2>
-            <div class="tester-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="formatter-actions">
+                    <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+                    <HeaderActionButton icon="copy" tooltip="复制响应" @click="copyResponse" :disabled="!response.data && !response.error" />
+                </div>
+            </template>
+        </PageHeader>
 
         <div class="tester-content">
             <div class="request-section">
                 <div class="request-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
                         </div>
@@ -35,231 +23,132 @@
                             <p>配置API请求参数和选项</p>
                         </div>
                     </div>
-                    <div class="request-info">
-                        <div class="example-buttons">
-                            <button class="example-btn-small get" @click="loadExample('jsonplaceholder')"
-                                title="JSONPlaceholder API">
-                                <span class="method-badge-small">GET</span>
-                                <span class="example-name-small">JSONPlaceholder</span>
+                    <div class="example-buttons">
+                        <ButtonGroup>
+                            <button class="group-btn" @click="loadExample('jsonplaceholder')">
+                                <span class="method-badge get">GET</span>
+                                JSONPlaceholder
                             </button>
-                            <button class="example-btn-small get" @click="loadExample('httpbin-get')"
-                                title="HTTPBin GET API">
-                                <span class="method-badge-small">GET</span>
-                                <span class="example-name-small">HTTPBin GET</span>
+                            <button class="group-btn" @click="loadExample('httpbin-get')">
+                                <span class="method-badge get">GET</span>
+                                HTTPBin GET
                             </button>
-                            <button class="example-btn-small post" @click="loadExample('httpbin-post')"
-                                title="HTTPBin POST API">
-                                <span class="method-badge-small">POST</span>
-                                <span class="example-name-small">HTTPBin POST</span>
+                            <button class="group-btn" @click="loadExample('httpbin-post')">
+                                <span class="method-badge post">POST</span>
+                                HTTPBin POST
                             </button>
-                        </div>
+                        </ButtonGroup>
                     </div>
                 </div>
 
                 <div class="request-content">
                     <!-- 请求方法和URL -->
                     <div class="request-line">
-                        <div class="method-wrapper">
-                            <select v-model="request.method" class="method-select">
-                                <option value="GET">GET</option>
-                                <option value="POST">POST</option>
-                                <option value="PUT">PUT</option>
-                                <option value="DELETE">DELETE</option>
-                                <option value="PATCH">PATCH</option>
-                                <option value="HEAD">HEAD</option>
-                                <option value="OPTIONS">OPTIONS</option>
-                            </select>
-                        </div>
-                        <div class="url-wrapper">
-                            <input v-model="request.url" type="text" class="url-input"
-                                placeholder="请输入API接口地址，如：https://jsonplaceholder.typicode.com/posts"
-                                @keyup.enter="sendRequest" />
-                            <div class="url-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <button class="send-btn" @click="sendRequest" :disabled="loading || !request.url.trim()"
+                        <select v-model="request.method" class="method-select">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                        <input v-model="request.url" type="text" class="url-input" 
+                            placeholder="请输入API接口地址，如：https://jsonplaceholder.typicode.com/posts"
+                            @keyup.enter="sendRequest" />
+                        <button class="send-btn" @click="sendRequest" :disabled="loading || !request.url.trim()" 
                             :class="{ loading, [request.method.toLowerCase()]: true }">
-                            <svg v-if="loading" class="loading-icon" width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2">
+                            <svg v-if="loading" class="loading-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 12a9 9 0 11-6.219-8.56" />
                             </svg>
-                            <svg v-else class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2">
+                            <svg v-else class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
                             </svg>
-                            <span>{{ loading ? '发送中...' : '发送请求' }}</span>
+                            {{ loading ? '发送中...' : '发送请求' }}
                         </button>
                     </div>
 
                     <!-- 请求头 -->
-                    <div class="headers-section">
-                        <div class="section-title">
-                            <div class="title-content">
-                                <div class="title-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14,2 14,8 20,8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10,9 9,9 8,9"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="title-text">
-                                    <span class="title-main">请求头 (Headers)</span>
-                                    <span class="title-sub">设置HTTP请求头信息</span>
-                                </div>
-                            </div>
+                    <div class="config-section">
+                        <div class="section-header">
+                            <h4>请求头 (Headers)</h4>
                             <button class="add-btn" @click="addHeader">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
-                                <span>添加</span>
+                                添加
                             </button>
                         </div>
-                        <div v-if="request.headers.length > 0" class="headers-container">
-                            <div class="headers-list-compact">
-                                <div v-for="(header, index) in request.headers" :key="index" class="header-row">
-                                    <input v-model="header.key" type="text" placeholder="Header名称，如：Content-Type"
-                                        class="header-key-compact" />
-                                    <div class="input-separator">:</div>
-                                    <input v-model="header.value" type="text" placeholder="Header值，如：application/json"
-                                        class="header-value-compact" />
-                                    <button class="remove-btn-compact" @click="removeHeader(index)" title="删除此请求头">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
-                                    </button>
-                                </div>
+                        <div v-if="request.headers.length > 0" class="headers-list">
+                            <div v-for="(header, index) in request.headers" :key="index" class="header-row">
+                                <input v-model="header.key" type="text" placeholder="Header名称" class="header-key" />
+                                <span class="separator">:</span>
+                                <input v-model="header.value" type="text" placeholder="Header值" class="header-value" />
+                                <button class="remove-btn" @click="removeHeader(index)">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 请求参数 -->
-                    <div class="params-section" v-if="request.method === 'GET'">
-                        <div class="section-title">
-                            <div class="title-content">
-                                <div class="title-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                        <path d="M12 1v6m0 6v6"></path>
-                                        <path d="m21 12-6-6m-6 6-6-6"></path>
-                                    </svg>
-                                </div>
-                                <div class="title-text">
-                                    <span class="title-main">查询参数 (Query Parameters)</span>
-                                    <span class="title-sub">设置URL查询字符串参数</span>
-                                </div>
-                            </div>
+                    <!-- 查询参数 (仅GET请求) -->
+                    <div v-if="request.method === 'GET'" class="config-section">
+                        <div class="section-header">
+                            <h4>查询参数 (Query Parameters)</h4>
                             <button class="add-btn" @click="addParam">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
-                                <span>添加</span>
+                                添加
                             </button>
                         </div>
-                        <div v-if="request.params.length > 0" class="params-container">
-                            <div class="params-list-compact">
-                                <div v-for="(param, index) in request.params" :key="index" class="param-row">
-                                    <input v-model="param.key" type="text" placeholder="参数名"
-                                        class="param-key-compact" />
-                                    <div class="input-separator">=</div>
-                                    <input v-model="param.value" type="text" placeholder="参数值"
-                                        class="param-value-compact" />
-                                    <button class="remove-btn-compact" @click="removeParam(index)" title="删除此参数">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
-                                    </button>
-                                </div>
+                        <div v-if="request.params.length > 0" class="params-list">
+                            <div v-for="(param, index) in request.params" :key="index" class="param-row">
+                                <input v-model="param.key" type="text" placeholder="参数名" class="param-key" />
+                                <span class="separator">=</span>
+                                <input v-model="param.value" type="text" placeholder="参数值" class="param-value" />
+                                <button class="remove-btn" @click="removeParam(index)">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 请求体 -->
-                    <div class="body-section" v-if="['POST', 'PUT', 'PATCH'].includes(request.method)">
-                        <div class="section-title">
-                            <div class="title-content">
-                                <div class="title-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z">
-                                        </path>
-                                        <polyline points="14,2 14,8 20,8"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="title-text">
-                                    <span class="title-main">请求体 (Request Body)</span>
-                                    <span class="title-sub">选择数据格式并输入请求内容</span>
-                                </div>
-                            </div>
-                            <div class="body-type-wrapper">
-                                <select v-model="request.bodyType" class="body-type-select">
-                                    <option value="json">📄 JSON</option>
-                                    <option value="form-urlencoded">📝 x-www-form-urlencoded</option>
-                                    <option value="form-data">📋 Form Data</option>
-                                    <option value="xml">🏷️ XML</option>
-                                    <option value="raw">📃 Raw Text</option>
-                                    <option value="binary">📁 Binary File</option>
-                                </select>
-                            </div>
+                    <!-- 请求体 (POST/PUT/PATCH) -->
+                    <div v-if="['POST', 'PUT', 'PATCH'].includes(request.method)" class="config-section">
+                        <div class="section-header">
+                            <h4>请求体 (Request Body)</h4>
+                            <select v-model="request.bodyType" class="body-type-select">
+                                <option value="json">📄 JSON</option>
+                                <option value="form-urlencoded">📝 x-www-form-urlencoded</option>
+                                <option value="form-data">📋 Form Data</option>
+                                <option value="xml">🏷️ XML</option>
+                                <option value="raw">📃 Raw Text</option>
+                                <option value="binary">📁 Binary File</option>
+                            </select>
                         </div>
-
+                        
                         <!-- JSON Body -->
                         <div v-if="request.bodyType === 'json'" class="json-body">
-                            <textarea v-model="request.jsonBody" class="json-textarea" placeholder='请输入JSON数据，例如：
-{
-  "title": "测试标题",
-  "body": "测试内容",
-  "userId": 1
-}' rows="8"></textarea>
+                            <textarea v-model="request.jsonBody" class="json-textarea" 
+                                placeholder='请输入JSON数据，例如：&#10;{&#10;  "title": "测试标题",&#10;  "body": "测试内容",&#10;  "userId": 1&#10;}' 
+                                rows="8"></textarea>
                             <div class="json-actions">
                                 <button class="format-btn" @click="formatJson">格式化</button>
                                 <button class="minify-btn" @click="minifyJson">压缩</button>
                             </div>
                         </div>
 
-                        <!-- Form Data -->
-                        <div v-if="request.bodyType === 'form-data'" class="form-body">
-                            <div class="form-list">
-                                <div v-for="(field, index) in request.formData" :key="index" class="form-item">
-                                    <input v-model="field.key" type="text" placeholder="字段名" class="form-key" />
-                                    <input v-model="field.value" type="text" placeholder="字段值" class="form-value" />
-                                    <button class="remove-btn" @click="removeFormField(index)">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <button class="add-btn" @click="addFormField">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                添加字段
-                            </button>
-                        </div>
-
-                        <!-- x-www-form-urlencoded -->
+                        <!-- Form URL Encoded -->
                         <div v-if="request.bodyType === 'form-urlencoded'" class="form-body">
                             <div class="form-mode-toggle">
                                 <button class="mode-btn" :class="{ active: formUrlEncodedMode === 'form' }"
@@ -286,18 +175,13 @@
                             <!-- 表单模式 -->
                             <div v-if="formUrlEncodedMode === 'form'" class="form-mode">
                                 <div v-if="request.formUrlEncodedData.length > 0" class="form-container">
-                                    <div class="form-list-compact">
-                                        <div v-for="(field, index) in request.formUrlEncodedData" :key="index"
-                                            class="form-row">
-                                            <input v-model="field.key" type="text" placeholder="参数名"
-                                                class="form-key-compact" />
-                                            <div class="input-separator">=</div>
-                                            <input v-model="field.value" type="text" placeholder="参数值"
-                                                class="form-value-compact" />
-                                            <button class="remove-btn-compact"
-                                                @click="removeFormUrlEncodedField(index)">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2">
+                                    <div class="form-list">
+                                        <div v-for="(field, index) in request.formUrlEncodedData" :key="index" class="form-row">
+                                            <input v-model="field.key" type="text" placeholder="参数名" class="form-key" />
+                                            <span class="separator">=</span>
+                                            <input v-model="field.value" type="text" placeholder="参数值" class="form-value" />
+                                            <button class="remove-btn" @click="removeFormUrlEncodedField(index)">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
@@ -306,8 +190,7 @@
                                     </div>
                                 </div>
                                 <button class="add-btn" @click="addFormUrlEncodedField">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
@@ -317,16 +200,9 @@
 
                             <!-- 批量编辑模式 -->
                             <div v-if="formUrlEncodedMode === 'bulk'" class="bulk-mode">
-                                <textarea v-model="formUrlEncodedBulkText" class="bulk-textarea" placeholder='批量编辑参数，每行一个参数，支持等号(=)或冒号(:)分割
-格式1：参数名=参数值
-格式2：参数名:参数值
-
-例如：
-name=张三
-email:test@example.com
-age=25
-city:北京
-token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
+                                <textarea v-model="formUrlEncodedBulkText" class="bulk-textarea" 
+                                    placeholder='批量编辑参数，每行一个参数，支持等号(=)或冒号(:)分割&#10;格式1：参数名=参数值&#10;格式2：参数名:参数值&#10;&#10;例如：&#10;name=张三&#10;email:test@example.com&#10;age=25&#10;city:北京&#10;token=abc123:def456' 
+                                    rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                                 <div class="bulk-actions">
                                     <button class="format-btn" @click="formatBulkFormUrlEncoded">格式化</button>
                                     <button class="clear-btn" @click="clearBulkFormUrlEncoded">清空</button>
@@ -334,15 +210,35 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                             </div>
                         </div>
 
+                        <!-- Form Data -->
+                        <div v-if="request.bodyType === 'form-data'" class="form-body">
+                            <div v-if="request.formDataFields.length > 0" class="form-list">
+                                <div v-for="(field, index) in request.formDataFields" :key="index" class="form-row">
+                                    <input v-model="field.key" type="text" placeholder="字段名" class="form-key" />
+                                    <span class="separator">=</span>
+                                    <input v-model="field.value" type="text" placeholder="字段值" class="form-value" />
+                                    <button class="remove-btn" @click="removeFormDataField(index)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="add-btn" @click="addFormDataField">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                添加字段
+                            </button>
+                        </div>
+
                         <!-- XML Body -->
                         <div v-if="request.bodyType === 'xml'" class="xml-body">
-                            <textarea v-model="request.xmlBody" class="xml-textarea" placeholder='请输入XML数据，例如：
-<?xml version="1.0" encoding="UTF-8"?>
-<root>
-    <name>测试用户</name>
-    <email>test@example.com</email>
-    <message>这是一个测试消息</message>
-</root>' rows="8"></textarea>
+                            <textarea v-model="request.xmlBody" class="xml-textarea" 
+                                placeholder='请输入XML数据，例如：&#10;<?xml version="1.0" encoding="UTF-8"?>&#10;<root>&#10;    <name>测试用户</name>&#10;    <email>test@example.com</email>&#10;    <message>这是一个测试消息</message>&#10;</root>' 
+                                rows="8"></textarea>
                             <div class="xml-actions">
                                 <button class="format-btn" @click="formatXml">格式化</button>
                                 <button class="minify-btn" @click="minifyXml">压缩</button>
@@ -351,18 +247,16 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
 
                         <!-- Raw Text -->
                         <div v-if="request.bodyType === 'raw'" class="raw-body">
-                            <textarea v-model="request.rawBody" class="raw-textarea" placeholder="请输入原始文本数据，支持任意格式"
-                                rows="8"></textarea>
+                            <textarea v-model="request.rawBody" class="raw-textarea" 
+                                placeholder="请输入原始文本数据" rows="8"></textarea>
                         </div>
 
                         <!-- Binary File -->
                         <div v-if="request.bodyType === 'binary'" class="binary-body">
                             <div class="file-upload">
-                                <input type="file" ref="fileInput" @change="handleFileSelect" class="file-input"
-                                    id="binary-file" />
+                                <input type="file" ref="fileInput" @change="handleFileSelect" class="file-input" id="binary-file" />
                                 <label for="binary-file" class="file-label">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7,10 12,15 17,10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -377,8 +271,7 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                                     <span class="file-type">{{ request.binaryFile.type || '未知类型' }}</span>
                                 </div>
                                 <button class="remove-file-btn" @click="removeBinaryFile">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -394,11 +287,8 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                 <div class="response-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path
-                                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
-                                </path>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                             </svg>
                         </div>
                         <div class="header-text">
@@ -407,64 +297,18 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                         </div>
                     </div>
                     <div class="response-info">
-                        <div v-if="response.status" class="response-status">
-                            <div class="status-badge" :class="getStatusClass(response.status)">
-                                <div class="status-dot"></div>
-                                <span class="status-code">{{ response.status }}</span>
-                                <span class="status-text">{{ getStatusText(response.status) }}</span>
-                            </div>
-                            <div class="response-meta">
-                                <div class="meta-item" v-if="response.time">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12,6 12,12 16,14"></polyline>
-                                    </svg>
-                                    <span>{{ response.time }}ms</span>
-                                </div>
-                                <div class="meta-item" v-if="response.size">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14,2 14,8 20,8"></polyline>
-                                    </svg>
-                                    <span>{{ formatSize(response.size) }}</span>
-                                </div>
-                            </div>
+                        <div v-if="response.status" class="status-badge" :class="getStatusClass(response.status)">
+                            <span class="status-code">{{ response.status }}</span>
+                            <span class="status-text">{{ getStatusText(response.status) }}</span>
                         </div>
-                        <div v-else class="response-placeholder">
-                            <span class="placeholder-text">等待响应...</span>
+                        <div v-if="response.time" class="meta-info">
+                            <span>{{ response.time }}ms</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="response-content" v-if="response.data || response.error">
-                    <!-- 响应头 -->
-                    <div class="response-headers" v-if="response.headers">
-                        <div class="response-tab-header">
-                            <button class="tab-btn" :class="{ active: activeTab === 'body' }"
-                                @click="activeTab = 'body'">
-                                响应体
-                            </button>
-                            <button class="tab-btn" :class="{ active: activeTab === 'headers' }"
-                                @click="activeTab = 'headers'">
-                                响应头
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 响应体 -->
-                    <div v-if="activeTab === 'body'" class="response-body">
-                        <!-- 复制按钮 -->
-                        <button v-if="response.status && (response.data || response.error)" @click="copyResponse"
-                            class="copy-response-btn-floating" title="复制响应结果">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                            </svg>
-                        </button>
-
+                <div class="response-content">
+                    <div v-if="response.data || response.error" class="response-body">
                         <div v-if="response.error" class="error-message">
                             <div class="error-title">请求失败</div>
                             <div class="error-detail">{{ response.error }}</div>
@@ -473,40 +317,30 @@ token=abc123:def456' rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                             <pre class="response-pre">{{ formatResponse(response.data) }}</pre>
                         </div>
                     </div>
-
-                    <!-- 响应头 -->
-                    <div v-if="activeTab === 'headers'" class="response-headers-content">
-                        <div v-for="(value, key) in response.headers" :key="key" class="header-row">
-                            <span class="header-name">{{ key }}:</span>
-                            <span class="header-value">{{ value }}</span>
+                    <div v-else class="empty-response">
+                        <div class="empty-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
                         </div>
+                        <div class="empty-text">配置请求参数后点击发送按钮</div>
+                        <div class="empty-hint">💡 提示：可以先试试上面的示例API</div>
                     </div>
-                </div>
-
-                <div v-else class="empty-response">
-                    <div class="empty-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 6v6l4 2"></path>
-                        </svg>
-                    </div>
-                    <div class="empty-text">配置请求参数后点击发送按钮</div>
-                    <div class="empty-hint">💡 提示：可以先试试上面的示例API</div>
                 </div>
             </div>
-        </div>
-
-        <!-- 消息提示 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, reactive, onMounted, onUnmounted  } from 'vue'
+import { ref, reactive } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import ButtonGroup from './common/ButtonGroup.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
@@ -527,17 +361,28 @@ interface FormField {
     value: string
 }
 
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('api-tester')
+const cardTitle = getCardTitle('api-tester')
+
+// 使用公共通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const loading = ref(false)
-const activeTab = ref('body')
 const formUrlEncodedMode = ref('form') // 'form' 或 'bulk'
 const formUrlEncodedBulkText = ref('')
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 const request = reactive({
     method: 'GET',
@@ -550,10 +395,10 @@ const request = reactive({
     jsonBody: '',
     formData: [] as FormField[],
     formUrlEncodedData: [] as FormField[],
+    formDataFields: [] as FormField[],
     xmlBody: '',
     rawBody: '',
-    binaryFile: null as File | null,
-    textBody: ''
+    binaryFile: null as File | null
 })
 
 const response = reactive({
@@ -561,10 +406,8 @@ const response = reactive({
     data: null as any,
     headers: null as Record<string, string> | null,
     error: null as string | null,
-    time: null as number | null,
-    size: null as number | null
+    time: null as number | null
 })
-
 // 加载示例API
 const loadExample = (type: string) => {
     switch (type) {
@@ -595,6 +438,7 @@ const loadExample = (type: string) => {
             }, null, 2)
             break
     }
+    showSuccess('已加载示例API')
 }
 
 // 添加请求头
@@ -617,26 +461,24 @@ const removeParam = (index: number) => {
     request.params.splice(index, 1)
 }
 
-// 添加表单字段
-const addFormField = () => {
-    request.formData.push({ key: '', value: '' })
+// 添加Form Data字段
+const addFormDataField = () => {
+    request.formDataFields.push({ key: '', value: '' })
 }
 
-// 移除表单字段
-const removeFormField = (index: number) => {
-    request.formData.splice(index, 1)
+// 移除Form Data字段
+const removeFormDataField = (index: number) => {
+    request.formDataFields.splice(index, 1)
 }
 
-// 添加form-urlencoded字段
+// 添加Form URL Encoded字段
 const addFormUrlEncodedField = () => {
     request.formUrlEncodedData.push({ key: '', value: '' })
-    syncFormUrlEncodedToBulk()
 }
 
-// 移除form-urlencoded字段
+// 移除Form URL Encoded字段
 const removeFormUrlEncodedField = (index: number) => {
     request.formUrlEncodedData.splice(index, 1)
-    syncFormUrlEncodedToBulk()
 }
 
 // 解析批量编辑的form-urlencoded文本
@@ -686,12 +528,14 @@ const syncFormUrlEncodedToBulk = () => {
 const formatBulkFormUrlEncoded = () => {
     parseBulkFormUrlEncoded()
     syncFormUrlEncodedToBulk()
+    showSuccess('批量参数格式化成功')
 }
 
 // 清空批量编辑文本
 const clearBulkFormUrlEncoded = () => {
     formUrlEncodedBulkText.value = ''
     request.formUrlEncodedData = []
+    showSuccess('已清空批量参数')
 }
 
 // 格式化JSON
@@ -699,8 +543,9 @@ const formatJson = () => {
     try {
         const parsed = JSON.parse(request.jsonBody)
         request.jsonBody = JSON.stringify(parsed, null, 2)
+        showSuccess('JSON格式化成功')
     } catch (error) {
-        alert('JSON格式错误，无法格式化')
+        showError('JSON格式错误，无法格式化')
     }
 }
 
@@ -709,8 +554,9 @@ const minifyJson = () => {
     try {
         const parsed = JSON.parse(request.jsonBody)
         request.jsonBody = JSON.stringify(parsed)
+        showSuccess('JSON压缩成功')
     } catch (error) {
-        alert('JSON格式错误，无法压缩')
+        showError('JSON格式错误，无法压缩')
     }
 }
 
@@ -718,12 +564,31 @@ const minifyJson = () => {
 const formatXml = () => {
     try {
         // 简单的XML格式化
-        const formatted = request.xmlBody
+        let formatted = request.xmlBody
             .replace(/></g, '>\n<')
             .replace(/^\s*\n/gm, '')
+        
+        // 添加缩进
+        const lines = formatted.split('\n')
+        let indent = 0
+        const indentSize = 2
+        
+        formatted = lines.map(line => {
+            const trimmed = line.trim()
+            if (trimmed.startsWith('</')) {
+                indent -= indentSize
+            }
+            const result = ' '.repeat(Math.max(0, indent)) + trimmed
+            if (trimmed.startsWith('<') && !trimmed.startsWith('</') && !trimmed.endsWith('/>')) {
+                indent += indentSize
+            }
+            return result
+        }).join('\n')
+        
         request.xmlBody = formatted
+        showSuccess('XML格式化成功')
     } catch (error) {
-        alert('XML格式化失败')
+        showError('XML格式化失败')
     }
 }
 
@@ -733,8 +598,9 @@ const minifyXml = () => {
         request.xmlBody = request.xmlBody
             .replace(/>\s+</g, '><')
             .replace(/^\s+|\s+$/g, '')
+        showSuccess('XML压缩成功')
     } catch (error) {
-        alert('XML压缩失败')
+        showError('XML压缩失败')
     }
 }
 
@@ -745,6 +611,7 @@ const handleFileSelect = (event: Event) => {
     const file = target.files?.[0]
     if (file) {
         request.binaryFile = file
+        showSuccess(`已选择文件: ${file.name}`)
     }
 }
 
@@ -754,48 +621,53 @@ const removeBinaryFile = () => {
     if (fileInput.value) {
         fileInput.value.value = ''
     }
+    showSuccess('已移除文件')
 }
 
 // 格式化文件大小
-const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // 清空所有
 const clearAll = () => {
-    if (confirm('确定要清空所有配置吗？')) {
-        request.method = 'GET'
-        request.url = ''
-        request.headers = [{ key: 'Content-Type', value: 'application/json' }]
-        request.params = []
-        request.bodyType = 'json'
-        request.jsonBody = ''
-        request.formData = []
-        request.formUrlEncodedData = []
-        request.xmlBody = ''
-        request.rawBody = ''
-        request.binaryFile = null
-        request.textBody = ''
+    request.method = 'GET'
+    request.url = ''
+    request.headers = [{ key: 'Content-Type', value: 'application/json' }]
+    request.params = []
+    request.bodyType = 'json'
+    request.jsonBody = ''
+    request.formData = []
+    request.formUrlEncodedData = []
+    request.formDataFields = []
+    request.xmlBody = ''
+    request.rawBody = ''
+    request.binaryFile = null
 
-        response.status = null
-        response.data = null
-        response.headers = null
-        response.error = null
-        response.time = null
-        response.size = null
+    formUrlEncodedMode.value = 'form'
+    formUrlEncodedBulkText.value = ''
 
-        if (fileInput.value) {
-            fileInput.value.value = ''
-        }
+    if (fileInput.value) {
+        fileInput.value.value = ''
     }
+
+    response.status = null
+    response.data = null
+    response.headers = null
+    response.error = null
+    response.time = null
+
+    showSuccess('已清空所有配置')
 }
 
 // 发送请求
 const sendRequest = async () => {
     if (!request.url.trim()) {
-        alert('请输入API接口地址')
+        showError('请输入API接口地址')
         return
     }
 
@@ -805,15 +677,12 @@ const sendRequest = async () => {
     response.headers = null
     response.status = null
     response.time = null
-    response.size = null
 
     const startTime = Date.now()
 
     try {
         // 构建URL
         let url = request.url.trim()
-
-        // 如果URL不包含协议，自动添加https://
         if (!url.match(/^https?:\/\//)) {
             url = 'https://' + url
         }
@@ -850,7 +719,6 @@ const sendRequest = async () => {
         if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
             if (request.bodyType === 'json' && request.jsonBody) {
                 try {
-                    // 验证JSON格式
                     JSON.parse(request.jsonBody)
                     config.body = request.jsonBody
                     if (!headers['Content-Type']) {
@@ -859,16 +727,6 @@ const sendRequest = async () => {
                 } catch (error) {
                     throw new Error('JSON格式错误，请检查请求体')
                 }
-            } else if (request.bodyType === 'form-data' && request.formData.length > 0) {
-                const formData = new FormData()
-                request.formData.forEach(field => {
-                    if (field.key && field.value) {
-                        formData.append(field.key, field.value)
-                    }
-                })
-                config.body = formData
-                // 删除Content-Type，让浏览器自动设置
-                delete headers['Content-Type']
             } else if (request.bodyType === 'form-urlencoded' && request.formUrlEncodedData.length > 0) {
                 const params = new URLSearchParams()
                 request.formUrlEncodedData.forEach(field => {
@@ -878,11 +736,19 @@ const sendRequest = async () => {
                 })
                 config.body = params.toString()
                 headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            } else if (request.bodyType === 'form-data' && request.formDataFields.length > 0) {
+                const formData = new FormData()
+                request.formDataFields.forEach(field => {
+                    if (field.key && field.value) {
+                        formData.append(field.key, field.value)
+                    }
+                })
+                config.body = formData
+                // 不设置Content-Type，让浏览器自动设置multipart/form-data边界
+                delete headers['Content-Type']
             } else if (request.bodyType === 'xml' && request.xmlBody) {
                 config.body = request.xmlBody
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = 'application/xml'
-                }
+                headers['Content-Type'] = 'application/xml'
             } else if (request.bodyType === 'raw' && request.rawBody) {
                 config.body = request.rawBody
                 if (!headers['Content-Type']) {
@@ -890,14 +756,7 @@ const sendRequest = async () => {
                 }
             } else if (request.bodyType === 'binary' && request.binaryFile) {
                 config.body = request.binaryFile
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = request.binaryFile.type || 'application/octet-stream'
-                }
-            } else if (request.bodyType === 'text' && request.textBody) {
-                config.body = request.textBody
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = 'text/plain'
-                }
+                headers['Content-Type'] = request.binaryFile.type || 'application/octet-stream'
             }
         }
 
@@ -923,7 +782,6 @@ const sendRequest = async () => {
             try {
                 responseData = await fetchResponse.json()
             } catch (error) {
-                // 如果JSON解析失败，尝试作为文本处理
                 responseData = await fetchResponse.text()
             }
         } else {
@@ -931,25 +789,25 @@ const sendRequest = async () => {
         }
 
         response.data = responseData
-        response.size = new Blob([JSON.stringify(responseData)]).size
 
-        // 如果状态码不是2xx，显示为错误
         if (!fetchResponse.ok) {
             response.error = `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`
+        } else {
+            showSuccess('请求发送成功')
         }
 
     } catch (error: any) {
         const endTime = Date.now()
         response.time = endTime - startTime
 
-        // 处理不同类型的错误
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            response.error = 'CORS跨域错误或网络连接失败。\n\n可能的原因：\n1. 目标API不支持跨域请求\n2. 网络连接问题\n3. API地址错误\n\n💡 建议：先试试上面的示例API'
+            response.error = 'CORS跨域错误或网络连接失败'
         } else if (error.message.includes('JSON格式错误')) {
             response.error = error.message
         } else {
             response.error = error.message || '请求失败'
         }
+        showError('请求失败')
     } finally {
         loading.value = false
     }
@@ -970,19 +828,13 @@ const getStatusText = (status: number) => {
         200: 'OK',
         201: 'Created',
         204: 'No Content',
-        301: 'Moved Permanently',
-        302: 'Found',
-        304: 'Not Modified',
         400: 'Bad Request',
         401: 'Unauthorized',
         403: 'Forbidden',
         404: 'Not Found',
-        405: 'Method Not Allowed',
-        429: 'Too Many Requests',
         500: 'Internal Server Error',
         502: 'Bad Gateway',
-        503: 'Service Unavailable',
-        504: 'Gateway Timeout'
+        503: 'Service Unavailable'
     }
     return statusTexts[status] || 'Unknown'
 }
@@ -999,27 +851,10 @@ const formatResponse = (data: any) => {
     return JSON.stringify(data, null, 2)
 }
 
-// 格式化文件大小
-const formatSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-// 显示消息提示
-const showMessage = (text: string, type: 'success' | 'error' = 'success') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
 // 复制响应结果
 const copyResponse = async () => {
     try {
         let responseText = ''
-
         if (response.error) {
             responseText = response.error
         } else if (response.data) {
@@ -1029,14 +864,12 @@ const copyResponse = async () => {
         }
 
         await navigator.clipboard.writeText(responseText)
-        showMessage('响应结果已复制到剪贴板', 'success')
+        showSuccess('响应结果已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败，请手动选择复制', 'error')
+        showError('复制失败')
     }
 }
-
 </script>
-
 <style scoped>
 .api-tester {
     width: 100%;
@@ -1044,65 +877,13 @@ const copyResponse = async () => {
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.tester-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
     color: var(--text-primary);
+    overflow: hidden;
 }
 
-.tester-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.tester-actions {
+.formatter-actions {
     display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
+    gap: 0.5rem;
 }
 
 .tester-content {
@@ -1124,20 +905,19 @@ const copyResponse = async () => {
 
 .request-header,
 .response-header {
-    padding: 24px;
+    padding: 1.5rem;
     border-bottom: 1px solid var(--border-color);
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    margin-bottom: 0;
-    min-height: 88px;
+    background: var(--bg-secondary);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 88px;
 }
 
 .header-content {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
     flex: 1;
 }
 
@@ -1153,155 +933,329 @@ const copyResponse = async () => {
     flex-shrink: 0;
 }
 
-.header-text {
-    flex: 1;
-}
-
 .header-text h3 {
-    margin: 0 0 4px 0;
-    font-size: 18px;
+    margin: 0 0 0.25rem 0;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.2;
 }
 
 .header-text p {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-muted);
-    line-height: 1.3;
 }
 
-.header-placeholder {
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-}
-
-.request-info,
-.response-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-    min-height: 40px;
-}
-
-.request-placeholder,
-.response-placeholder {
-    display: flex;
-    align-items: center;
-    height: 40px;
-}
-
-.placeholder-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-/* 统一status-badge样式，让左右两边完全一致 */
 .example-buttons {
     display: flex;
-    gap: 8px;
     align-items: center;
 }
 
-.example-btn-small {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 12px;
-}
-
-.example-btn-small:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-color-alpha);
-    transform: translateY(-1px);
-}
-
-.method-badge-small {
-    font-size: 9px;
+.method-badge {
+    font-size: 0.625rem;
     font-weight: 700;
-    padding: 2px 4px;
+    padding: 0.125rem 0.25rem;
     border-radius: var(--radius-sm);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-right: 0.375rem;
 }
 
-.example-btn-small.get .method-badge-small {
-    background: #10b981;
+.method-badge.get {
+    background: var(--success-color);
     color: white;
 }
 
-.example-btn-small.post .method-badge-small {
+.method-badge.post {
     background: #3b82f6;
     color: white;
 }
 
-.example-name-small {
-    font-size: 11px;
-    font-weight: 500;
+.request-content {
+    flex: 1;
+    padding: 1.25rem;
+    overflow-y: auto;
+}
+
+.request-line {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    align-items: stretch;
+}
+
+.method-select {
+    width: 120px;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
     color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.method-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+.url-input {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: var(--transition);
+}
+
+.url-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+    background: var(--bg-primary);
+}
+
+.send-btn {
+    padding: 0.875rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-btn.get {
+    background: var(--success-color);
+}
+
+.send-btn.post {
+    background: #3b82f6;
+}
+
+.send-btn.put {
+    background: #f59e0b;
+}
+
+.send-btn.delete {
+    background: var(--error-color);
+}
+
+.loading-icon {
+    animation: spin 1s linear infinite;
+}
+
+.config-section {
+    margin-bottom: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.section-header h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.add-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.add-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.body-type-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.headers-list,
+.params-list,
+.form-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.header-row,
+.param-row,
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-key,
+.header-value,
+.param-key,
+.param-value,
+.form-key,
+.form-value {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    transition: var(--transition);
+}
+
+.header-key:focus,
+.header-value:focus,
+.param-key:focus,
+.param-value:focus,
+.form-key:focus,
+.form-value:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha);
+}
+
+.separator {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.remove-btn {
+    width: 24px;
+    height: 24px;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.remove-btn:hover {
+    background: var(--error-color-dark);
+    transform: scale(1.1);
+}
+
+.json-textarea,
+.xml-textarea,
+.raw-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+}
+
+.json-textarea:focus,
+.xml-textarea:focus,
+.raw-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha);
+}
+
+.json-actions,
+.xml-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.format-btn,
+.minify-btn {
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.format-btn:hover,
+.minify-btn:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.response-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .status-badge {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: var(--radius-lg);
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
     font-weight: 600;
-    font-size: 13px;
-    white-space: nowrap;
+    font-size: 0.8125rem;
     border: 1px solid;
 }
 
-/* HTTP方法的颜色样式 */
-.status-badge.get {
-    background: var(--success-color-alpha);
-    color: var(--success-color);
-    border-color: var(--success-color);
-}
-
-.status-badge.post {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-    border-color: #3b82f6;
-}
-
-.status-badge.put {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-    border-color: #f59e0b;
-}
-
-.status-badge.delete {
-    background: var(--error-color-alpha);
-    color: var(--error-color);
-    border-color: var(--error-color);
-}
-
-.status-badge.patch {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
-    border-color: #8b5cf6;
-}
-
-.status-badge.head,
-.status-badge.options {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    border-color: var(--border-color);
-}
-
-/* HTTP状态码的颜色样式 */
 .status-badge.success {
     background: var(--success-color-alpha);
     color: var(--success-color);
@@ -1321,839 +1275,114 @@ const copyResponse = async () => {
     border-color: var(--error-color);
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
-}
-
 .status-code {
     font-weight: 700;
 }
 
-.status-text {
-    opacity: 0.8;
-}
-
-
-
-.response-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-    min-height: 40px;
-}
-
-.response-status {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.response-placeholder {
-    display: flex;
-    align-items: center;
-    height: 40px;
-}
-
-.placeholder-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-
-
-.response-meta {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
+.meta-info {
+    font-size: 0.75rem;
     color: var(--text-muted);
     background: var(--bg-tertiary);
-    padding: 4px 8px;
+    padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
-    white-space: nowrap;
 }
 
-.request-section {
-    background: var(--bg-primary);
-    display: flex;
-    flex-direction: column;
+.response-content {
+    flex: 1;
     overflow: hidden;
 }
 
-.request-content {
-    flex: 1;
-    padding: 20px;
+.response-body {
+    padding: 1.25rem;
+    height: 100%;
     overflow-y: auto;
 }
 
-.request-line {
-    display: flex;
-    gap: 12px;
-    margin: 24px 0;
-    align-items: stretch;
+.error-message {
+    background: var(--error-color-alpha);
+    border: 1px solid var(--error-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
 }
 
-.method-wrapper {
-    position: relative;
+.error-title {
+    font-weight: 600;
+    color: var(--error-color);
+    margin-bottom: 0.5rem;
 }
 
-.method-select {
-    width: 120px;
-    padding: 14px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-lg);
+.error-detail {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    white-space: pre-line;
+}
+
+.response-pre {
     background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
     color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition);
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 12px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-    padding-right: 40px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    overflow-x: auto;
+    line-height: 1.5;
 }
 
-.method-select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-}
-
-.url-wrapper {
-    flex: 1;
-    position: relative;
+.empty-response {
+    height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
-}
-
-.url-input {
-    flex: 1;
-    padding: 14px 16px 14px 48px;
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 14px;
-    transition: var(--transition);
-}
-
-.url-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-    background: var(--bg-primary);
-}
-
-.url-icon {
-    position: absolute;
-    left: 16px;
+    justify-content: center;
     color: var(--text-muted);
-    pointer-events: none;
-    z-index: 1;
+    padding: 2.5rem;
+    text-align: center;
 }
 
-.send-btn {
-    padding: 14px 24px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 140px;
-    justify-content: center;
-    box-shadow: 0 2px 4px var(--primary-color-alpha);
+.empty-icon {
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
-.send-btn:hover:not(:disabled) {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px var(--primary-color-alpha);
+.empty-text {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
 }
 
-.send-btn:active:not(:disabled) {
-    transform: translateY(0);
+.empty-hint {
+    font-size: 0.75rem;
+    opacity: 0.8;
 }
 
-.send-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.send-btn.get {
-    background: #10b981;
-}
-
-.send-btn.post {
-    background: #3b82f6;
-}
-
-.send-btn.put {
-    background: #f59e0b;
-}
-
-.send-btn.delete {
-    background: #ef4444;
-}
-
-.send-btn.patch {
-    background: #8b5cf6;
-}
-
-.loading-icon {
-    animation: spin 1s linear infinite;
-}
-
-.example-apis {
-    margin-bottom: 32px;
-    padding: 20px;
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-}
-
-.example-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.example-icon {
-    color: var(--primary-color);
-}
-
-.example-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.example-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-}
-
-.example-btn {
-    padding: 12px 16px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    text-align: left;
-}
-
-.example-btn:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-color-alpha);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.method-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.example-btn.get .method-badge {
-    background: #10b981;
-    color: white;
-}
-
-.example-btn.post .method-badge {
-    background: #3b82f6;
-    color: white;
-}
-
-.example-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.example-desc {
-    font-size: 11px;
-    color: var(--text-muted);
-}
-
-.headers-list,
-.params-list,
-.form-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0;
-}
-
-.headers-section,
-.params-section,
-.body-section {
-    margin-bottom: 32px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    padding: 10px 20px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-}
-
-.title-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.title-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-color-alpha);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-}
-
-.title-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.title-main {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.title-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.add-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    margin-top: 16px;
-}
-
-.add-btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-}
-
-/* 重置标题栏中添加按钮的margin */
-.section-title .add-btn {
-    margin-top: 0;
-}
-
-.body-type-wrapper {
-    display: flex;
-    align-items: center;
-}
-
-.body-type-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    min-width: 180px;
-}
-
-.body-type-select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha);
-}
-
-.header-item,
-.param-item,
-.form-item {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    align-items: center;
-    padding: 16px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-}
-
-/* 紧凑的表单项样式 - 用于form-urlencoded */
-.form-item.compact {
-    padding: 8px 12px;
-    margin-bottom: 6px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-}
-
-.form-item.compact:hover {
-    border-color: var(--primary-color-alpha);
-    background: var(--bg-tertiary);
-}
-
-.header-item:hover,
-.param-item:hover,
-.form-item:hover:not(.compact) {
-    border-color: var(--primary-color-alpha);
-    background: var(--bg-tertiary);
-}
-
-.input-group {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.input-separator {
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 14px;
-    padding: 0 4px;
-}
-
-.header-key,
-.header-value,
-.param-key,
-.param-value,
-.form-key,
-.form-value {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 14px;
-    transition: var(--transition);
-}
-
-.header-key:focus,
-.header-value:focus,
-.param-key:focus,
-.param-value:focus,
-.form-key:focus,
-.form-value:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-    background: var(--bg-primary);
-}
-
-/* 紧凑模式下的输入框样式 */
-.form-item.compact .form-key,
-.form-item.compact .form-value {
-    padding: 6px 10px;
-    font-size: 13px;
-    border-radius: var(--radius-sm);
-}
-
-.form-item.compact .input-separator {
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 12px;
-    padding: 0 2px;
-}
-
-.remove-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    flex-shrink: 0;
-}
-
-.remove-btn:hover {
-    background: var(--error-color-dark);
-    transform: scale(1.05);
-}
-
-.remove-btn.compact {
-    width: 24px;
-    height: 24px;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    flex-shrink: 0;
-}
-
-.remove-btn.compact:hover {
-    background: var(--error-color-dark);
-    transform: scale(1.1);
-}
-
-.body-type-select {
-    padding: 6px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 12px;
-}
-
-.json-textarea,
-.text-textarea,
-.xml-textarea,
-.raw-textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    resize: vertical;
-    min-height: 120px;
-}
-
-.json-actions,
-.xml-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.format-btn,
-.minify-btn {
-    padding: 6px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.format-btn:hover,
-.minify-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.form-mode-toggle {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 16px;
-    background: var(--bg-tertiary);
-    padding: 4px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.mode-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.mode-btn:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-.mode-btn.active {
-    background: var(--primary-color);
-    color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.bulk-textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    resize: vertical;
-    min-height: 120px;
-}
-
-.bulk-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-}
-
-.bulk-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.clear-btn {
-    padding: 6px 12px;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.clear-btn:hover {
-    background: var(--error-color-dark);
-}
-
-/* 表单容器样式 - 单个大卡片 */
-.form-container {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 16px;
-}
-
-.form-container .add-btn {
-    margin-top: 16px;
-}
-
-.form-list-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.form-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.form-key-compact,
-.form-value-compact {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 13px;
-    transition: var(--transition);
-}
-
-.form-key-compact:focus,
-.form-value-compact:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha);
-}
-
-.remove-btn-compact {
-    width: 24px;
-    height: 24px;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    flex-shrink: 0;
-}
-
-.remove-btn-compact:hover {
-    background: var(--error-color-dark);
-    transform: scale(1.1);
-}
-
-/* 请求头容器样式 - 单个大卡片 */
-.headers-container {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 16px;
-}
-
-.headers-container .add-btn {
-    margin-top: 16px;
-}
-
-.headers-list-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.header-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.header-key-compact,
-.header-value-compact {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 13px;
-    transition: var(--transition);
-}
-
-.header-key-compact:focus,
-.header-value-compact:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha);
-}
-
-/* 查询参数容器样式 - 单个大卡片 */
-.params-container {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 16px;
-}
-
-.params-container .add-btn {
-    margin-top: 16px;
-}
-
-.params-list-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.param-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.param-key-compact,
-.param-value-compact {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 13px;
-    transition: var(--transition);
-}
-
-.param-key-compact:focus,
-.param-value-compact:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha);
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .file-upload {
-    position: relative;
-    display: inline-block;
-    width: 100%;
+    margin-bottom: 1rem;
 }
 
 .file-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
+    display: none;
 }
 
 .file-label {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--bg-tertiary);
+    gap: 0.75rem;
+    padding: 1rem;
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
-    font-size: 14px;
-    min-height: 60px;
-    justify-content: center;
+    font-size: 0.875rem;
 }
 
 .file-label:hover {
@@ -2163,31 +1392,31 @@ const copyResponse = async () => {
 }
 
 .file-info {
-    margin-top: 12px;
-    padding: 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-top: 0.5rem;
 }
 
 .file-details {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .file-name {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .file-size,
 .file-type {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-muted);
 }
 
@@ -2207,178 +1436,92 @@ const copyResponse = async () => {
 
 .remove-file-btn:hover {
     background: var(--error-color-dark);
+    transform: scale(1.1);
 }
 
-.response-section {
-    overflow: hidden;
-}
-
-.response-content {
-    flex: 1;
+.form-mode-toggle {
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.response-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    position: relative;
-}
-
-.copy-response-btn-floating {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid var(--border-color);
+    gap: 4px;
+    margin-bottom: 1rem;
+    background: var(--bg-tertiary);
+    padding: 4px;
     border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    opacity: 0;
-    transform: translateY(-4px);
-    z-index: 10;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
 }
 
-.response-body:hover .copy-response-btn-floating {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.copy-response-btn-floating:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px var(--primary-color-alpha);
-}
-
-.response-tab-header {
-    display: flex;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tab-btn {
-    padding: 12px 20px;
+.mode-btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
     background: transparent;
     border: none;
+    border-radius: var(--radius-sm);
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 0.8125rem;
+    font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
-    border-bottom: 2px solid transparent;
-}
-
-.tab-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-}
-
-.tab-btn:hover {
-    color: var(--text-primary);
-}
-
-.response-body,
-.response-headers-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.error-message {
-    background: var(--error-color-alpha);
-    border: 1px solid var(--error-color);
-    border-radius: var(--radius-md);
-    padding: 16px;
-}
-
-.error-title {
-    font-weight: 600;
-    color: var(--error-color);
-    margin-bottom: 8px;
-}
-
-.error-detail {
-    color: var(--error-color);
-    font-size: 14px;
-    white-space: pre-line;
-}
-
-.response-pre {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 13px;
-    color: var(--text-primary);
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-    overflow-x: auto;
-}
-
-.header-row {
     display: flex;
-    margin-bottom: 8px;
-    font-size: 13px;
-}
-
-.header-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 150px;
-    margin-right: 12px;
-}
-
-.header-value {
-    color: var(--text-secondary);
-    word-break: break-all;
-}
-
-.empty-response {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
-    padding: 40px;
+    gap: 0.375rem;
 }
 
-.empty-icon {
-    margin-bottom: 16px;
-    opacity: 0.5;
+.mode-btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
-.empty-text {
-    font-size: 14px;
-    margin-bottom: 8px;
+.mode-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.empty-hint {
-    font-size: 12px;
-    opacity: 0.8;
+.form-mode,
+.bulk-mode {
+    margin-top: 0.5rem;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
+.bulk-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+}
 
-    100% {
-        transform: rotate(360deg);
-    }
+.bulk-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha);
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.clear-btn {
+    padding: 0.375rem 0.75rem;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.clear-btn:hover {
+    background: var(--error-color-dark);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 1024px) {
@@ -2401,60 +1544,22 @@ const copyResponse = async () => {
         width: 100%;
     }
 
-    .header-item,
-    .param-item,
-    .form-item {
+    .header-row,
+    .param-row,
+    .form-row {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.25rem;
+    }
+
+    .separator {
+        display: none;
     }
 
     .remove-btn {
         align-self: flex-end;
         width: 100%;
-        margin-top: 4px;
-    }
-
-    .example-list {
-        flex-direction: column;
-    }
-
-    .example-btn {
-        width: 100%;
-    }
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
+        margin-top: 0.25rem;
     }
 }
 </style>

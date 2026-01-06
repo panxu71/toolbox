@@ -25,7 +25,6 @@ import HashGenerator from './components/HashGenerator.vue'
 import PasswordGenerator from './components/PasswordGenerator.vue'
 import RsaKeyGenerator from './components/RsaKeyGenerator.vue'
 import CodeFormatter from './components/CodeFormatter.vue'
-import CodeFormatterNew from './components/CodeFormatter-new.vue'
 import QrGenerator from './components/QrGenerator.vue'
 import CrontabGenerator from './components/CrontabGenerator.vue'
 import BaseConverter from './components/BaseConverter.vue'
@@ -194,7 +193,6 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'text-replacer': 'text-replacer',
         'php-serializer': 'php-serializer',
         'code-formatter': 'code-formatter',
-        'code-formatter-new': 'code-formatter-new',
         'base-converter': 'number-base',
         'number-converter': 'number-format',
         'number-converter-new': 'number-format-new',
@@ -203,6 +201,14 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'api-tester': 'api-tester',
         'uuid-generator': 'uuid-generator',
         'password-generator': 'password-generator',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
+        'password-generator-new': 'password-generator-new',
         'qr-generator': 'qr-generator',
         'crontab-generator': 'crontab-generator',
         'markdown-editor': 'markdown-editor',
@@ -317,6 +323,60 @@ const executeFunction = async (action: string) => {
             case 'generatePassword':
                 openPage('password-generator')
                 return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
+            case 'generatePasswordNew':
+                openPage('password-generator-new')
+                return // 不需要loading状态
             case 'generateRsaKeys':
                 openPage('rsa-key-generator')
                 return // 不需要loading状态
@@ -336,9 +396,6 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'formatCode':
                 openPage('code-formatter')
-                return // 不需要loading状态
-            case 'formatCodeNew':
-                openPage('code-formatter-new')
                 return // 不需要loading状态
             case 'convertColor':
                 openPage('color-reference')
@@ -857,7 +914,6 @@ const getToolAction = (toolId: string): string | null => {
         'text-replacer': 'replaceText',
         'php-serializer': 'phpSerialize',
         'code-formatter': 'formatCode',
-        'code-formatter-new': 'formatCodeNew',
         'number-base': 'convertBase',
         'number-format': 'convertNumber',
         'unit-convert': 'convertUnit',
@@ -963,7 +1019,6 @@ const updateUrl = (category?: string, tool?: string) => {
                 <PasswordGenerator v-if="currentPage === 'password-generator'" @back="closePage" />
                 <RsaKeyGenerator v-if="currentPage === 'rsa-key-generator'" @back="closePage" />
                 <CodeFormatter v-if="currentPage === 'code-formatter'" @back="closePage" />
-                <CodeFormatterNew v-if="currentPage === 'code-formatter-new'" @back="closePage" />
                 <QrGenerator v-if="currentPage === 'qr-generator'" @back="closePage" />
                 <CrontabGenerator v-if="currentPage === 'crontab-generator'" @back="closePage" />
                 <MarkdownEditor v-if="currentPage === 'markdown-editor'" @back="closePage" />
