@@ -26,6 +26,7 @@ import PasswordGenerator from './components/PasswordGenerator.vue'
 import RsaKeyGenerator from './components/RsaKeyGenerator.vue'
 import CodeFormatter from './components/CodeFormatter.vue'
 import QrGenerator from './components/QrGenerator.vue'
+import QrGeneratorNew from './components/QrGeneratorNew.vue'
 import CrontabGenerator from './components/CrontabGenerator.vue'
 import BaseConverter from './components/BaseConverter.vue'
 import TextEncoder from './components/TextEncoder.vue'
@@ -202,6 +203,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'uuid-generator': 'uuid-generator',
         'password-generator': 'password-generator',
         'qr-generator': 'qr-generator',
+        'qr-generator-new': 'qr-generator-new',
         'crontab-generator': 'crontab-generator',
         'markdown-editor': 'markdown-editor',
         'teleprompter': 'teleprompter',
@@ -365,6 +367,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'generateQR':
                 openPage('qr-generator')
+                return // 不需要loading状态
+            case 'generateQRNew':
+                openPage('qr-generator-new')
                 return // 不需要loading状态
             case 'generateCrontab':
                 openPage('crontab-generator')
@@ -862,6 +867,7 @@ const getToolAction = (toolId: string): string | null => {
         'uuid-generator': 'generateUuid',
         'password-generator': 'generatePassword',
         'qr-generator': 'generateQR',
+        'qr-generator-new': 'generateQRNew',
         'crontab-generator': 'generateCrontab',
         'markdown-editor': 'markdownEditor',
         'teleprompter': 'teleprompter',
@@ -958,6 +964,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <RsaKeyGenerator v-if="currentPage === 'rsa-key-generator'" @back="closePage" />
                 <CodeFormatter v-if="currentPage === 'code-formatter'" @back="closePage" />
                 <QrGenerator v-if="currentPage === 'qr-generator'" @back="closePage" />
+                <QrGeneratorNew v-if="currentPage === 'qr-generator-new'" @back="closePage" />
                 <CrontabGenerator v-if="currentPage === 'crontab-generator'" @back="closePage" />
                 <MarkdownEditor v-if="currentPage === 'markdown-editor'" @back="closePage" />
                 <Teleprompter v-if="currentPage === 'teleprompter'" @back="closePage" />

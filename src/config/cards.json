@@ -287,6 +287,18 @@
                 "color": "#6366f1"
             },
             {
+                "id": "qr-generator-new",
+                "title": "二维码生成(新版)",
+                "description": "生成自定义二维码 - 使用公共组件版本",
+                "icon": "📱",
+                "action": "generateQRNew",
+                "color": "#6366f1",
+                "badge": {
+                    "text": "测试",
+                    "color": "#10b981"
+                }
+            },
+            {
                 "id": "crontab-generator",
                 "title": "Crontab表达式",
                 "description": "生成和解析Cron定时任务表达式",
