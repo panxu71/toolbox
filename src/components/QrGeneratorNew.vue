@@ -189,17 +189,6 @@
 
                     <!-- 位置类型 -->
                     <div v-if="selectedType === 'location'" class="input-form">
-                        <div class="form-group">
-                            <label class="form-label">位置格式</label>
-                            <select v-model="locationFormat" class="form-select" @change="generateQR">
-                                <option value="tencent">腾讯地图</option>
-                                <option value="baidu">百度地图</option>
-                                <option value="amap">高德地图</option>
-                                <option value="google">谷歌地图</option>
-                                <option value="geo">Geo格式 (geo:lat,lng)</option>
-                                <option value="text">纯文本格式</option>
-                            </select>
-                        </div>
                         <!-- 地图选择器 -->
                         <div class="map-selector">
                             <div class="map-header">
@@ -230,6 +219,16 @@
                                     </div>
                                     <button @click="searchLocation" class="search-btn">搜索</button>
                                     <button @click="getCurrentLocation" class="location-btn">定位</button>
+                                    <div class="location-format-wrapper">
+                                        <select v-model="locationFormat" class="format-select" @change="generateQR">
+                                            <option value="tencent">腾讯地图</option>
+                                            <option value="baidu">百度地图</option>
+                                            <option value="amap">高德地图</option>
+                                            <option value="google">谷歌地图</option>
+                                            <option value="geo">Geo格式</option>
+                                            <option value="text">纯文本</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -259,13 +258,102 @@
                 <div class="settings-panel">
                     <h3>二维码设置</h3>
                     
+                    <!-- 预设样式 -->
+                    <div class="settings-section">
+                        <h4 class="section-title">预设样式</h4>
+                        <div class="preset-grid">
+                            <button 
+                                v-for="preset in stylePresets" 
+                                :key="preset.id"
+                                class="preset-btn"
+                                @click="applyPreset(preset)"
+                            >
+                                <div class="preset-preview" :class="'preset-' + preset.id"></div>
+                                <span class="preset-name">{{ preset.name }}</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 基本样式 -->
                     <div class="settings-section">
-                        <h4 class="section-title">基本样式</h4>
+                        <h4 class="section-title">码点码眼</h4>
                         <div class="style-grid">
                             <div class="style-row">
                                 <div class="style-item">
-                                    <label class="style-label">点阵颜色:</label>
+                                    <label class="style-label">码点形状:</label>
+                                    <select v-model="dotStyle" class="style-select" @change="generateQR">
+                                        <option value="square">方形</option>
+                                        <option value="circle">圆形</option>
+                                        <option value="rounded">圆角</option>
+                                        <option value="horizontal">横条纹</option>
+                                        <option value="vertical">竖条纹</option>
+                                        <option value="diamond">菱形</option>
+                                        <option value="dot">圆点</option>
+                                        <option value="star">星形</option>
+                                        <option value="liquid">液化</option>
+                                        <option value="tile">瓷砖</option>
+                                        <option value="grid">网格</option>
+                                        <option value="small-square">小方点</option>
+                                    </select>
+                                </div>
+                                <div class="style-item">
+                                    <label class="style-label">码眼形状:</label>
+                                    <select v-model="cornerStyle" class="style-select" @change="generateQR">
+                                        <option value="square">方正</option>
+                                        <option value="circle">圆形</option>
+                                        <option value="rounded">圆角</option>
+                                        <option value="leaf">叶形</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 码眼形状样式 -->
+                            <div class="style-row">
+                                <div class="style-item full-width">
+                                    <label class="style-label">码眼形状:</label>
+                                    <select v-model="eyePattern" class="style-select full-width-select" @change="generateQR">
+                                        <option 
+                                            v-for="shape in eyeShapes" 
+                                            :key="shape.id"
+                                            :value="shape.id"
+                                        >
+                                            {{ shape.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 自定义颜色 -->
+                            <div v-if="eyePattern === 'custom'" class="style-row">
+                                <div class="style-item">
+                                    <label class="style-label">码外眼颜色:</label>
+                                    <div class="color-picker-wrapper">
+                                        <div class="color-preview" :style="{ backgroundColor: outerEyeColor }"></div>
+                                        <input 
+                                            v-model="outerEyeColor" 
+                                            type="color" 
+                                            class="color-input-hidden"
+                                            @change="generateQR"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="style-item">
+                                    <label class="style-label">码内眼颜色:</label>
+                                    <div class="color-picker-wrapper">
+                                        <div class="color-preview" :style="{ backgroundColor: innerEyeColor }"></div>
+                                        <input 
+                                            v-model="innerEyeColor" 
+                                            type="color" 
+                                            class="color-input-hidden"
+                                            @change="generateQR"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="style-row">
+                                <div class="style-item">
+                                    <label class="style-label">码颜色:</label>
                                     <div class="color-picker-wrapper">
                                         <div class="color-preview" :style="{ backgroundColor: foregroundColor }"></div>
                                         <input 
@@ -274,11 +362,10 @@
                                             class="color-input-hidden"
                                             @change="generateQR"
                                         />
-                                        <span class="color-text">{{ foregroundColor.toUpperCase() }}</span>
                                     </div>
                                 </div>
                                 <div class="style-item">
-                                    <label class="style-label">背景色:</label>
+                                    <label class="style-label">码背景色:</label>
                                     <div class="color-picker-wrapper">
                                         <div class="color-preview" :style="{ backgroundColor: backgroundColor }"></div>
                                         <input 
@@ -287,10 +374,16 @@
                                             class="color-input-hidden"
                                             @change="generateQR"
                                         />
-                                        <span class="color-text">{{ backgroundColor.toUpperCase() }}</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 尺寸设置 -->
+                    <div class="settings-section">
+                        <h4 class="section-title">尺寸设置</h4>
+                        <div class="style-grid">
                             <div class="style-row">
                                 <div class="style-item">
                                     <label class="style-label">标准尺寸:</label>
@@ -395,6 +488,20 @@
                         </div>
                         <div class="qr-info">
                             <div class="qr-content">{{ getCurrentContent() }}</div>
+                            <div class="qr-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">内容长度:</span>
+                                    <span class="stat-value">{{ getCurrentContent().length }} 字符</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">尺寸:</span>
+                                    <span class="stat-value">{{ qrSize }}x{{ qrSize }}px</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">容错率:</span>
+                                    <span class="stat-value">{{ getErrorCorrectionName() }}</span>
+                                </div>
+                            </div>
                             <button v-if="selectedType === 'sms' || selectedType === 'phone' || selectedType === 'email'" 
                                     @click="testLink" 
                                     class="test-link-btn">
@@ -503,8 +610,66 @@ const backgroundColor = ref('#ffffff')
 const errorCorrectionLevel = ref('M')
 const dotStyle = ref('square')
 const cornerStyle = ref('square')
+const eyeColor = ref('auto')
+const eyePattern = ref('normal')
+const outerEyeColor = ref('#000000')
+const innerEyeColor = ref('#000000')
 const encodingContent = ref('')
 const encodingLength = ref('')
+
+// 码眼形状选项
+const eyeShapes = [
+    { id: 'normal', name: '普通' },
+    { id: 'liquid', name: '液化' },
+    { id: 'round-liquid', name: '圆液化' },
+    { id: 'stripe', name: '条纹' },
+    { id: 'horizontal', name: '横条纹' },
+    { id: 'vertical', name: '竖条纹' },
+    { id: 'tile', name: '瓷砖' },
+    { id: 'big-dot', name: '大圆点' },
+    { id: 'small-dot', name: '小圆点' },
+    { id: 'star', name: '粗星形' },
+    { id: 'fine-star', name: '细星形' },
+    { id: 'grid', name: '网格' },
+    { id: 'diamond', name: '菱形' },
+    { id: 'small-square', name: '小方点' }
+]
+
+// 预设样式
+const stylePresets = [
+    {
+        id: 'classic',
+        name: '经典',
+        dotStyle: 'square',
+        eyePattern: 'normal',
+        foregroundColor: '#000000',
+        backgroundColor: '#ffffff'
+    },
+    {
+        id: 'modern',
+        name: '现代',
+        dotStyle: 'circle',
+        eyePattern: 'rounded',
+        foregroundColor: '#2563eb',
+        backgroundColor: '#ffffff'
+    },
+    {
+        id: 'artistic',
+        name: '艺术',
+        dotStyle: 'diamond',
+        eyePattern: 'liquid',
+        foregroundColor: '#7c3aed',
+        backgroundColor: '#f8fafc'
+    },
+    {
+        id: 'minimal',
+        name: '简约',
+        dotStyle: 'rounded',
+        eyePattern: 'circle',
+        foregroundColor: '#374151',
+        backgroundColor: '#ffffff'
+    }
+]
 
 // Logo相关
 const logoImage = ref('')
@@ -513,6 +678,16 @@ const logoInput = ref<HTMLInputElement | null>(null)
 
 // 二维码数据
 const qrDataURL = ref('')
+
+// 应用预设样式
+const applyPreset = (preset: any) => {
+    dotStyle.value = preset.dotStyle
+    eyePattern.value = preset.eyePattern
+    foregroundColor.value = preset.foregroundColor
+    backgroundColor.value = preset.backgroundColor
+    generateQR()
+    success(`已应用${preset.name}样式`)
+}
 
 // 选择类型
 const selectType = (type: string) => {
@@ -820,7 +995,9 @@ const getCurrentContent = (): string => {
                     }
                 case 'baidu':
                     if (name) {
-                        return `https://map.baidu.com/search/${encodeURIComponent(name)}/@${lng},${lat},15z?querytype=s&da_src=shareurl&wd=${encodeURIComponent(name)}&c=1&src=0&pn=0&sug=0&l=15&b=(${lng-0.01},${lat-0.01};${lng+0.01},${lat+0.01})&from=webmap&biz_forward=%7B%22scaler%22:1,%22styles%22:%22pl%22%7D`
+                        const lngNum = parseFloat(lng)
+                        const latNum = parseFloat(lat)
+                        return `https://map.baidu.com/search/${encodeURIComponent(name)}/@${lng},${lat},15z?querytype=s&da_src=shareurl&wd=${encodeURIComponent(name)}&c=1&src=0&pn=0&sug=0&l=15&b=(${lngNum-0.01},${latNum-0.01};${lngNum+0.01},${latNum+0.01})&from=webmap&biz_forward=%7B%22scaler%22:1,%22styles%22:%22pl%22%7D`
                     } else {
                         return `https://map.baidu.com/@${lng},${lat},15z`
                     }
@@ -887,16 +1064,447 @@ const generateQR = async () => {
         // 生成基础二维码
         const baseQR = await QRCode.toDataURL(content, options)
         
+        // 应用高级样式（码点码眼）
+        let styledQR = baseQR
+        if (dotStyle.value !== 'square' || cornerStyle.value !== 'square' || eyePattern.value !== 'normal') {
+            styledQR = await applyAdvancedStyles(baseQR)
+        }
+        
         // 如果有Logo，则合成Logo到二维码中心
         if (logoImage.value) {
-            qrDataURL.value = await addLogoToQR(baseQR)
+            qrDataURL.value = await addLogoToQR(styledQR)
         } else {
-            qrDataURL.value = baseQR
+            qrDataURL.value = styledQR
         }
     } catch (err) {
         console.error('生成二维码失败:', err)
         error('生成二维码失败')
     }
+}
+
+// 应用高级样式（码点码眼）
+const applyAdvancedStyles = async (qrDataURL: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+            reject(new Error('无法获取canvas上下文'))
+            return
+        }
+
+        const qrImage = new Image()
+        qrImage.onload = () => {
+            const size = parseInt(qrSize.value)
+            canvas.width = size
+            canvas.height = size
+
+            // 绘制背景
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(0, 0, size, size)
+
+            // 获取原始图像数据
+            const tempCanvas = document.createElement('canvas')
+            const tempCtx = tempCanvas.getContext('2d')
+            if (!tempCtx) {
+                resolve(qrDataURL)
+                return
+            }
+            
+            tempCanvas.width = size
+            tempCanvas.height = size
+            tempCtx.drawImage(qrImage, 0, 0, size, size)
+            
+            const imageData = tempCtx.getImageData(0, 0, size, size)
+            const data = imageData.data
+            
+            // 计算模块大小（假设标准21x21模块加边距）
+            const margin = parseInt(qrMargin.value)
+            const moduleSize = (size - 2 * margin * 4) / 21 // 简化计算
+            const startX = margin * 4
+            const startY = margin * 4
+            
+            // 绘制码点
+            for (let y = 0; y < size; y += Math.max(1, Math.floor(moduleSize))) {
+                for (let x = 0; x < size; x += Math.max(1, Math.floor(moduleSize))) {
+                    const pixelIndex = (y * size + x) * 4
+                    if (pixelIndex >= 0 && pixelIndex < data.length) {
+                        const isDark = (data[pixelIndex] ?? 255) < 128 // 判断是否为暗色模块
+                        
+                        if (isDark) {
+                            // 检查是否在码眼区域
+                            const isInEye = isInEyeArea(x, y, startX, startY, moduleSize)
+                            
+                            if (isInEye && eyePattern.value !== 'normal') {
+                                // 使用码眼形状样式
+                                ctx.fillStyle = foregroundColor.value
+                            } else if (isInEye && eyeColor.value === 'auto') {
+                                // 使用自定义码眼颜色
+                                const isOuterEye = isInOuterEye(x, y, startX, startY, moduleSize)
+                                ctx.fillStyle = isOuterEye ? outerEyeColor.value : innerEyeColor.value
+                            } else {
+                                ctx.fillStyle = foregroundColor.value
+                            }
+                            
+                            // 根据样式绘制模块
+                            if (isInEye) {
+                                // 码眼区域使用码眼形状
+                                drawModule(ctx, x, y, moduleSize, eyePattern.value)
+                            } else {
+                                // 普通区域使用码点形状
+                                drawModule(ctx, x, y, moduleSize, dotStyle.value)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            resolve(canvas.toDataURL('image/png'))
+        }
+        qrImage.onerror = () => resolve(qrDataURL) // 如果失败，返回原始图像
+        qrImage.src = qrDataURL
+    })
+}
+
+// 判断是否在码眼区域
+const isInEyeArea = (x: number, y: number, startX: number, startY: number, moduleSize: number): boolean => {
+    const moduleX = Math.floor((x - startX) / moduleSize)
+    const moduleY = Math.floor((y - startY) / moduleSize)
+    
+    // 三个码眼的位置（简化）
+    const eyePositions = [
+        { x: 0, y: 0 },     // 左上
+        { x: 14, y: 0 },    // 右上
+        { x: 0, y: 14 }     // 左下
+    ]
+    
+    for (const eye of eyePositions) {
+        if (moduleX >= eye.x && moduleX < eye.x + 7 && 
+            moduleY >= eye.y && moduleY < eye.y + 7) {
+            return true
+        }
+    }
+    
+    return false
+}
+
+// 判断是否在码眼外圈
+const isInOuterEye = (x: number, y: number, startX: number, startY: number, moduleSize: number): boolean => {
+    const moduleX = Math.floor((x - startX) / moduleSize)
+    const moduleY = Math.floor((y - startY) / moduleSize)
+    
+    const eyePositions = [
+        { x: 0, y: 0 },
+        { x: 14, y: 0 },
+        { x: 0, y: 14 }
+    ]
+    
+    for (const eye of eyePositions) {
+        const relX = moduleX - eye.x
+        const relY = moduleY - eye.y
+        
+        if (relX >= 0 && relX < 7 && relY >= 0 && relY < 7) {
+            // 外圈：边框
+            if (relX === 0 || relX === 6 || relY === 0 || relY === 6) {
+                return true
+            }
+            // 内圈：中心3x3区域的边框
+            if ((relX >= 2 && relX <= 4) && (relY >= 2 && relY <= 4)) {
+                if (relX === 2 || relX === 4 || relY === 2 || relY === 4) {
+                    return true
+                }
+            }
+        }
+    }
+    
+    return false
+}
+
+// 绘制模块
+const drawModule = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, style: string) => {
+    const actualSize = Math.max(1, Math.floor(size * 0.9)) // 稍微缩小以避免重叠
+    
+    switch (style) {
+        case 'circle':
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'rounded':
+            const radius = actualSize * 0.2
+            ctx.beginPath()
+            // 手动绘制圆角矩形
+            const rectX = x + (size-actualSize)/2
+            const rectY = y + (size-actualSize)/2
+            ctx.moveTo(rectX + radius, rectY)
+            ctx.lineTo(rectX + actualSize - radius, rectY)
+            ctx.quadraticCurveTo(rectX + actualSize, rectY, rectX + actualSize, rectY + radius)
+            ctx.lineTo(rectX + actualSize, rectY + actualSize - radius)
+            ctx.quadraticCurveTo(rectX + actualSize, rectY + actualSize, rectX + actualSize - radius, rectY + actualSize)
+            ctx.lineTo(rectX + radius, rectY + actualSize)
+            ctx.quadraticCurveTo(rectX, rectY + actualSize, rectX, rectY + actualSize - radius)
+            ctx.lineTo(rectX, rectY + radius)
+            ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY)
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'horizontal':
+            // 横条纹
+            const hStripeHeight = actualSize / 3
+            for (let i = 0; i < 3; i++) {
+                if (i % 2 === 0) {
+                    ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2 + i * hStripeHeight, actualSize, hStripeHeight)
+                }
+            }
+            break
+        case 'vertical':
+            // 竖条纹
+            const vStripeWidth = actualSize / 3
+            for (let i = 0; i < 3; i++) {
+                if (i % 2 === 0) {
+                    ctx.fillRect(x + (size-actualSize)/2 + i * vStripeWidth, y + (size-actualSize)/2, vStripeWidth, actualSize)
+                }
+            }
+            break
+        case 'diamond':
+            // 菱形
+            ctx.beginPath()
+            const centerX = x + size/2
+            const centerY = y + size/2
+            const halfSize = actualSize/2
+            ctx.moveTo(centerX, centerY - halfSize)
+            ctx.lineTo(centerX + halfSize, centerY)
+            ctx.lineTo(centerX, centerY + halfSize)
+            ctx.lineTo(centerX - halfSize, centerY)
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'leaf':
+            // 叶形（椭圆）
+            ctx.beginPath()
+            ctx.ellipse(x + size/2, y + size/2, actualSize/2, actualSize/3, 0, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'liquid':
+            // 液化效果 - 不规则圆形
+            ctx.beginPath()
+            const liquidRadius = actualSize/2
+            const centerLiquidX = x + size/2
+            const centerLiquidY = y + size/2
+            for (let angle = 0; angle < 2 * Math.PI; angle += 0.1) {
+                const r = liquidRadius * (0.8 + 0.2 * Math.sin(angle * 5))
+                const px = centerLiquidX + r * Math.cos(angle)
+                const py = centerLiquidY + r * Math.sin(angle)
+                if (angle === 0) {
+                    ctx.moveTo(px, py)
+                } else {
+                    ctx.lineTo(px, py)
+                }
+            }
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'round-liquid':
+            // 圆液化 - 多个小圆组成
+            const dotRadius = actualSize / 6
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((i + j) % 2 === 0) {
+                        ctx.beginPath()
+                        ctx.arc(
+                            x + (size-actualSize)/2 + (i + 0.5) * actualSize/3,
+                            y + (size-actualSize)/2 + (j + 0.5) * actualSize/3,
+                            dotRadius,
+                            0, 2 * Math.PI
+                        )
+                        ctx.fill()
+                    }
+                }
+            }
+            break
+        case 'stripe':
+            // 条纹效果
+            const stripeWidth = actualSize / 5
+            for (let i = 0; i < 5; i++) {
+                if (i % 2 === 0) {
+                    ctx.fillRect(
+                        x + (size-actualSize)/2 + i * stripeWidth,
+                        y + (size-actualSize)/2,
+                        stripeWidth,
+                        actualSize
+                    )
+                }
+            }
+            break
+        case 'tile':
+            // 瓷砖效果
+            const tileSize = actualSize / 3
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((i + j) % 2 === 0) {
+                        ctx.fillRect(
+                            x + (size-actualSize)/2 + i * tileSize,
+                            y + (size-actualSize)/2 + j * tileSize,
+                            tileSize,
+                            tileSize
+                        )
+                    }
+                }
+            }
+            break
+        case 'big-dot':
+            // 大圆点
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.4, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'small-dot':
+            // 小圆点
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.3, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'star':
+            // 粗星形
+            drawStar(ctx, x + size/2, y + size/2, 5, actualSize/2, actualSize/4)
+            break
+        case 'fine-star':
+            // 细星形
+            drawStar(ctx, x + size/2, y + size/2, 8, actualSize/2, actualSize/3)
+            break
+        case 'grid':
+            // 网格效果
+            const gridLineWidth = 1
+            const gridCellSize = actualSize / 3
+            // 绘制网格线
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, gridLineWidth)
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2 + gridCellSize, actualSize, gridLineWidth)
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2 + 2*gridCellSize, actualSize, gridLineWidth)
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, gridLineWidth, actualSize)
+            ctx.fillRect(x + (size-actualSize)/2 + gridCellSize, y + (size-actualSize)/2, gridLineWidth, actualSize)
+            ctx.fillRect(x + (size-actualSize)/2 + 2*gridCellSize, y + (size-actualSize)/2, gridLineWidth, actualSize)
+            break
+        case 'small-square':
+            // 小方点
+            const smallSquareSize = actualSize / 4
+            for (let i = 0; i < 2; i++) {
+                for (let j = 0; j < 2; j++) {
+                    ctx.fillRect(
+                        x + (size-actualSize)/2 + i * actualSize/2 + actualSize/4 - smallSquareSize/2,
+                        y + (size-actualSize)/2 + j * actualSize/2 + actualSize/4 - smallSquareSize/2,
+                        smallSquareSize,
+                        smallSquareSize
+                    )
+                }
+            }
+            break
+        case 'dot':
+            // 圆点
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.35, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'star':
+            // 星形
+            drawStar(ctx, x + size/2, y + size/2, 5, actualSize/2, actualSize/4)
+            break
+        case 'liquid':
+            // 液化效果 - 不规则圆形
+            ctx.beginPath()
+            const dotLiquidRadius = actualSize/2
+            const dotCenterX = x + size/2
+            const dotCenterY = y + size/2
+            for (let angle = 0; angle < 2 * Math.PI; angle += 0.2) {
+                const r = dotLiquidRadius * (0.7 + 0.3 * Math.sin(angle * 3))
+                const px = dotCenterX + r * Math.cos(angle)
+                const py = dotCenterY + r * Math.sin(angle)
+                if (angle === 0) {
+                    ctx.moveTo(px, py)
+                } else {
+                    ctx.lineTo(px, py)
+                }
+            }
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'tile':
+            // 瓷砖效果
+            const dotTileSize = actualSize / 2
+            for (let i = 0; i < 2; i++) {
+                for (let j = 0; j < 2; j++) {
+                    if ((i + j) % 2 === 0) {
+                        ctx.fillRect(
+                            x + (size-actualSize)/2 + i * dotTileSize,
+                            y + (size-actualSize)/2 + j * dotTileSize,
+                            dotTileSize,
+                            dotTileSize
+                        )
+                    }
+                }
+            }
+            break
+        case 'grid':
+            // 网格效果
+            const dotGridLineWidth = Math.max(1, actualSize / 8)
+            const dotGridCellSize = actualSize / 3
+            // 绘制网格线
+            for (let i = 0; i <= 3; i++) {
+                // 水平线
+                ctx.fillRect(
+                    x + (size-actualSize)/2, 
+                    y + (size-actualSize)/2 + i * dotGridCellSize - dotGridLineWidth/2, 
+                    actualSize, 
+                    dotGridLineWidth
+                )
+                // 垂直线
+                ctx.fillRect(
+                    x + (size-actualSize)/2 + i * dotGridCellSize - dotGridLineWidth/2, 
+                    y + (size-actualSize)/2, 
+                    dotGridLineWidth, 
+                    actualSize
+                )
+            }
+            break
+        case 'small-square':
+            // 小方点
+            const dotSmallSquareSize = actualSize / 3
+            ctx.fillRect(
+                x + (size-actualSize)/2 + actualSize/2 - dotSmallSquareSize/2,
+                y + (size-actualSize)/2 + actualSize/2 - dotSmallSquareSize/2,
+                dotSmallSquareSize,
+                dotSmallSquareSize
+            )
+            break
+        default: // square 和 normal
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            break
+    }
+}
+
+// 绘制星形
+const drawStar = (ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number) => {
+    let rot = Math.PI / 2 * 3
+    let x = cx
+    let y = cy
+    const step = Math.PI / spikes
+
+    ctx.beginPath()
+    ctx.moveTo(cx, cy - outerRadius)
+    
+    for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius
+        y = cy + Math.sin(rot) * outerRadius
+        ctx.lineTo(x, y)
+        rot += step
+
+        x = cx + Math.cos(rot) * innerRadius
+        y = cy + Math.sin(rot) * innerRadius
+        ctx.lineTo(x, y)
+        rot += step
+    }
+    
+    ctx.lineTo(cx, cy - outerRadius)
+    ctx.closePath()
+    ctx.fill()
 }
 
 // 添加Logo到二维码
@@ -1054,6 +1662,17 @@ const getScanTip = (): string => {
     }
 }
 
+// 获取容错率名称
+const getErrorCorrectionName = (): string => {
+    switch (errorCorrectionLevel.value) {
+        case 'L': return '低 (7%)'
+        case 'M': return '中 (15%)'
+        case 'Q': return '高 (25%)'
+        case 'H': return '最高 (30%)'
+        default: return '中 (15%)'
+    }
+}
+
 // 测试链接
 const testLink = () => {
     const content = getCurrentContent()
@@ -1094,6 +1713,7 @@ const clearAll = () => {
     errorCorrectionLevel.value = 'M'
     dotStyle.value = 'square'
     cornerStyle.value = 'square'
+    eyePattern.value = 'normal'
     encodingContent.value = ''
     encodingLength.value = ''
     logoSize.value = 20
@@ -1285,11 +1905,29 @@ onMounted(() => {
 .map-controls {
     display: flex;
     gap: 6px;
+    align-items: center;
 }
 
 .search-wrapper {
     position: relative;
     flex: 1;
+}
+
+.location-format-wrapper {
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.format-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 13px;
+    min-width: 100px;
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .search-input {
@@ -1466,7 +2104,37 @@ onMounted(() => {
     font-weight: 500;
     word-break: break-all;
     line-height: 1.3;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.qr-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 11px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: monospace;
 }
 
 .scan-tip {
@@ -1550,6 +2218,74 @@ onMounted(() => {
     padding-bottom: 4px;
 }
 
+/* 预设样式 */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 10px;
+}
+
+.preset-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.preset-preview {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    position: relative;
+}
+
+.preset-preview.preset-classic {
+    background: 
+        linear-gradient(45deg, #000 25%, transparent 25%), 
+        linear-gradient(-45deg, #000 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #000 75%), 
+        linear-gradient(-45deg, transparent 75%, #000 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+.preset-preview.preset-modern {
+    background: radial-gradient(circle, #2563eb 30%, transparent 30%);
+    background-size: 4px 4px;
+}
+
+.preset-preview.preset-artistic {
+    background: #7c3aed;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.preset-preview.preset-minimal {
+    background: #374151;
+    border-radius: 6px;
+}
+
+.preset-name {
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1;
+}
+
 /* 基本样式区域 */
 .style-grid {
     display: flex;
@@ -1613,10 +2349,311 @@ onMounted(() => {
     cursor: pointer;
 }
 
-.color-text {
-    font-size: 10px;
+.style-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    cursor: pointer;
+}
+
+.shape-preview {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.shape-preview.square {
+    background: #000;
+}
+
+.shape-preview.eye-square {
+    background: #000;
+    position: relative;
+}
+
+.shape-preview.eye-square::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+}
+
+/* 码眼样式网格 */
+.eye-pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.eye-pattern-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-primary);
+}
+
+.eye-pattern-item:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.eye-pattern-item.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color-alpha);
+}
+
+.pattern-preview {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 2px;
+    background: var(--text-primary);
+    position: relative;
+}
+
+/* 不同样式的预览 */
+.pattern-preview.pattern-normal {
+    background: #000;
+}
+
+.pattern-preview.pattern-liquid {
+    background: linear-gradient(45deg, #000 25%, #333 25%, #333 50%, #000 50%, #000 75%, #333 75%);
+    background-size: 4px 4px;
+}
+
+.pattern-preview.pattern-round-liquid {
+    background: radial-gradient(circle, #000 30%, #333 70%);
+}
+
+.pattern-preview.pattern-stripe {
+    background: repeating-linear-gradient(0deg, #000 0px, #000 2px, #666 2px, #666 4px);
+}
+
+.pattern-preview.pattern-horizontal {
+    background: repeating-linear-gradient(0deg, #000 0px, #000 3px, transparent 3px, transparent 6px);
+}
+
+.pattern-preview.pattern-vertical {
+    background: repeating-linear-gradient(90deg, #000 0px, #000 3px, transparent 3px, transparent 6px);
+}
+
+.pattern-preview.pattern-tile {
+    background: 
+        linear-gradient(45deg, #000 25%, transparent 25%), 
+        linear-gradient(-45deg, #000 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #000 75%), 
+        linear-gradient(-45deg, transparent 75%, #000 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+.pattern-preview.pattern-big-dot {
+    background: radial-gradient(circle, #000 40%, transparent 40%);
+    background-size: 6px 6px;
+}
+
+.pattern-preview.pattern-small-dot {
+    background: radial-gradient(circle, #000 30%, transparent 30%);
+    background-size: 4px 4px;
+}
+
+.pattern-preview.pattern-star {
+    background: #000;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.pattern-preview.pattern-fine-star {
+    background: #000;
+    clip-path: polygon(50% 0%, 55% 40%, 100% 40%, 65% 65%, 80% 100%, 50% 80%, 20% 100%, 35% 65%, 0% 40%, 45% 40%);
+}
+
+.pattern-preview.pattern-grid {
+    background: 
+        linear-gradient(to right, #000 1px, transparent 1px),
+        linear-gradient(to bottom, #000 1px, transparent 1px);
+    background-size: 4px 4px;
+}
+
+.pattern-preview.pattern-diamond {
+    background: #000;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.pattern-preview.pattern-small-square {
+    background: 
+        radial-gradient(circle at 25% 25%, #000 20%, transparent 20%),
+        radial-gradient(circle at 75% 75%, #000 20%, transparent 20%);
+    background-size: 8px 8px;
+}
+
+.pattern-preview.pattern-custom {
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-color-dark));
+}
+
+.pattern-name {
+    font-size: 9px;
     color: var(--text-secondary);
-    font-family: monospace;
+    text-align: center;
+    line-height: 1;
+}
+
+/* 更新形状预览样式 */
+.shape-preview.dot-square {
+    background: #000;
+}
+
+.shape-preview.dot-circle {
+    background: #000;
+    border-radius: 50%;
+}
+
+.shape-preview.dot-rounded {
+    background: #000;
+    border-radius: 3px;
+}
+
+.shape-preview.dot-horizontal {
+    background: repeating-linear-gradient(0deg, #000 0px, #000 2px, transparent 2px, transparent 4px);
+}
+
+.shape-preview.dot-vertical {
+    background: repeating-linear-gradient(90deg, #000 0px, #000 2px, transparent 2px, transparent 4px);
+}
+
+.shape-preview.dot-diamond {
+    background: #000;
+    transform: rotate(45deg);
+}
+
+.shape-preview.eye-square {
+    background: #000;
+    position: relative;
+}
+
+.shape-preview.eye-square::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+}
+
+.shape-preview.eye-circle {
+    background: #000;
+    border-radius: 50%;
+    position: relative;
+}
+
+.shape-preview.eye-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.shape-preview.eye-rounded {
+    background: #000;
+    border-radius: 3px;
+    position: relative;
+}
+
+.shape-preview.eye-rounded::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 1px;
+}
+
+.shape-preview.eye-leaf {
+    background: #000;
+    border-radius: 50% 0;
+    position: relative;
+}
+
+.shape-preview.eye-leaf::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50% 0;
+}
+
+.eye-color-options {
+    display: flex;
+    gap: 12px;
+}
+
+.eye-color-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.eye-color-option input[type="radio"] {
+    display: none;
+}
+
+.checkmark {
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    position: relative;
+}
+
+.eye-color-option input[type="radio"]:checked + .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.eye-color-option input[type="radio"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+}
+
+.style-item.full-width {
+    grid-column: 1 / -1;
 }
 
 .style-select,
@@ -1627,6 +2664,12 @@ onMounted(() => {
     background: var(--bg-primary);
     color: var(--text-primary);
     font-size: 11px;
+}
+
+.full-width-select {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 12px;
 }
 
 /* Logo设置 */
