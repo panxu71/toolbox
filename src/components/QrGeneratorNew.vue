@@ -258,60 +258,32 @@
                 <div class="settings-panel">
                     <h3>二维码设置</h3>
                     
-                    <!-- 预设样式 -->
-                    <div class="settings-section">
-                        <h4 class="section-title">预设样式</h4>
-                        <div class="preset-grid">
-                            <button 
-                                v-for="preset in stylePresets" 
-                                :key="preset.id"
-                                class="preset-btn"
-                                @click="applyPreset(preset)"
-                            >
-                                <div class="preset-preview" :class="'preset-' + preset.id"></div>
-                                <span class="preset-name">{{ preset.name }}</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- 基本样式 -->
                     <div class="settings-section">
-                        <h4 class="section-title">码点码眼</h4>
                         <div class="style-grid">
                             <div class="style-row">
                                 <div class="style-item">
                                     <label class="style-label">码点形状:</label>
                                     <select v-model="dotStyle" class="style-select" @change="generateQR">
-                                        <option value="square">方形</option>
-                                        <option value="circle">圆形</option>
-                                        <option value="rounded">圆角</option>
+                                        <option value="square">普通</option>
+                                        <option value="liquid">液化</option>
+                                        <option value="round-liquid">圆液化</option>
+                                        <option value="stripe">条纹</option>
                                         <option value="horizontal">横条纹</option>
                                         <option value="vertical">竖条纹</option>
-                                        <option value="diamond">菱形</option>
-                                        <option value="dot">圆点</option>
-                                        <option value="star">星形</option>
-                                        <option value="liquid">液化</option>
                                         <option value="tile">瓷砖</option>
+                                        <option value="big-dot">大圆点</option>
+                                        <option value="small-dot">小圆点</option>
+                                        <option value="star">粗星形</option>
+                                        <option value="fine-star">细星形</option>
                                         <option value="grid">网格</option>
+                                        <option value="diamond">菱形</option>
                                         <option value="small-square">小方点</option>
                                     </select>
                                 </div>
                                 <div class="style-item">
                                     <label class="style-label">码眼形状:</label>
-                                    <select v-model="cornerStyle" class="style-select" @change="generateQR">
-                                        <option value="square">方正</option>
-                                        <option value="circle">圆形</option>
-                                        <option value="rounded">圆角</option>
-                                        <option value="leaf">叶形</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- 码眼形状样式 -->
-                            <div class="style-row">
-                                <div class="style-item full-width">
-                                    <label class="style-label">码眼形状:</label>
-                                    <select v-model="eyePattern" class="style-select full-width-select" @change="generateQR">
+                                    <select v-model="eyePattern" class="style-select" @change="generateQR">
                                         <option 
                                             v-for="shape in eyeShapes" 
                                             :key="shape.id"
@@ -609,9 +581,8 @@ const foregroundColor = ref('#000000')
 const backgroundColor = ref('#ffffff')
 const errorCorrectionLevel = ref('M')
 const dotStyle = ref('square')
-const cornerStyle = ref('square')
 const eyeColor = ref('auto')
-const eyePattern = ref('normal')
+const eyePattern = ref('square')
 const outerEyeColor = ref('#000000')
 const innerEyeColor = ref('#000000')
 const encodingContent = ref('')
@@ -619,20 +590,19 @@ const encodingLength = ref('')
 
 // 码眼形状选项
 const eyeShapes = [
-    { id: 'normal', name: '普通' },
-    { id: 'liquid', name: '液化' },
-    { id: 'round-liquid', name: '圆液化' },
-    { id: 'stripe', name: '条纹' },
-    { id: 'horizontal', name: '横条纹' },
-    { id: 'vertical', name: '竖条纹' },
-    { id: 'tile', name: '瓷砖' },
-    { id: 'big-dot', name: '大圆点' },
-    { id: 'small-dot', name: '小圆点' },
-    { id: 'star', name: '粗星形' },
-    { id: 'fine-star', name: '细星形' },
-    { id: 'grid', name: '网格' },
+    { id: 'square', name: '方正' },
+    { id: 'circle', name: '圆角' },
+    { id: 'thick-rounded', name: '粗圆角' },
+    { id: 'medium-rounded', name: '中圆角' },
+    { id: 'thin-rounded', name: '细圆角' },
+    { id: 'thick-circle', name: '粗圆形' },
+    { id: 'thin-circle', name: '细圆形' },
     { id: 'diamond', name: '菱形' },
-    { id: 'small-square', name: '小方点' }
+    { id: 'star', name: '星形' },
+    { id: 'bubble', name: '气泡' },
+    { id: 'eye', name: '眼睛' },
+    { id: 'single-rounded', name: '单圆角' },
+    { id: 'four-eye', name: '四码眼' }
 ]
 
 // 预设样式
@@ -641,7 +611,7 @@ const stylePresets = [
         id: 'classic',
         name: '经典',
         dotStyle: 'square',
-        eyePattern: 'normal',
+        eyePattern: 'square',
         foregroundColor: '#000000',
         backgroundColor: '#ffffff'
     },
@@ -649,7 +619,7 @@ const stylePresets = [
         id: 'modern',
         name: '现代',
         dotStyle: 'circle',
-        eyePattern: 'rounded',
+        eyePattern: 'circle',
         foregroundColor: '#2563eb',
         backgroundColor: '#ffffff'
     },
@@ -657,7 +627,7 @@ const stylePresets = [
         id: 'artistic',
         name: '艺术',
         dotStyle: 'diamond',
-        eyePattern: 'liquid',
+        eyePattern: 'star',
         foregroundColor: '#7c3aed',
         backgroundColor: '#f8fafc'
     },
@@ -665,7 +635,7 @@ const stylePresets = [
         id: 'minimal',
         name: '简约',
         dotStyle: 'rounded',
-        eyePattern: 'circle',
+        eyePattern: 'fine-rounded',
         foregroundColor: '#374151',
         backgroundColor: '#ffffff'
     }
@@ -1050,31 +1020,31 @@ const generateQR = async () => {
     encodingLength.value = content.length.toString()
 
     try {
-        const options = {
-            width: parseInt(qrSize.value),
-            margin: parseInt(qrMargin.value),
-            errorCorrectionLevel: errorCorrectionLevel.value as 'L' | 'M' | 'Q' | 'H',
-            version: qrVersion.value === 'auto' ? undefined : parseInt(qrVersion.value),
-            color: {
-                dark: foregroundColor.value,
-                light: backgroundColor.value
-            }
-        }
-
-        // 生成基础二维码
-        const baseQR = await QRCode.toDataURL(content, options)
-        
-        // 应用高级样式（码点码眼）
-        let styledQR = baseQR
-        if (dotStyle.value !== 'square' || cornerStyle.value !== 'square' || eyePattern.value !== 'normal') {
-            styledQR = await applyAdvancedStyles(baseQR)
-        }
-        
-        // 如果有Logo，则合成Logo到二维码中心
-        if (logoImage.value) {
-            qrDataURL.value = await addLogoToQR(styledQR)
+        // 如果使用自定义样式，使用自定义绘制
+        console.log('dotStyle:', dotStyle.value, 'eyePattern:', eyePattern.value)
+        if (dotStyle.value !== 'square' || eyePattern.value !== 'square') {
+            console.log('使用自定义绘制')
+            qrDataURL.value = await generateCustomQR(content)
         } else {
-            qrDataURL.value = styledQR
+            console.log('使用标准绘制')
+            // 使用标准QRCode库生成
+            const options = {
+                width: parseInt(qrSize.value),
+                margin: parseInt(qrMargin.value),
+                errorCorrectionLevel: errorCorrectionLevel.value as 'L' | 'M' | 'Q' | 'H',
+                version: qrVersion.value === 'auto' ? undefined : parseInt(qrVersion.value),
+                color: {
+                    dark: foregroundColor.value,
+                    light: backgroundColor.value
+                }
+            }
+            const baseQR = await QRCode.toDataURL(content, options)
+            
+            if (logoImage.value) {
+                qrDataURL.value = await addLogoToQR(baseQR)
+            } else {
+                qrDataURL.value = baseQR
+            }
         }
     } catch (err) {
         console.error('生成二维码失败:', err)
@@ -1082,152 +1052,1086 @@ const generateQR = async () => {
     }
 }
 
-// 应用高级样式（码点码眼）
-const applyAdvancedStyles = async (qrDataURL: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-            reject(new Error('无法获取canvas上下文'))
-            return
-        }
-
-        const qrImage = new Image()
-        qrImage.onload = () => {
-            const size = parseInt(qrSize.value)
-            canvas.width = size
-            canvas.height = size
-
-            // 绘制背景
-            ctx.fillStyle = backgroundColor.value
-            ctx.fillRect(0, 0, size, size)
-
-            // 获取原始图像数据
-            const tempCanvas = document.createElement('canvas')
-            const tempCtx = tempCanvas.getContext('2d')
-            if (!tempCtx) {
-                resolve(qrDataURL)
-                return
-            }
-            
-            tempCanvas.width = size
-            tempCanvas.height = size
-            tempCtx.drawImage(qrImage, 0, 0, size, size)
-            
-            const imageData = tempCtx.getImageData(0, 0, size, size)
-            const data = imageData.data
-            
-            // 计算模块大小（假设标准21x21模块加边距）
-            const margin = parseInt(qrMargin.value)
-            const moduleSize = (size - 2 * margin * 4) / 21 // 简化计算
-            const startX = margin * 4
-            const startY = margin * 4
-            
-            // 绘制码点
-            for (let y = 0; y < size; y += Math.max(1, Math.floor(moduleSize))) {
-                for (let x = 0; x < size; x += Math.max(1, Math.floor(moduleSize))) {
-                    const pixelIndex = (y * size + x) * 4
-                    if (pixelIndex >= 0 && pixelIndex < data.length) {
-                        const isDark = (data[pixelIndex] ?? 255) < 128 // 判断是否为暗色模块
-                        
-                        if (isDark) {
-                            // 检查是否在码眼区域
-                            const isInEye = isInEyeArea(x, y, startX, startY, moduleSize)
-                            
-                            if (isInEye && eyePattern.value !== 'normal') {
-                                // 使用码眼形状样式
-                                ctx.fillStyle = foregroundColor.value
-                            } else if (isInEye && eyeColor.value === 'auto') {
-                                // 使用自定义码眼颜色
-                                const isOuterEye = isInOuterEye(x, y, startX, startY, moduleSize)
-                                ctx.fillStyle = isOuterEye ? outerEyeColor.value : innerEyeColor.value
-                            } else {
-                                ctx.fillStyle = foregroundColor.value
-                            }
-                            
-                            // 根据样式绘制模块
-                            if (isInEye) {
-                                // 码眼区域使用码眼形状
-                                drawModule(ctx, x, y, moduleSize, eyePattern.value)
-                            } else {
-                                // 普通区域使用码点形状
-                                drawModule(ctx, x, y, moduleSize, dotStyle.value)
-                            }
+// 生成自定义样式二维码
+const generateCustomQR = async (content: string): Promise<string> => {
+    // 获取QR码矩阵数据
+    const qrData = await QRCode.create(content, {
+        errorCorrectionLevel: errorCorrectionLevel.value as 'L' | 'M' | 'Q' | 'H',
+        version: qrVersion.value === 'auto' ? undefined : parseInt(qrVersion.value)
+    })
+    
+    const modules = qrData.modules
+    const moduleCount = modules.size
+    const size = parseInt(qrSize.value)
+    const marginModules = parseInt(qrMargin.value)
+    
+    // 计算模块大小，margin是以模块数为单位（与标准QRCode库一致）
+    const totalModules = moduleCount + marginModules * 2
+    const moduleSize = size / totalModules
+    const margin = marginModules * moduleSize
+    
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('无法获取canvas上下文')
+    
+    // 绘制背景
+    ctx.fillStyle = backgroundColor.value
+    ctx.fillRect(0, 0, size, size)
+    
+    // 设置前景色
+    ctx.fillStyle = foregroundColor.value
+    
+    // 如果是液化效果，使用特殊处理
+    if (dotStyle.value === 'liquid') {
+        drawLiquidEffect(ctx, modules, moduleCount, margin, moduleSize)
+    } else {
+        // 遍历每个模块
+        for (let row = 0; row < moduleCount; row++) {
+            for (let col = 0; col < moduleCount; col++) {
+                if (modules.get(row, col)) {
+                    const x = margin + col * moduleSize
+                    const y = margin + row * moduleSize
+                    
+                    // 判断是否在码眼区域
+                    if (isInFinderPattern(row, col, moduleCount)) {
+                        // 码眼区域 - 绘制完整的码眼（只在码眼的起始位置绘制一次）
+                        if (isFinderPatternStart(row, col, moduleCount)) {
+                            drawFinderPattern(ctx, x, y, moduleSize * 7, eyePattern.value)
                         }
+                    } else {
+                        // 数据区域 - 使用码点样式
+                        drawDataModule(ctx, x, y, moduleSize, dotStyle.value)
                     }
                 }
             }
-            
-            resolve(canvas.toDataURL('image/png'))
-        }
-        qrImage.onerror = () => resolve(qrDataURL) // 如果失败，返回原始图像
-        qrImage.src = qrDataURL
-    })
-}
-
-// 判断是否在码眼区域
-const isInEyeArea = (x: number, y: number, startX: number, startY: number, moduleSize: number): boolean => {
-    const moduleX = Math.floor((x - startX) / moduleSize)
-    const moduleY = Math.floor((y - startY) / moduleSize)
-    
-    // 三个码眼的位置（简化）
-    const eyePositions = [
-        { x: 0, y: 0 },     // 左上
-        { x: 14, y: 0 },    // 右上
-        { x: 0, y: 14 }     // 左下
-    ]
-    
-    for (const eye of eyePositions) {
-        if (moduleX >= eye.x && moduleX < eye.x + 7 && 
-            moduleY >= eye.y && moduleY < eye.y + 7) {
-            return true
         }
     }
     
+    // 如果有Logo，添加Logo
+    if (logoImage.value) {
+        return await addLogoToQR(canvas.toDataURL('image/png'))
+    }
+    
+    return canvas.toDataURL('image/png')
+}
+
+// 判断是否在码眼区域
+const isInFinderPattern = (row: number, col: number, moduleCount: number): boolean => {
+    // 左上角码眼
+    if (row < 7 && col < 7) return true
+    // 右上角码眼
+    if (row < 7 && col >= moduleCount - 7) return true
+    // 左下角码眼
+    if (row >= moduleCount - 7 && col < 7) return true
     return false
 }
 
-// 判断是否在码眼外圈
-const isInOuterEye = (x: number, y: number, startX: number, startY: number, moduleSize: number): boolean => {
-    const moduleX = Math.floor((x - startX) / moduleSize)
-    const moduleY = Math.floor((y - startY) / moduleSize)
+// 判断是否是码眼的起始位置
+const isFinderPatternStart = (row: number, col: number, moduleCount: number): boolean => {
+    // 左上角码眼起始
+    if (row === 0 && col === 0) return true
+    // 右上角码眼起始
+    if (row === 0 && col === moduleCount - 7) return true
+    // 左下角码眼起始
+    if (row === moduleCount - 7 && col === 0) return true
+    return false
+}
+
+// 绘制码眼
+const drawFinderPattern = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, style: string) => {
+    const outerSize = size
+    const middleSize = size * 5 / 7
+    const innerSize = size * 3 / 7
+    const middleOffset = (outerSize - middleSize) / 2
+    const innerOffset = (outerSize - innerSize) / 2
     
-    const eyePositions = [
-        { x: 0, y: 0 },
-        { x: 14, y: 0 },
-        { x: 0, y: 14 }
-    ]
+    ctx.fillStyle = foregroundColor.value
     
-    for (const eye of eyePositions) {
-        const relX = moduleX - eye.x
-        const relY = moduleY - eye.y
-        
-        if (relX >= 0 && relX < 7 && relY >= 0 && relY < 7) {
-            // 外圈：边框
-            if (relX === 0 || relX === 6 || relY === 0 || relY === 6) {
-                return true
+    switch (style) {
+        case 'square':
+            // 方正 - 外方框，内方框，中心实心方块
+            ctx.fillRect(x, y, outerSize, outerSize)
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(x + middleOffset, y + middleOffset, middleSize, middleSize)
+            ctx.fillStyle = foregroundColor.value
+            ctx.fillRect(x + innerOffset, y + innerOffset, innerSize, innerSize)
+            break
+            
+        case 'circle':
+            // 圆角 - 外圆角方形，中间空心，中心实心圆
+            drawRoundedRect(ctx, x, y, outerSize, outerSize, outerSize * 0.2)
+            ctx.fillStyle = backgroundColor.value
+            drawRoundedRect(ctx, x + middleOffset, y + middleOffset, middleSize, middleSize, middleSize * 0.2)
+            ctx.fillStyle = foregroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, innerSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+            
+        case 'thick-rounded':
+            // 粗圆角
+            drawRoundedFinderPattern(ctx, x, y, outerSize, middleSize, innerSize, 0.25)
+            break
+            
+        case 'medium-rounded':
+            // 中圆角
+            drawRoundedFinderPattern(ctx, x, y, outerSize, middleSize, innerSize, 0.15)
+            break
+            
+        case 'thin-rounded':
+            // 细圆角
+            drawRoundedFinderPattern(ctx, x, y, outerSize, middleSize, innerSize, 0.08)
+            break
+            
+        case 'thick-circle':
+            // 粗圆形
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, outerSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = backgroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, middleSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = foregroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, innerSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+            
+        case 'thin-circle':
+            // 细圆形
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, outerSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = backgroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, middleSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = foregroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, innerSize * 0.6, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+            
+        case 'diamond':
+            // 菱形
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, outerSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = backgroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize/2, y + outerSize/2, middleSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = foregroundColor.value
+            // 中心菱形
+            ctx.beginPath()
+            const diamondSize = innerSize / 2
+            ctx.moveTo(x + outerSize/2, y + outerSize/2 - diamondSize)
+            ctx.lineTo(x + outerSize/2 + diamondSize, y + outerSize/2)
+            ctx.lineTo(x + outerSize/2, y + outerSize/2 + diamondSize)
+            ctx.lineTo(x + outerSize/2 - diamondSize, y + outerSize/2)
+            ctx.closePath()
+            ctx.fill()
+            break
+            
+        case 'star':
+            // 星形 - 外圆环，中心四角星（内凹）
+            const cx = x + outerSize / 2
+            const cy = y + outerSize / 2
+            ctx.beginPath()
+            ctx.arc(cx, cy, outerSize / 2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = backgroundColor.value
+            ctx.beginPath()
+            ctx.arc(cx, cy, middleSize / 2, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.fillStyle = foregroundColor.value
+            // 中心四角星（内凹菱形）
+            const starR = innerSize / 2
+            const starInner = starR * 0.35
+            ctx.beginPath()
+            ctx.moveTo(cx, cy - starR)
+            ctx.quadraticCurveTo(cx + starInner, cy - starInner, cx + starR, cy)
+            ctx.quadraticCurveTo(cx + starInner, cy + starInner, cx, cy + starR)
+            ctx.quadraticCurveTo(cx - starInner, cy + starInner, cx - starR, cy)
+            ctx.quadraticCurveTo(cx - starInner, cy - starInner, cx, cy - starR)
+            ctx.closePath()
+            ctx.fill()
+            break
+            
+        case 'bubble':
+            // 气泡 - 使用旋转机制
+            drawBubbleWithRotation(ctx, x, y, outerSize, middleSize, innerSize)
+            break
+            
+        case 'eye':
+            // 眼睛 - 椭圆外框，椭圆内框，圆形瞳孔
+            console.log('绘制眼睛形状')
+            drawRealisticEye(ctx, x, y, outerSize, middleSize, innerSize)
+            break
+            
+        case 'single-rounded':
+            // 单圆角
+            ctx.fillRect(x, y, outerSize, outerSize)
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(x + middleOffset, y + middleOffset, middleSize, middleSize)
+            ctx.fillStyle = foregroundColor.value
+            ctx.fillRect(x + innerOffset, y + innerOffset, innerSize, innerSize)
+            // 左上角圆角
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(x, y, outerSize * 0.2, outerSize * 0.2)
+            ctx.fillStyle = foregroundColor.value
+            ctx.beginPath()
+            ctx.arc(x + outerSize * 0.2, y + outerSize * 0.2, outerSize * 0.2, Math.PI, Math.PI * 1.5)
+            ctx.fill()
+            break
+            
+        case 'four-eye':
+            // 四码眼
+            ctx.fillRect(x, y, outerSize, outerSize)
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(x + middleOffset, y + middleOffset, middleSize, middleSize)
+            ctx.fillStyle = foregroundColor.value
+            ctx.fillRect(x + innerOffset, y + innerOffset, innerSize, innerSize)
+            break
+            
+        default:
+            // 默认方正
+            ctx.fillRect(x, y, outerSize, outerSize)
+            ctx.fillStyle = backgroundColor.value
+            ctx.fillRect(x + middleOffset, y + middleOffset, middleSize, middleSize)
+            ctx.fillStyle = foregroundColor.value
+            ctx.fillRect(x + innerOffset, y + innerOffset, innerSize, innerSize)
+            break
+    }
+}
+
+// 绘制圆角码眼
+const drawRoundedFinderPattern = (
+    ctx: CanvasRenderingContext2D, 
+    x: number, 
+    y: number, 
+    outerSize: number, 
+    middleSize: number, 
+    innerSize: number,
+    radiusRatio: number
+) => {
+    const middleOffset = (outerSize - middleSize) / 2
+    const innerOffset = (outerSize - innerSize) / 2
+    
+    // 外框圆角方形
+    ctx.fillStyle = foregroundColor.value
+    drawRoundedRect(ctx, x, y, outerSize, outerSize, outerSize * radiusRatio)
+    
+    // 中间空心圆角方形
+    ctx.fillStyle = backgroundColor.value
+    drawRoundedRect(ctx, x + middleOffset, y + middleOffset, middleSize, middleSize, middleSize * radiusRatio)
+    
+    // 中心实心圆角方形
+    ctx.fillStyle = foregroundColor.value
+    drawRoundedRect(ctx, x + innerOffset, y + innerOffset, innerSize, innerSize, innerSize * radiusRatio)
+}
+
+// 绘制圆角矩形
+const drawRoundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + width - radius, y)
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    ctx.lineTo(x + width, y + height - radius)
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    ctx.lineTo(x + radius, y + height)
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+    ctx.fill()
+}
+
+// 绘制气泡矩形（左下角直角，其他三角圆角）
+const drawBubbleRect = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, radius: number, color: string) => {
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + size - radius, y)
+    ctx.quadraticCurveTo(x + size, y, x + size, y + radius)
+    ctx.lineTo(x + size, y + size - radius)
+    ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size)
+    ctx.lineTo(x, y + size) // 左下角直角
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+    ctx.fill()
+}
+
+// 绘制带旋转的气泡形状
+const drawBubbleWithRotation = (ctx: CanvasRenderingContext2D, x: number, y: number, outerSize: number, middleSize: number, innerSize: number) => {
+    const middleOffset = (outerSize - middleSize) / 2
+    const innerOffset = (outerSize - innerSize) / 2
+    
+    // 判断是哪个定位点，设置不同的旋转角度
+    let rotationAngle = 0
+    let position = 'unknown'
+    
+    // 根据位置判断是哪个定位点，气泡的基础形状是左下角直角
+    if (x < 100 && y < 100) {
+        // 左上角定位点 - 旋转180度，让左下角直角移到左上角
+        rotationAngle = Math.PI
+        position = '左上角'
+    } else if (x > 150 && y < 100) {
+        // 右上角定位点 - 旋转90度，让左下角直角移到右上角
+        rotationAngle = Math.PI / 2
+        position = '右上角'
+    } else if (x < 100 && y > 150) {
+        // 左下角定位点 - 旋转270度，让左下角直角保持在左下角
+        rotationAngle = Math.PI * 3 / 2
+        position = '左下角'
+    }
+    
+    console.log(`气泡定位点位置: ${position}, 坐标: (${x}, ${y}), 旋转角度: ${rotationAngle * 180 / Math.PI}度`)
+    
+    ctx.fillStyle = foregroundColor.value
+    
+    // 外层气泡轮廓
+    drawBubbleShapeWithRotation(ctx, x, y, outerSize, outerSize, rotationAngle)
+    
+    // 中间空白区域
+    ctx.fillStyle = backgroundColor.value
+    drawBubbleShapeWithRotation(ctx, x + middleOffset, y + middleOffset, middleSize, middleSize, rotationAngle)
+    
+    // 内层瞳孔
+    ctx.fillStyle = foregroundColor.value
+    drawBubbleShapeWithRotation(ctx, x + innerOffset, y + innerOffset, innerSize, innerSize, rotationAngle)
+}
+
+// 绘制带旋转的气泡形状
+const drawBubbleShapeWithRotation = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, rotationAngle: number) => {
+    const radius = Math.min(width, height) * 0.25
+    const centerX = x + width / 2
+    const centerY = y + height / 2
+    
+    ctx.save() // 保存当前状态
+    
+    // 移动到中心点并旋转指定角度
+    ctx.translate(centerX, centerY)
+    ctx.rotate(rotationAngle)
+    ctx.translate(-centerX, -centerY)
+    
+    ctx.beginPath()
+    
+    // 气泡形状：左下角直角，其他三角圆角
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + width - radius, y)
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    ctx.lineTo(x + width, y + height - radius)
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    ctx.lineTo(x, y + height) // 左下角直角
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    
+    ctx.closePath()
+    ctx.fill()
+    
+    ctx.restore() // 恢复状态
+}
+
+// 绘制眼睛形状（三个超大圆角，右下角直角）
+const drawEyeShapeRect = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, _r1: number, _r2: number, color: string) => {
+    ctx.fillStyle = color
+    const bigRadius = size * 0.5  // 超大圆角，几乎是半圆
+    
+    ctx.beginPath()
+    // 从左上角开始（超大圆角）
+    ctx.moveTo(x + bigRadius, y)
+    ctx.lineTo(x + size - bigRadius, y)
+    // 右上角（超大圆角）
+    ctx.quadraticCurveTo(x + size, y, x + size, y + bigRadius)
+    ctx.lineTo(x + size, y + size)  // 右下角直角
+    ctx.lineTo(x + bigRadius, y + size)
+    // 左下角（超大圆角）
+    ctx.quadraticCurveTo(x, y + size, x, y + size - bigRadius)
+    ctx.lineTo(x, y + bigRadius)
+    // 左上角（超大圆角）
+    ctx.quadraticCurveTo(x, y, x + bigRadius, y)
+    ctx.closePath()
+    ctx.fill()
+}
+
+// 绘制真实眼睛形状
+const drawRealisticEye = (ctx: CanvasRenderingContext2D, x: number, y: number, outerSize: number, middleSize: number, innerSize: number) => {
+    console.log('drawRealisticEye被调用', { x, y, outerSize, middleSize, innerSize })
+    const cx = x + outerSize / 2
+    const cy = y + outerSize / 2
+    const middleOffset = (outerSize - middleSize) / 2
+    const innerOffset = (outerSize - innerSize) / 2
+    
+    // 判断是哪个定位点，设置不同的旋转角度，让直角指向中心
+    let rotationAngle = 0
+    let position = 'unknown'
+    
+    // 根据位置判断是哪个定位点
+    if (x < 100 && y < 100) {
+        // 左上角定位点 - 不旋转，直角本来就在右下角
+        rotationAngle = 0
+        position = '左上角'
+    } else if (x > 150 && y < 100) {
+        // 右上角定位点 - 旋转90度，让右上角直角移到左下角
+        rotationAngle = Math.PI / 2
+        position = '右上角'
+    } else if (x < 100 && y > 150) {
+        // 左下角定位点 - 旋转-90度，让左下角直角移到右上角
+        rotationAngle = -Math.PI / 2
+        position = '左下角'
+    }
+    
+    console.log(`定位点位置: ${position}, 坐标: (${x}, ${y}), 旋转角度: ${rotationAngle * 180 / Math.PI}度`)
+    
+    ctx.fillStyle = foregroundColor.value
+    
+    // 外层眼睛轮廓
+    drawEyeShapeWithRotation(ctx, x, y, outerSize, outerSize, rotationAngle)
+    
+    // 中间空白区域
+    ctx.fillStyle = backgroundColor.value
+    drawEyeShapeWithRotation(ctx, x + middleOffset, y + middleOffset, middleSize, middleSize, rotationAngle)
+    
+    // 内层瞳孔
+    ctx.fillStyle = foregroundColor.value
+    drawEyeShapeWithRotation(ctx, x + innerOffset, y + innerOffset, innerSize, innerSize, rotationAngle)
+}
+
+// 绘制眼睛形状（左右弧度，上下直角）
+const drawEyeShape = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+    const radius = Math.min(width, height) * 0.3 // 圆角半径
+    const centerX = x + width / 2
+    const centerY = y + height / 2
+    
+    ctx.save() // 保存当前状态
+    
+    // 移动到中心点并旋转90度
+    ctx.translate(centerX, centerY)
+    ctx.rotate(Math.PI / 2) // 顺时针旋转90度
+    ctx.translate(-centerX, -centerY)
+    
+    ctx.beginPath()
+    
+    // 从左上角圆角开始
+    ctx.moveTo(x + radius, y)
+    
+    // 上边直线到右上角（直角）
+    ctx.lineTo(x + width, y)
+    
+    // 右边直线到右下角圆角开始点
+    ctx.lineTo(x + width, y + height - radius)
+    
+    // 右下角圆角
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    
+    // 下边直线到左下角（直角）
+    ctx.lineTo(x, y + height)
+    
+    // 左边直线到左上角圆角开始点
+    ctx.lineTo(x, y + radius)
+    
+    // 左上角圆角
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    
+    ctx.closePath()
+    ctx.fill()
+    
+    ctx.restore() // 恢复状态
+}
+
+// 绘制带旋转的眼睛形状
+const drawEyeShapeWithRotation = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, rotationAngle: number) => {
+    const radius = Math.min(width, height) * 0.3 // 圆角半径
+    const centerX = x + width / 2
+    const centerY = y + height / 2
+    
+    ctx.save() // 保存当前状态
+    
+    // 移动到中心点并旋转指定角度
+    ctx.translate(centerX, centerY)
+    ctx.rotate(rotationAngle)
+    ctx.translate(-centerX, -centerY)
+    
+    ctx.beginPath()
+    
+    // 重新定义基础眼睛形状：右上角和左下角是圆角，左上角和右下角是直角
+    // 这样右下角的直角就指向中心了
+    
+    // 从左上角开始（直角）
+    ctx.moveTo(x, y)
+    
+    // 上边直线到右上角圆角开始点
+    ctx.lineTo(x + width - radius, y)
+    
+    // 右上角圆角
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    
+    // 右边直线到右下角（直角）
+    ctx.lineTo(x + width, y + height)
+    
+    // 下边直线到左下角圆角开始点
+    ctx.lineTo(x + radius, y + height)
+    
+    // 左下角圆角
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+    
+    // 左边直线回到左上角（直角）
+    ctx.lineTo(x, y)
+    
+    ctx.closePath()
+    ctx.fill()
+    
+    ctx.restore() // 恢复状态
+}
+
+// 绘制液化效果
+const drawLiquidEffect = (ctx: CanvasRenderingContext2D, modules: any, moduleCount: number, margin: number, moduleSize: number) => {
+    ctx.fillStyle = foregroundColor.value
+    
+    // 使用更复杂的路径绘制液化效果
+    const liquidPath = new Path2D()
+    
+    // 遍历所有模块，创建液化形状
+    for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+            if (modules.get(row, col) && !isInFinderPattern(row, col, moduleCount)) {
+                const x = margin + col * moduleSize
+                const y = margin + row * moduleSize
+                
+                // 创建不规则的液化形状
+                drawLiquidBlob(ctx, x, y, moduleSize, row, col, modules, moduleCount)
             }
-            // 内圈：中心3x3区域的边框
-            if ((relX >= 2 && relX <= 4) && (relY >= 2 && relY <= 4)) {
-                if (relX === 2 || relX === 4 || relY === 2 || relY === 4) {
-                    return true
+        }
+    }
+    
+    // 绘制码眼（保持原样）
+    for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+            if (modules.get(row, col) && isInFinderPattern(row, col, moduleCount)) {
+                if (isFinderPatternStart(row, col, moduleCount)) {
+                    const x = margin + col * moduleSize
+                    const y = margin + row * moduleSize
+                    drawFinderPattern(ctx, x, y, moduleSize * 7, eyePattern.value)
                 }
             }
         }
     }
-    
-    return false
 }
+
+// 绘制液化斑点
+const drawLiquidBlob = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, row: number, col: number, modules: any, moduleCount: number) => {
+    const centerX = x + size / 2
+    const centerY = y + size / 2
+    
+    // 检查8个方向的相邻模块
+    const neighbors = []
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue
+            const nr = row + dr
+            const nc = col + dc
+            if (nr >= 0 && nr < moduleCount && nc >= 0 && nc < moduleCount) {
+                neighbors.push({
+                    exists: modules.get(nr, nc),
+                    direction: { dr, dc }
+                })
+            }
+        }
+    }
+    
+    // 创建有机形状
+    ctx.beginPath()
+    
+    const baseRadius = size * 0.35
+    const points = []
+    
+    // 生成不规则的边界点
+    for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 8) {
+        // 基于相邻模块调整半径
+        let radiusMultiplier = 1
+        
+        // 检查这个角度方向是否有相邻模块
+        const dirX = Math.cos(angle)
+        const dirY = Math.sin(angle)
+        
+        for (const neighbor of neighbors) {
+            if (neighbor.exists) {
+                const neighborAngle = Math.atan2(neighbor.direction.dr, neighbor.direction.dc)
+                const angleDiff = Math.abs(angle - neighborAngle)
+                if (angleDiff < Math.PI / 4 || angleDiff > 7 * Math.PI / 4) {
+                    radiusMultiplier += 0.4 // 向有相邻模块的方向扩展
+                }
+            }
+        }
+        
+        // 添加随机变化
+        const noise = 0.1 * Math.sin(angle * 3 + row * 0.5 + col * 0.7)
+        const radius = baseRadius * (radiusMultiplier + noise)
+        
+        points.push({
+            x: centerX + radius * Math.cos(angle),
+            y: centerY + radius * Math.sin(angle)
+        })
+    }
+    
+    // 使用贝塞尔曲线连接点，创建平滑的有机形状
+    if (points.length > 0) {
+        ctx.moveTo(points[0].x, points[0].y)
+        
+        for (let i = 0; i < points.length; i++) {
+            const current = points[i]
+            const next = points[(i + 1) % points.length]
+            const nextNext = points[(i + 2) % points.length]
+            
+            // 计算控制点
+            const cp1x = current.x + (next.x - current.x) * 0.3
+            const cp1y = current.y + (next.y - current.y) * 0.3
+            const cp2x = next.x - (nextNext.x - current.x) * 0.1
+            const cp2y = next.y - (nextNext.y - current.y) * 0.1
+            
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y)
+        }
+        
+        ctx.closePath()
+        ctx.fill()
+    }
+}
+
+// 绘制数据模块（码点）
+const drawDataModule = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, style: string) => {
+    ctx.fillStyle = foregroundColor.value
+    
+    // square 样式填满整个模块，与标准QRCode库一致
+    if (style === 'square') {
+        ctx.fillRect(x, y, size, size)
+        return
+    }
+    
+    const actualSize = size * 0.9
+    const offset = (size - actualSize) / 2
+    const cx = x + size / 2
+    const cy = y + size / 2
+    const halfSize = actualSize / 2
+    
+    switch (style) {
+        case 'circle':
+            ctx.beginPath()
+            ctx.arc(cx, cy, halfSize, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+            
+        case 'rounded':
+            drawRoundedRect(ctx, x + offset, y + offset, actualSize, actualSize, actualSize * 0.3)
+            break
+            
+        case 'diamond':
+            ctx.beginPath()
+            ctx.moveTo(cx, y + offset)
+            ctx.lineTo(x + size - offset, cy)
+            ctx.lineTo(cx, y + size - offset)
+            ctx.lineTo(x + offset, cy)
+            ctx.closePath()
+            ctx.fill()
+            break
+            
+        case 'dot':
+            ctx.beginPath()
+            ctx.arc(cx, cy, halfSize * 0.7, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+            
+        case 'star':
+            // 四角星（内凹菱形）
+            const starR = halfSize
+            const starInner = starR * 0.3
+            ctx.beginPath()
+            ctx.moveTo(cx, cy - starR)
+            ctx.quadraticCurveTo(cx + starInner, cy - starInner, cx + starR, cy)
+            ctx.quadraticCurveTo(cx + starInner, cy + starInner, cx, cy + starR)
+            ctx.quadraticCurveTo(cx - starInner, cy + starInner, cx - starR, cy)
+            ctx.quadraticCurveTo(cx - starInner, cy - starInner, cx, cy - starR)
+            ctx.closePath()
+            ctx.fill()
+            break
+            
+        case 'horizontal':
+            ctx.fillRect(x + offset, cy - halfSize * 0.4, actualSize, halfSize * 0.8)
+            break
+            
+        case 'vertical':
+            ctx.fillRect(cx - halfSize * 0.4, y + offset, halfSize * 0.8, actualSize)
+            break
+            
+        case 'liquid':
+            ctx.beginPath()
+            for (let angle = 0; angle < 2 * Math.PI; angle += 0.3) {
+                const r = halfSize * (0.7 + 0.3 * Math.sin(angle * 3 + x + y))
+                const px = cx + r * Math.cos(angle)
+                const py = cy + r * Math.sin(angle)
+                if (angle === 0) {
+                    ctx.moveTo(px, py)
+                } else {
+                    ctx.lineTo(px, py)
+                }
+            }
+            ctx.closePath()
+            ctx.fill()
+            break
+            
+        case 'tile':
+            const tileSize = actualSize / 2
+            ctx.fillRect(x + offset, y + offset, tileSize, tileSize)
+            ctx.fillRect(x + offset + tileSize, y + offset + tileSize, tileSize, tileSize)
+            break
+            
+        case 'grid':
+            const gridSize = actualSize / 3
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((i + j) % 2 === 0) {
+                        ctx.fillRect(x + offset + i * gridSize, y + offset + j * gridSize, gridSize, gridSize)
+                    }
+                }
+            }
+            break
+            
+        case 'small-square':
+            const smallSize = actualSize * 0.6
+            ctx.fillRect(cx - smallSize / 2, cy - smallSize / 2, smallSize, smallSize)
+            break
+            
+        default:
+            ctx.fillRect(x, y, size, size)
+            break
+    }
+}
+
+
 
 // 绘制模块
 const drawModule = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, style: string) => {
     const actualSize = Math.max(1, Math.floor(size * 0.9)) // 稍微缩小以避免重叠
     
     switch (style) {
+        case 'square':
+            // 方正 - 外方框，内方框，中心实心方块
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            // 内部空心方框
+            ctx.globalCompositeOperation = 'destination-out'
+            const squareInnerSize = actualSize * 0.6
+            ctx.fillRect(x + size/2 - squareInnerSize/2, y + size/2 - squareInnerSize/2, squareInnerSize, squareInnerSize)
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心方块
+            const squareCenterSize = actualSize * 0.3
+            ctx.fillRect(x + size/2 - squareCenterSize/2, y + size/2 - squareCenterSize/2, squareCenterSize, squareCenterSize)
+            break
         case 'circle':
+            // 圆角 - 外方框，内圆形，中心实心圆
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            // 内部空心圆
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.3, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心圆
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.15, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'thick-rounded':
+            // 粗圆角 - 外粗圆角方框，内粗圆角方框，中心实心方块
+            const thickRadius = actualSize * 0.25
+            // 外框
+            ctx.beginPath()
+            const thickRectX = x + (size-actualSize)/2
+            const thickRectY = y + (size-actualSize)/2
+            ctx.moveTo(thickRectX + thickRadius, thickRectY)
+            ctx.lineTo(thickRectX + actualSize - thickRadius, thickRectY)
+            ctx.quadraticCurveTo(thickRectX + actualSize, thickRectY, thickRectX + actualSize, thickRectY + thickRadius)
+            ctx.lineTo(thickRectX + actualSize, thickRectY + actualSize - thickRadius)
+            ctx.quadraticCurveTo(thickRectX + actualSize, thickRectY + actualSize, thickRectX + actualSize - thickRadius, thickRectY + actualSize)
+            ctx.lineTo(thickRectX + thickRadius, thickRectY + actualSize)
+            ctx.quadraticCurveTo(thickRectX, thickRectY + actualSize, thickRectX, thickRectY + actualSize - thickRadius)
+            ctx.lineTo(thickRectX, thickRectY + thickRadius)
+            ctx.quadraticCurveTo(thickRectX, thickRectY, thickRectX + thickRadius, thickRectY)
+            ctx.closePath()
+            ctx.fill()
+            // 内部空心粗圆角方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const thickInnerSize = actualSize * 0.6
+            const thickInnerRadius = thickInnerSize * 0.25
+            const thickInnerX = x + size/2 - thickInnerSize/2
+            const thickInnerY = y + size/2 - thickInnerSize/2
+            ctx.beginPath()
+            ctx.moveTo(thickInnerX + thickInnerRadius, thickInnerY)
+            ctx.lineTo(thickInnerX + thickInnerSize - thickInnerRadius, thickInnerY)
+            ctx.quadraticCurveTo(thickInnerX + thickInnerSize, thickInnerY, thickInnerX + thickInnerSize, thickInnerY + thickInnerRadius)
+            ctx.lineTo(thickInnerX + thickInnerSize, thickInnerY + thickInnerSize - thickInnerRadius)
+            ctx.quadraticCurveTo(thickInnerX + thickInnerSize, thickInnerY + thickInnerSize, thickInnerX + thickInnerSize - thickInnerRadius, thickInnerY + thickInnerSize)
+            ctx.lineTo(thickInnerX + thickInnerRadius, thickInnerY + thickInnerSize)
+            ctx.quadraticCurveTo(thickInnerX, thickInnerY + thickInnerSize, thickInnerX, thickInnerY + thickInnerSize - thickInnerRadius)
+            ctx.lineTo(thickInnerX, thickInnerY + thickInnerRadius)
+            ctx.quadraticCurveTo(thickInnerX, thickInnerY, thickInnerX + thickInnerRadius, thickInnerY)
+            ctx.closePath()
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心方块
+            const thickCenterSize = actualSize * 0.3
+            ctx.fillRect(x + size/2 - thickCenterSize/2, y + size/2 - thickCenterSize/2, thickCenterSize, thickCenterSize)
+            break
+        case 'medium-rounded':
+            // 中圆角 - 外中圆角方框，内方框，中心实心方块
+            const mediumRadius = actualSize * 0.15
+            ctx.beginPath()
+            const mediumRectX = x + (size-actualSize)/2
+            const mediumRectY = y + (size-actualSize)/2
+            ctx.moveTo(mediumRectX + mediumRadius, mediumRectY)
+            ctx.lineTo(mediumRectX + actualSize - mediumRadius, mediumRectY)
+            ctx.quadraticCurveTo(mediumRectX + actualSize, mediumRectY, mediumRectX + actualSize, mediumRectY + mediumRadius)
+            ctx.lineTo(mediumRectX + actualSize, mediumRectY + actualSize - mediumRadius)
+            ctx.quadraticCurveTo(mediumRectX + actualSize, mediumRectY + actualSize, mediumRectX + actualSize - mediumRadius, mediumRectY + actualSize)
+            ctx.lineTo(mediumRectX + mediumRadius, mediumRectY + actualSize)
+            ctx.quadraticCurveTo(mediumRectX, mediumRectY + actualSize, mediumRectX, mediumRectY + actualSize - mediumRadius)
+            ctx.lineTo(mediumRectX, mediumRectY + mediumRadius)
+            ctx.quadraticCurveTo(mediumRectX, mediumRectY, mediumRectX + mediumRadius, mediumRectY)
+            ctx.closePath()
+            ctx.fill()
+            // 内部空心方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const mediumInnerSize = actualSize * 0.6
+            ctx.fillRect(x + size/2 - mediumInnerSize/2, y + size/2 - mediumInnerSize/2, mediumInnerSize, mediumInnerSize)
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心方块
+            const mediumCenterSize = actualSize * 0.3
+            ctx.fillRect(x + size/2 - mediumCenterSize/2, y + size/2 - mediumCenterSize/2, mediumCenterSize, mediumCenterSize)
+            break
+        case 'thin-rounded':
+            // 细圆角 - 外细圆角方框，内方框，中心实心方块
+            const thinRadius = actualSize * 0.08
+            ctx.beginPath()
+            const thinRectX = x + (size-actualSize)/2
+            const thinRectY = y + (size-actualSize)/2
+            ctx.moveTo(thinRectX + thinRadius, thinRectY)
+            ctx.lineTo(thinRectX + actualSize - thinRadius, thinRectY)
+            ctx.quadraticCurveTo(thinRectX + actualSize, thinRectY, thinRectX + actualSize, thinRectY + thinRadius)
+            ctx.lineTo(thinRectX + actualSize, thinRectY + actualSize - thinRadius)
+            ctx.quadraticCurveTo(thinRectX + actualSize, thinRectY + actualSize, thinRectX + actualSize - thinRadius, thinRectY + actualSize)
+            ctx.lineTo(thinRectX + thinRadius, thinRectY + actualSize)
+            ctx.quadraticCurveTo(thinRectX, thinRectY + actualSize, thinRectX, thinRectY + actualSize - thinRadius)
+            ctx.lineTo(thinRectX, thinRectY + thinRadius)
+            ctx.quadraticCurveTo(thinRectX, thinRectY, thinRectX + thinRadius, thinRectY)
+            ctx.closePath()
+            ctx.fill()
+            // 内部空心方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const thinInnerSize = actualSize * 0.6
+            ctx.fillRect(x + size/2 - thinInnerSize/2, y + size/2 - thinInnerSize/2, thinInnerSize, thinInnerSize)
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心方块
+            const thinCenterSize = actualSize * 0.3
+            ctx.fillRect(x + size/2 - thinCenterSize/2, y + size/2 - thinCenterSize/2, thinCenterSize, thinCenterSize)
+            break
+        case 'thick-circle':
+            // 粗圆形 - 外圆环，内圆环，中心实心圆
             ctx.beginPath()
             ctx.arc(x + size/2, y + size/2, actualSize/2, 0, 2 * Math.PI)
             ctx.fill()
+            // 内部空心圆
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.3, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心圆
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.15, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'thin-circle':
+            // 细圆形 - 外圆环，内实心圆
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            // 内部空心圆
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.3, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心实心圆（更大）
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize * 0.25, 0, 2 * Math.PI)
+            ctx.fill()
+            break
+        case 'diamond':
+            // 菱形 - 外圆内菱形
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            // 内部空心圆
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/3, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心菱形
+            ctx.beginPath()
+            const diamondSize = actualSize/6
+            const diamondCenterX = x + size/2
+            const diamondCenterY = y + size/2
+            ctx.moveTo(diamondCenterX, diamondCenterY - diamondSize)
+            ctx.lineTo(diamondCenterX + diamondSize, diamondCenterY)
+            ctx.lineTo(diamondCenterX, diamondCenterY + diamondSize)
+            ctx.lineTo(diamondCenterX - diamondSize, diamondCenterY)
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'star':
+            // 星形 - 外圆内星形
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/2, 0, 2 * Math.PI)
+            ctx.fill()
+            // 内部空心圆
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.beginPath()
+            ctx.arc(x + size/2, y + size/2, actualSize/3, 0, 2 * Math.PI)
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心星形（四角星）
+            const starCenterX = x + size/2
+            const starCenterY = y + size/2
+            const starSize = actualSize/8
+            ctx.fillRect(starCenterX - starSize, starCenterY - starSize/3, starSize*2, starSize*2/3)
+            ctx.fillRect(starCenterX - starSize/3, starCenterY - starSize, starSize*2/3, starSize*2)
+            break
+        case 'bubble':
+            // 气泡 - 外方内圆角方形，右上角有缺口
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            // 内部空心圆角方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const bubbleInnerSize = actualSize * 0.6
+            const bubbleRadius = bubbleInnerSize * 0.3
+            const bubbleInnerX = x + size/2 - bubbleInnerSize/2
+            const bubbleInnerY = y + size/2 - bubbleInnerSize/2
+            ctx.beginPath()
+            ctx.moveTo(bubbleInnerX + bubbleRadius, bubbleInnerY)
+            ctx.lineTo(bubbleInnerX + bubbleInnerSize - bubbleRadius, bubbleInnerY)
+            ctx.quadraticCurveTo(bubbleInnerX + bubbleInnerSize, bubbleInnerY, bubbleInnerX + bubbleInnerSize, bubbleInnerY + bubbleRadius)
+            ctx.lineTo(bubbleInnerX + bubbleInnerSize, bubbleInnerY + bubbleInnerSize - bubbleRadius)
+            ctx.quadraticCurveTo(bubbleInnerX + bubbleInnerSize, bubbleInnerY + bubbleInnerSize, bubbleInnerX + bubbleInnerSize - bubbleRadius, bubbleInnerY + bubbleInnerSize)
+            ctx.lineTo(bubbleInnerX + bubbleRadius, bubbleInnerY + bubbleInnerSize)
+            ctx.quadraticCurveTo(bubbleInnerX, bubbleInnerY + bubbleInnerSize, bubbleInnerX, bubbleInnerY + bubbleInnerSize - bubbleRadius)
+            ctx.lineTo(bubbleInnerX, bubbleInnerY + bubbleRadius)
+            ctx.quadraticCurveTo(bubbleInnerX, bubbleInnerY, bubbleInnerX + bubbleRadius, bubbleInnerY)
+            ctx.closePath()
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 右上角缺口
+            const notchSize = actualSize * 0.2
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.fillRect(x + (size-actualSize)/2 + actualSize - notchSize, y + (size-actualSize)/2, notchSize, notchSize)
+            ctx.globalCompositeOperation = 'source-over'
+            break
+        case 'eye':
+            // 眼睛 - 外圆角方框，内圆角方框，中心圆角方块
+            const eyeRadius = actualSize * 0.2
+            // 外框圆角方形
+            ctx.beginPath()
+            const eyeRectX = x + (size-actualSize)/2
+            const eyeRectY = y + (size-actualSize)/2
+            ctx.moveTo(eyeRectX + eyeRadius, eyeRectY)
+            ctx.lineTo(eyeRectX + actualSize - eyeRadius, eyeRectY)
+            ctx.quadraticCurveTo(eyeRectX + actualSize, eyeRectY, eyeRectX + actualSize, eyeRectY + eyeRadius)
+            ctx.lineTo(eyeRectX + actualSize, eyeRectY + actualSize - eyeRadius)
+            ctx.quadraticCurveTo(eyeRectX + actualSize, eyeRectY + actualSize, eyeRectX + actualSize - eyeRadius, eyeRectY + actualSize)
+            ctx.lineTo(eyeRectX + eyeRadius, eyeRectY + actualSize)
+            ctx.quadraticCurveTo(eyeRectX, eyeRectY + actualSize, eyeRectX, eyeRectY + actualSize - eyeRadius)
+            ctx.lineTo(eyeRectX, eyeRectY + eyeRadius)
+            ctx.quadraticCurveTo(eyeRectX, eyeRectY, eyeRectX + eyeRadius, eyeRectY)
+            ctx.closePath()
+            ctx.fill()
+            // 内部空心圆角方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const eyeInnerSize = actualSize * 0.6
+            const eyeInnerRadius = eyeInnerSize * 0.2
+            const eyeInnerX = x + size/2 - eyeInnerSize/2
+            const eyeInnerY = y + size/2 - eyeInnerSize/2
+            ctx.beginPath()
+            ctx.moveTo(eyeInnerX + eyeInnerRadius, eyeInnerY)
+            ctx.lineTo(eyeInnerX + eyeInnerSize - eyeInnerRadius, eyeInnerY)
+            ctx.quadraticCurveTo(eyeInnerX + eyeInnerSize, eyeInnerY, eyeInnerX + eyeInnerSize, eyeInnerY + eyeInnerRadius)
+            ctx.lineTo(eyeInnerX + eyeInnerSize, eyeInnerY + eyeInnerSize - eyeInnerRadius)
+            ctx.quadraticCurveTo(eyeInnerX + eyeInnerSize, eyeInnerY + eyeInnerSize, eyeInnerX + eyeInnerSize - eyeInnerRadius, eyeInnerY + eyeInnerSize)
+            ctx.lineTo(eyeInnerX + eyeInnerRadius, eyeInnerY + eyeInnerSize)
+            ctx.quadraticCurveTo(eyeInnerX, eyeInnerY + eyeInnerSize, eyeInnerX, eyeInnerY + eyeInnerSize - eyeInnerRadius)
+            ctx.lineTo(eyeInnerX, eyeInnerY + eyeInnerRadius)
+            ctx.quadraticCurveTo(eyeInnerX, eyeInnerY, eyeInnerX + eyeInnerRadius, eyeInnerY)
+            ctx.closePath()
+            ctx.fill()
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心圆角方块
+            const eyeCenterSize = actualSize * 0.3
+            const eyeCenterRadius = eyeCenterSize * 0.2
+            const eyeCenterX = x + size/2 - eyeCenterSize/2
+            const eyeCenterY = y + size/2 - eyeCenterSize/2
+            ctx.beginPath()
+            ctx.moveTo(eyeCenterX + eyeCenterRadius, eyeCenterY)
+            ctx.lineTo(eyeCenterX + eyeCenterSize - eyeCenterRadius, eyeCenterY)
+            ctx.quadraticCurveTo(eyeCenterX + eyeCenterSize, eyeCenterY, eyeCenterX + eyeCenterSize, eyeCenterY + eyeCenterRadius)
+            ctx.lineTo(eyeCenterX + eyeCenterSize, eyeCenterY + eyeCenterSize - eyeCenterRadius)
+            ctx.quadraticCurveTo(eyeCenterX + eyeCenterSize, eyeCenterY + eyeCenterSize, eyeCenterX + eyeCenterSize - eyeCenterRadius, eyeCenterY + eyeCenterSize)
+            ctx.lineTo(eyeCenterX + eyeCenterRadius, eyeCenterY + eyeCenterSize)
+            ctx.quadraticCurveTo(eyeCenterX, eyeCenterY + eyeCenterSize, eyeCenterX, eyeCenterY + eyeCenterSize - eyeCenterRadius)
+            ctx.lineTo(eyeCenterX, eyeCenterY + eyeCenterRadius)
+            ctx.quadraticCurveTo(eyeCenterX, eyeCenterY, eyeCenterX + eyeCenterRadius, eyeCenterY)
+            ctx.closePath()
+            ctx.fill()
+            break
+        case 'single-rounded':
+            // 单圆角 - 外方内方，左上角圆角
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            // 内部空心方形
+            ctx.globalCompositeOperation = 'destination-out'
+            const singleInnerSize = actualSize * 0.5
+            ctx.fillRect(x + size/2 - singleInnerSize/2, y + size/2 - singleInnerSize/2, singleInnerSize, singleInnerSize)
+            ctx.globalCompositeOperation = 'source-over'
+            // 左上角圆角处理
+            const singleRadius = actualSize * 0.2
+            ctx.globalCompositeOperation = 'destination-out'
+            ctx.fillRect(
+                x + (size-actualSize)/2,
+                y + (size-actualSize)/2,
+                singleRadius,
+                singleRadius
+            )
+            ctx.globalCompositeOperation = 'source-over'
+            ctx.beginPath()
+            ctx.arc(
+                x + (size-actualSize)/2 + singleRadius,
+                y + (size-actualSize)/2 + singleRadius,
+                singleRadius,
+                Math.PI,
+                Math.PI * 1.5
+            )
+            ctx.fill()
+            break
+        case 'four-eye':
+            // 四码眼 - 外方内小方
+            ctx.fillRect(x + (size-actualSize)/2, y + (size-actualSize)/2, actualSize, actualSize)
+            // 内部空心
+            ctx.globalCompositeOperation = 'destination-out'
+            const fourEyeInnerSize = actualSize * 0.6
+            ctx.fillRect(x + size/2 - fourEyeInnerSize/2, y + size/2 - fourEyeInnerSize/2, fourEyeInnerSize, fourEyeInnerSize)
+            ctx.globalCompositeOperation = 'source-over'
+            // 中心小方块
+            const fourEyeCenterSize = actualSize * 0.2
+            ctx.fillRect(x + size/2 - fourEyeCenterSize/2, y + size/2 - fourEyeCenterSize/2, fourEyeCenterSize, fourEyeCenterSize)
             break
         case 'rounded':
             const radius = actualSize * 0.2
@@ -1712,8 +2616,7 @@ const clearAll = () => {
     qrMargin.value = '4'
     errorCorrectionLevel.value = 'M'
     dotStyle.value = 'square'
-    cornerStyle.value = 'square'
-    eyePattern.value = 'normal'
+    eyePattern.value = 'square'
     encodingContent.value = ''
     encodingLength.value = ''
     logoSize.value = 20
