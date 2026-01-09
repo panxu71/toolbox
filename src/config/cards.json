@@ -294,18 +294,6 @@
                 "color": "#f59e0b"
             },
             {
-                "id": "crontab-generator",
-                "title": "Crontab表达式",
-                "description": "生成和解析Cron定时任务表达式",
-                "icon": "⏰",
-                "action": "generateCrontab",
-                "color": "#ec4899",
-                "badge": {
-                    "text": "专业",
-                    "color": "#8b5cf6"
-                }
-            },
-            {
                 "id": "markdown-editor",
                 "title": "Markdown编辑器",
                 "description": "在线Markdown编辑器，支持图片拖拽转Base64",
@@ -327,18 +315,6 @@
                 "badge": {
                     "text": "新功能",
                     "color": "#10b981"
-                }
-            },
-            {
-                "id": "teleprompter-new",
-                "title": "在线提词器 (新版)",
-                "description": "重构版提词器，使用通用组件",
-                "icon": "📺",
-                "action": "teleprompterNew",
-                "color": "#ec4899",
-                "badge": {
-                    "text": "测试版",
-                    "color": "#f59e0b"
                 }
             }
         ],
