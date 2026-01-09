@@ -283,11 +283,6 @@
             </div>
         </div>
 
-        <!-- 消息提示 -->
-        <div v-if="message" class="message" :class="messageType">
-            {{ message }}
-        </div>
-
         <!-- 隐藏的文件输入 -->
         <input ref="imageInput" type="file" accept="image/*" @change="handleImageSelect" style="display: none;">
     </div>
@@ -389,8 +384,6 @@ const lineNumbersRef = ref<HTMLDivElement>()
 
 // 响应式数据
 const content = ref('')
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 const showEmojiMenu = ref(false)
 const showTableMenu = ref(false)
 const hoverRow = ref(1)
@@ -651,11 +644,7 @@ const previewHtml = computed(() => {
     }
 })
 
-function showMessage(text: string, type: 'success' | 'error' = 'success') {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => message.value = '', 2000)
-}
+// 移除重复的 showMessage 函数定义，使用公共的 useNotification
 
 function updatePreview() {
     // 预览会自动更新，因为使用了 computed
@@ -681,7 +670,7 @@ function syncScroll() {
 
 function togglePreview() {
     enablePreview.value = !enablePreview.value
-    showMessage(enablePreview.value ? '预览已开启' : '预览已关闭')
+    showSuccess(enablePreview.value ? '预览已开启' : '预览已关闭')
 }
 
 function insertText(before: string, after: string = '') {
@@ -923,7 +912,7 @@ function insertDateTime(type: string) {
     const dateTimeText = formatDateTime(type)
     insertText(dateTimeText)
     showDateTimeMenu.value = false
-    showMessage(`已插入${type === 'date' ? '日期' : type === 'time' ? '时间' : type === 'datetime' ? '日期时间' : type === 'iso' ? 'ISO格式' : '时间戳'}`)
+    showSuccess(`已插入${type === 'date' ? '日期' : type === 'time' ? '时间' : type === 'datetime' ? '日期时间' : type === 'iso' ? 'ISO格式' : '时间戳'}`)
 }
 
 function toggleEmojiMenu() {
@@ -1005,12 +994,12 @@ watch(content, () => {
 
 function insertSampleData() {
     content.value = example.value
-    showMessage('示例数据已插入')
+    showSuccess('示例数据已插入')
 }
 
 function clearContent() {
     content.value = ''
-    showMessage('内容已清空')
+    showSuccess('内容已清空')
 }
 
 function exportMarkdown() {
@@ -1021,7 +1010,7 @@ function exportMarkdown() {
     a.download = `markdown-${Date.now()}.md`
     a.click()
     URL.revokeObjectURL(url)
-    showMessage('文件已导出')
+    showSuccess('文件已导出')
 }
 
 async function copyContent() {
@@ -1048,7 +1037,7 @@ function handleImageSelect(event: Event) {
 
 function convertImageToBase64(file: File) {
     if (!file.type.startsWith('image/')) {
-        showMessage('请选择图片文件', 'error')
+        showError('请选择图片文件')
         return
     }
 
@@ -1058,10 +1047,10 @@ function convertImageToBase64(file: File) {
         const fileName = file.name.replace(/\.[^/.]+$/, '') // 去掉扩展名
         const imageMarkdown = `![${fileName}](${base64})`
         insertText(imageMarkdown)
-        showMessage('图片已插入')
+        showSuccess('图片已插入')
     }
     reader.onerror = () => {
-        showMessage('图片读取失败', 'error')
+        showError('图片读取失败')
     }
     reader.readAsDataURL(file)
 }
@@ -1177,7 +1166,7 @@ onMounted(() => {
 }
 
 .pane-actions {
-    margin-left: auto;
+    /* 移除 margin-left: auto，让操作按钮保持在固定位置 */
 }
 
 .sample-btn {
@@ -1215,7 +1204,7 @@ onMounted(() => {
     border-radius: 6px;
     height: 40px;
     box-sizing: border-box;
-    margin-left: auto;
+    /* 移除 margin-left: auto，让工具栏保持在固定位置 */
 }
 
 .toolbar-btn {
@@ -1599,39 +1588,6 @@ onMounted(() => {
     height: auto;
     border-radius: var(--radius-md);
     margin: 1em 0;
-}
-
-.message {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    color: white;
-    font-size: 14px;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: var(--shadow-lg);
-}
-
-.message.success {
-    background: var(--success-color);
-}
-
-.message.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
 }
 
 .datetime-menu {
