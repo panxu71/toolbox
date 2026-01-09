@@ -1165,10 +1165,6 @@ onMounted(() => {
     text-transform: uppercase;
 }
 
-.pane-actions {
-    /* 移除 margin-left: auto，让操作按钮保持在固定位置 */
-}
-
 .sample-btn {
     display: flex;
     align-items: center;
