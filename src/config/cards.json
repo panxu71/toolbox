@@ -253,7 +253,6 @@
                     "color": "#10b981"
                 }
             },
-
             {
                 "id": "uuid-generator",
                 "title": "UUID生成器",
@@ -287,16 +286,12 @@
                 "color": "#6366f1"
             },
             {
-                "id": "qr-generator-new",
-                "title": "二维码生成(新版)",
-                "description": "生成自定义二维码 - 使用公共组件版本",
-                "icon": "📱",
-                "action": "generateQRNew",
-                "color": "#6366f1",
-                "badge": {
-                    "text": "测试",
-                    "color": "#10b981"
-                }
+                "id": "crontab-generator",
+                "title": "Crontab表达式生成器",
+                "description": "生成和解析Cron定时任务表达式",
+                "icon": "⏰",
+                "action": "generateCrontab",
+                "color": "#f59e0b"
             },
             {
                 "id": "crontab-generator",
@@ -332,6 +327,18 @@
                 "badge": {
                     "text": "新功能",
                     "color": "#10b981"
+                }
+            },
+            {
+                "id": "teleprompter-new",
+                "title": "在线提词器 (新版)",
+                "description": "重构版提词器，使用通用组件",
+                "icon": "📺",
+                "action": "teleprompterNew",
+                "color": "#ec4899",
+                "badge": {
+                    "text": "测试版",
+                    "color": "#f59e0b"
                 }
             }
         ],

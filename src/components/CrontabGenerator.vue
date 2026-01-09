@@ -1,42 +1,25 @@
 <template>
     <div class="crontab-generator">
-        <div class="tool-header">
-            <div class="header-left">
-                <button @click="$emit('back')" class="back-button">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                    返回
-                </button>
-                <div class="title-section">
-                    <h2>Crontab表达式生成器</h2>
-                    <p>生成和解析Linux Cron定时任务表达式</p>
+        <PageHeader :title="pageTitle" @back="$emit('back')">
+            <template #actions>
+                <div class="mode-toggle">
+                    <button class="mode-btn" :class="{ active: mode === 'visual' }" @click="setMode('visual')">
+                        可视化
+                    </button>
+                    <button class="mode-btn" :class="{ active: mode === 'manual' }" @click="setMode('manual')">
+                        手动输入
+                    </button>
                 </div>
-            </div>
-            <div class="header-actions">
-                <button @click="clearAll" class="action-btn" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+                <HeaderActionButton icon="copy" tooltip="复制表达式" @click="copyCron" :disabled="!cronExpression" />
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="generator-content">
             <!-- 左侧配置区域 -->
             <div class="config-section">
                 <div class="section-header">
                     <h3>定时配置</h3>
-                    <div class="mode-toggle">
-                        <button class="mode-btn" :class="{ active: mode === 'visual' }" @click="setMode('visual')">
-                            可视化
-                        </button>
-                        <button class="mode-btn" :class="{ active: mode === 'manual' }" @click="setMode('manual')">
-                            手动输入
-                        </button>
-                    </div>
                 </div>
 
                 <!-- 可视化配置 -->
@@ -212,12 +195,7 @@
                         <div class="cron-input-wrapper">
                             <input v-model="manualCron" type="text" class="cron-input" placeholder="* * * * *"
                                 @input="parseCron" />
-                            <button @click="validateCron" class="validate-btn" title="验证表达式">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="20,6 9,17 4,12" />
-                                </svg>
-                            </button>
+                            <HeaderActionButton icon="validate" tooltip="验证表达式" @click="validateCron" />
                         </div>
                         <div class="cron-format-help">
                             <span class="format-text">格式：分钟 小时 日期 月份 星期</span>
@@ -230,16 +208,6 @@
             <div class="result-section">
                 <div class="section-header">
                     <h3>生成结果</h3>
-                    <div class="result-actions">
-                        <button @click="copyCron" class="copy-btn" :disabled="!cronExpression">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                            </svg>
-                            复制
-                        </button>
-                    </div>
                 </div>
 
                 <div class="result-content">
@@ -299,26 +267,40 @@
                 </div>
             </div>
         </div>
-
-        <!-- 状态提示 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import { useClipboard } from '../composables/useClipboard'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 模式
-// 使用页面标题管理
+// 使用组合式函数
 usePageTitle('crontab-generator')
+const { success: showSuccess, error: showError } = useNotification()
+const { copyToClipboard } = useClipboard()
 
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'crontab-generator')
+        if (card) {
+            return card.title
+        }
+    }
+    return 'Crontab表达式生成器'
+})
+
+// 模式
 const mode = ref<'visual' | 'manual'>('visual')
 
 // Cron配置
@@ -333,10 +315,6 @@ const cronConfig = ref({
 // 手动输入的cron表达式
 const manualCron = ref('* * * * *')
 
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
 // 常用预设配置
 const commonPresets = [
     { name: '每分钟', desc: '每分钟执行一次', cron: '* * * * *' },
@@ -346,18 +324,29 @@ const commonPresets = [
     { name: '每30分钟', desc: '每30分钟执行一次', cron: '*/30 * * * *' },
     { name: '每小时', desc: '每小时整点执行', cron: '0 * * * *' },
     { name: '每2小时', desc: '每2小时执行一次', cron: '0 */2 * * *' },
+    { name: '每3小时', desc: '每3小时执行一次', cron: '0 */3 * * *' },
+    { name: '每4小时', desc: '每4小时执行一次', cron: '0 */4 * * *' },
     { name: '每6小时', desc: '每6小时执行一次', cron: '0 */6 * * *' },
+    { name: '每12小时', desc: '每12小时执行一次', cron: '0 */12 * * *' },
     { name: '每天午夜', desc: '每天0点执行', cron: '0 0 * * *' },
-    { name: '每天中午', desc: '每天12点执行', cron: '0 12 * * *' },
+    { name: '每天凌晨2点', desc: '每天凌晨2点执行', cron: '0 2 * * *' },
+    { name: '每天早上6点', desc: '每天早上6点执行', cron: '0 6 * * *' },
     { name: '每天早上9点', desc: '每天上午9点执行', cron: '0 9 * * *' },
+    { name: '每天中午', desc: '每天12点执行', cron: '0 12 * * *' },
     { name: '每天晚上6点', desc: '每天下午6点执行', cron: '0 18 * * *' },
+    { name: '每天晚上10点', desc: '每天晚上10点执行', cron: '0 22 * * *' },
     { name: '工作日9点', desc: '周一到周五9点执行', cron: '0 9 * * 1-5' },
     { name: '工作日下班', desc: '周一到周五18点执行', cron: '0 18 * * 1-5' },
+    { name: '工作日午休', desc: '周一到周五12点执行', cron: '0 12 * * 1-5' },
     { name: '每周一', desc: '每周一0点执行', cron: '0 0 * * 1' },
+    { name: '每周五', desc: '每周五0点执行', cron: '0 0 * * 5' },
     { name: '每周日', desc: '每周日0点执行', cron: '0 0 * * 0' },
+    { name: '周末', desc: '每周六日0点执行', cron: '0 0 * * 0,6' },
     { name: '每月1号', desc: '每月1号0点执行', cron: '0 0 1 * *' },
     { name: '每月15号', desc: '每月15号0点执行', cron: '0 0 15 * *' },
+    { name: '每月最后一天', desc: '每月最后一天0点执行', cron: '0 0 L * *' },
     { name: '每季度', desc: '每季度第一天执行', cron: '0 0 1 */3 *' },
+    { name: '每半年', desc: '每半年第一天执行', cron: '0 0 1 */6 *' },
     { name: '每年元旦', desc: '每年1月1日执行', cron: '0 0 1 1 *' }
 ]
 
@@ -422,7 +411,7 @@ const applyPreset = (cronExpr: string) => {
 
     mode.value = 'visual'
     updateCron()
-    showMessage('已应用预设配置', 'success')
+    showSuccess('已应用预设配置')
 }
 
 // 解析cron字段
@@ -465,9 +454,9 @@ const updateCron = () => {
 const parseCron = () => {
     try {
         validateCronExpression(manualCron.value)
-        showMessage('Cron表达式格式正确', 'success')
+        showSuccess('Cron表达式格式正确')
     } catch (error) {
-        showMessage(`Cron表达式格式错误: ${(error as Error).message}`, 'error')
+        showError(`Cron表达式格式错误: ${(error as Error).message}`)
     }
 }
 
@@ -475,9 +464,9 @@ const parseCron = () => {
 const validateCron = () => {
     try {
         validateCronExpression(manualCron.value)
-        showMessage('Cron表达式验证通过', 'success')
+        showSuccess('Cron表达式验证通过')
     } catch (error) {
-        showMessage(`验证失败: ${(error as Error).message}`, 'error')
+        showError(`验证失败: ${(error as Error).message}`)
     }
 }
 
@@ -789,15 +778,15 @@ const matchesCronField = (value: number, cronField: string, min: number, max: nu
 // 复制cron表达式
 const copyCron = async () => {
     if (!cronExpression.value) {
-        showMessage('没有可复制的内容', 'error')
+        showError('没有可复制的内容')
         return
     }
 
     try {
-        await navigator.clipboard.writeText(cronExpression.value)
-        showMessage('Cron表达式已复制到剪贴板', 'success')
+        await copyToClipboard(cronExpression.value)
+        showSuccess('Cron表达式已复制到剪贴板')
     } catch (error) {
-        showMessage('复制失败', 'error')
+        showError('复制失败')
     }
 }
 
@@ -812,112 +801,34 @@ const clearAll = () => {
     }
     manualCron.value = '* * * * *'
     mode.value = 'visual'
-    showMessage('已清空所有配置', 'success')
-}
-
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showSuccess('已清空所有配置')
 }
 
 // 初始化
-onMounted(() => {updateCron()
+onMounted(() => {
+    updateCron()
 })
-
 </script>
 
 <style scoped>
 .crontab-generator {
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-}
-
-.tool-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.back-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-button:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.title-section h2 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.title-section p {
-    margin: 4px 0 0 0;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.header-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
+    overflow: hidden;
 }
 
 .generator-content {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 3fr 2fr;
     gap: 1px;
     background: var(--border-color);
     min-height: 600px;
-    height: calc(100vh - 120px);
+    overflow: hidden;
 }
 
 .config-section,
@@ -933,10 +844,10 @@ onMounted(() => {updateCron()
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
-    min-height: 72px;
+    min-height: 44px;
     box-sizing: border-box;
 }
 
@@ -948,30 +859,32 @@ onMounted(() => {updateCron()
 }
 
 .mode-toggle {
-    display: flex;
-    background: var(--bg-tertiary);
+    display: inline-flex;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
+    background: var(--bg-primary);
 }
 
 .mode-btn {
-    padding: 6px 12px;
+    padding: 8px 16px;
     background: transparent;
     border: none;
     color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
-    font-size: 12px;
-    font-weight: 500;
     border-right: 1px solid var(--border-color);
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .mode-btn:last-child {
     border-right: none;
 }
 
-.mode-btn:hover {
+.mode-btn:hover:not(.active) {
     background: var(--bg-secondary);
     color: var(--text-primary);
 }
@@ -981,45 +894,12 @@ onMounted(() => {updateCron()
     color: white;
 }
 
-.result-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.copy-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--primary-color);
-    color: white;
-    border: 1px solid var(--primary-color);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.copy-btn:hover:not(:disabled) {
-    background: var(--primary-color-dark, #4f46e5);
-}
-
-.copy-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* 配置区域 */
-.visual-config,
-.manual-config {
+.visual-config {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
 }
 
-/* 横向配置网格 */
 .config-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1075,6 +955,15 @@ onMounted(() => {updateCron()
     width: 50px;
 }
 
+.interval-compact,
+.range-compact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
 .config-select-tiny {
     padding: 4px 6px;
     border: 1px solid var(--border-color);
@@ -1083,16 +972,7 @@ onMounted(() => {updateCron()
     color: var(--text-primary);
     font-size: 10px;
     cursor: pointer;
-    width: 40px;
-}
-
-.interval-compact,
-.range-compact {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-secondary);
+    width: 50px;
 }
 
 /* 预设区域 */
@@ -1155,87 +1035,23 @@ onMounted(() => {updateCron()
     margin-top: 2px;
 }
 
-.detail-config {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.config-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.config-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.config-input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.config-select {
-    padding: 6px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 12px;
-    cursor: pointer;
-    min-width: 100px;
-}
-
-.config-input {
-    padding: 6px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 12px;
-    width: 60px;
-}
-
-.config-input-small {
-    padding: 4px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 12px;
-    width: 50px;
-}
-
-.config-select-small {
-    padding: 4px 6px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 11px;
-    cursor: pointer;
-    min-width: 40px;
-}
-
-.interval-inputs,
-.range-inputs {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
 /* 手动输入 */
+.manual-config {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
 .manual-input-section {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.section-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
 .cron-input-wrapper {
@@ -1262,24 +1078,6 @@ onMounted(() => {updateCron()
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.validate-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--success-color, #10b981);
-    border: 1px solid var(--success-color, #10b981);
-    border-radius: var(--radius-md);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.validate-btn:hover {
-    background: #059669;
-}
-
 .cron-format-help {
     padding: 8px 12px;
     background: var(--bg-tertiary);
@@ -1293,6 +1091,14 @@ onMounted(() => {updateCron()
 }
 
 /* 结果区域 */
+.result-section {
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
 .result-content {
     flex: 1;
     padding: 20px;
@@ -1300,6 +1106,12 @@ onMounted(() => {updateCron()
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .cron-display {
@@ -1413,41 +1225,6 @@ onMounted(() => {updateCron()
     font-family: monospace;
 }
 
-.message {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     .generator-content {
@@ -1462,11 +1239,6 @@ onMounted(() => {updateCron()
 
     .presets-grid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
-
-    .config-input-group {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     .field-item {

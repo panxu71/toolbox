@@ -26,7 +26,6 @@ import PasswordGenerator from './components/PasswordGenerator.vue'
 import RsaKeyGenerator from './components/RsaKeyGenerator.vue'
 import CodeFormatter from './components/CodeFormatter.vue'
 import QrGenerator from './components/QrGenerator.vue'
-import QrGeneratorNew from './components/QrGeneratorNew.vue'
 import CrontabGenerator from './components/CrontabGenerator.vue'
 import BaseConverter from './components/BaseConverter.vue'
 import TextEncoder from './components/TextEncoder.vue'
@@ -50,6 +49,7 @@ import UuidGenerator from './components/UuidGenerator.vue'
 import ProgrammingLanguages from './components/ProgrammingLanguages.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
 import Teleprompter from './components/Teleprompter.vue'
+import TeleprompterNew from './components/Teleprompter-new.vue'
 import ScreenTest from './components/ScreenTest.vue'
 import Settings from './components/Settings.vue'
 import CountriesCapitals from './components/CountriesCapitals.vue'
@@ -207,6 +207,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'crontab-generator': 'crontab-generator',
         'markdown-editor': 'markdown-editor',
         'teleprompter': 'teleprompter',
+        'teleprompter-new': 'teleprompter-new',
         'screen-test': 'screen-test',
         'text-compare': 'text-compare',
         'string-counter': 'string-counter',
@@ -368,9 +369,6 @@ const executeFunction = async (action: string) => {
             case 'generateQR':
                 openPage('qr-generator')
                 return // 不需要loading状态
-            case 'generateQRNew':
-                openPage('qr-generator-new')
-                return // 不需要loading状态
             case 'generateCrontab':
                 openPage('crontab-generator')
                 return // 不需要loading状态
@@ -379,6 +377,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'teleprompter':
                 openPage('teleprompter')
+                return // 不需要loading状态
+            case 'teleprompterNew':
+                openPage('teleprompter-new')
                 return // 不需要loading状态
             case 'screenTest':
                 openPage('screen-test')
@@ -867,7 +868,6 @@ const getToolAction = (toolId: string): string | null => {
         'uuid-generator': 'generateUuid',
         'password-generator': 'generatePassword',
         'qr-generator': 'generateQR',
-        'qr-generator-new': 'generateQRNew',
         'crontab-generator': 'generateCrontab',
         'markdown-editor': 'markdownEditor',
         'teleprompter': 'teleprompter',
@@ -964,10 +964,10 @@ const updateUrl = (category?: string, tool?: string) => {
                 <RsaKeyGenerator v-if="currentPage === 'rsa-key-generator'" @back="closePage" />
                 <CodeFormatter v-if="currentPage === 'code-formatter'" @back="closePage" />
                 <QrGenerator v-if="currentPage === 'qr-generator'" @back="closePage" />
-                <QrGeneratorNew v-if="currentPage === 'qr-generator-new'" @back="closePage" />
                 <CrontabGenerator v-if="currentPage === 'crontab-generator'" @back="closePage" />
                 <MarkdownEditor v-if="currentPage === 'markdown-editor'" @back="closePage" />
                 <Teleprompter v-if="currentPage === 'teleprompter'" @back="closePage" />
+                <TeleprompterNew v-if="currentPage === 'teleprompter-new'" @back="closePage" />
                 <ScreenTest v-if="currentPage === 'screen-test'" @back="closePage" />
                 <BaseConverter v-if="currentPage === 'base-converter'" @back="closePage" />
                 <TextEncoder v-if="currentPage === 'text-encoder'" @back="closePage" />
