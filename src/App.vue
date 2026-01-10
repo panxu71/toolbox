@@ -30,6 +30,7 @@ import CrontabGenerator from './components/CrontabGenerator.vue'
 import BaseConverter from './components/BaseConverter.vue'
 import TextEncoder from './components/TextEncoder.vue'
 import StringCounter from './components/StringCounter.vue'
+import StringCounterNew from './components/StringCounter-new.vue'
 import PhpSerializer from './components/PhpSerializer.vue'
 import TextReplacer from './components/TextReplacer.vue'
 import ChineseConverter from './components/ChineseConverter.vue'
@@ -209,6 +210,7 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'screen-test': 'screen-test',
         'text-compare': 'text-compare',
         'string-counter': 'string-counter',
+        'string-counter-new': 'string-counter-new',
         'ascii-lookup': 'ascii-lookup',
         'regex-tester': 'regex-tester',
         'color-reference': 'color-reference',
@@ -410,6 +412,12 @@ const executeFunction = async (action: string) => {
                 break
             case 'compareText':
                 openPage('text-compare')
+                return // 不需要loading状态
+            case 'countString':
+                openPage('string-counter')
+                return // 不需要loading状态
+            case 'countStringNew':
+                openPage('string-counter-new')
                 return // 不需要loading状态
             case 'mimeTypeReference':
                 openPage('mime-type-reference')
@@ -871,6 +879,7 @@ const getToolAction = (toolId: string): string | null => {
         'screen-test': 'screenTest',
         'text-compare': 'compareText',
         'string-counter': 'countString',
+        'string-counter-new': 'countStringNew',
         'ascii-lookup': 'lookupAscii',
         'regex-tester': 'testRegex',
         'color-reference': 'convertColor',
@@ -966,6 +975,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <BaseConverter v-if="currentPage === 'base-converter'" @back="closePage" />
                 <TextEncoder v-if="currentPage === 'text-encoder'" @back="closePage" />
                 <StringCounter v-if="currentPage === 'string-counter'" @back="closePage" />
+                <StringCounterNew v-if="currentPage === 'string-counter-new'" @back="closePage" />
                 <SurnameLookup v-if="currentPage === 'surname-lookup'" @back="closePage" />
                 <Settings v-if="currentPage === 'settings'" @back="closePage" />
                 <PhpSerializer v-if="currentPage === 'php-serializer'" @back="closePage" />

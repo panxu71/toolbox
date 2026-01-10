@@ -1,21 +1,10 @@
 <template>
     <div class="screen-test" :class="{ fullscreen: isFullscreen }">
-        <div class="converter-header" v-if="!isFullscreen">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">屏幕测试</h2>
-            <div class="converter-actions">
-                <button @click="toggleFullscreen" class="control-btn" title="全屏测试">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="pageTitle" @back="$emit('back')" v-if="!isFullscreen">
+            <template #actions>
+                <HeaderActionButton icon="fullscreen" tooltip="全屏测试" @click="toggleFullscreen" />
+            </template>
+        </PageHeader>
 
         <div class="converter-content">
             <!-- 主要内容区域 -->
@@ -448,26 +437,38 @@
                 </svg>
             </button>
         </div>
-
-        <!-- 消息提示 -->
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useWakeLock } from '../composables/useWakeLock'
+import { useNotification } from '../composables/useNotification'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 状态管理
-// 使用页面标题管理
+// 使用组合式函数
 usePageTitle('screen-test')
+const { requestWakeLock, releaseWakeLock } = useWakeLock()
+const { success: showSuccess, error: showError } = useNotification()
+
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'screen-test')
+        if (card) {
+            return card.title
+        }
+    }
+    return '屏幕测试'
+})
 
 const isFullscreen = ref(false)
 const currentTest = ref('solid-colors')
@@ -638,13 +639,6 @@ const testSuites: Record<string, {
 
 const currentTestSuite = ref('basic')
 
-// 防止息屏
-const { requestWakeLock, releaseWakeLock } = useWakeLock()
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
 // 测试数据
 const testModes = [
     'solid-colors', 'gradient', 'dead-pixel', 'grid', 'horizontal-lines',
@@ -708,11 +702,11 @@ const toggleFlicker = () => {
     
     if (isFlickering.value) {
         console.log('Starting flicker test')
-        showMessage('闪烁测试已开始', 'success')
+        showSuccess('闪烁测试已开始')
         startFlicker()
     } else {
         console.log('Stopping flicker test')
-        showMessage('闪烁测试已停止', 'success')
+        showSuccess('闪烁测试已停止')
         stopFlicker()
     }
 }
@@ -1041,14 +1035,14 @@ const startAutoTest = async () => {
         if (!document.fullscreenElement) {
             await document.documentElement.requestFullscreen()
             isFullscreen.value = true
-            requestWakeLock(showMessage)
+            requestWakeLock()
         }
     } catch (error) {
         isFullscreen.value = true
-        requestWakeLock(showMessage)
+        requestWakeLock()
     }
     
-    showMessage(`开始${testSuites[currentTestSuite.value]?.name || '测试'}`, 'success')
+    showSuccess(`开始${testSuites[currentTestSuite.value]?.name || '测试'}`)
     runNextAutoTest()
 }
 
@@ -1062,7 +1056,7 @@ const stopAutoTest = () => {
     currentAutoTestIndex.value = 0
     autoTestCountdown.value = 0
     
-    showMessage('自动测试已停止', 'success')
+    showSuccess('自动测试已停止')
 }
 
 const runNextAutoTest = () => {
@@ -1070,7 +1064,7 @@ const runNextAutoTest = () => {
     
     if (!suite || currentAutoTestIndex.value >= suite.tests.length) {
         stopAutoTest()
-        showMessage('所有测试已完成！', 'success')
+        showSuccess('所有测试已完成！')
         return
     }
     
@@ -1114,20 +1108,20 @@ const toggleFullscreen = async () => {
         if (!document.fullscreenElement) {
             await document.documentElement.requestFullscreen()
             isFullscreen.value = true
-            requestWakeLock(showMessage)
-            showMessage('全屏测试模式，点击切换测试，ESC退出', 'success')
+            requestWakeLock()
+            showSuccess('全屏测试模式，点击切换测试，ESC退出')
         } else {
             await document.exitFullscreen()
             isFullscreen.value = false
-            releaseWakeLock(showMessage)
+            releaseWakeLock()
         }
     } catch (error) {
         isFullscreen.value = !isFullscreen.value
         if (isFullscreen.value) {
-            requestWakeLock(showMessage)
-            showMessage('全屏测试模式，点击切换测试，ESC退出', 'success')
+            requestWakeLock()
+            showSuccess('全屏测试模式，点击切换测试，ESC退出')
         } else {
-            releaseWakeLock(showMessage)
+            releaseWakeLock()
         }
     }
 }
@@ -1137,7 +1131,7 @@ const handleFullscreenChange = () => {
     isFullscreen.value = !!document.fullscreenElement
     
     if (wasFullscreen && !isFullscreen.value) {
-        releaseWakeLock(showMessage)
+        releaseWakeLock()
     }
 }
 
@@ -1187,19 +1181,21 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    if (type === 'success') {
+        showSuccess(msg)
+    } else {
+        showError(msg)
+    }
 }
 
-onMounted(() => {document.addEventListener('keydown', handleKeyPress)
+onMounted(() => {
+    document.addEventListener('keydown', handleKeyPress)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
-    showMessage('屏幕测试已就绪，空格键或点击切换测试', 'success')
+    showSuccess('屏幕测试已就绪，空格键或点击切换测试')
 })
 
-onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeyPress)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
     releaseWakeLock()
     stopFlicker()
@@ -1226,76 +1222,6 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     width: 100vw;
     height: 100vh;
     z-index: 9999;
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    position: relative;
-}
-
-.screen-test.fullscreen .converter-header,
-.screen-test:fullscreen .converter-header {
-    display: none;
-}
-
-.back-btn {
-    position: absolute;
-    left: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.converter-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.converter-actions {
-    position: absolute;
-    right: 24px;
-    display: flex;
-    gap: 8px;
-}
-
-.control-btn {
-    padding: 8px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-}
-
-.control-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
 }
 
 .converter-content {
@@ -1670,46 +1596,6 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
     border-radius: 3px;
 }
 
-/* 消息提示 */
-.message-toast {
-    position: fixed;
-    bottom: 3rem;
-    right: 3rem;
-    padding: 1rem 1.5rem;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    color: #374151;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.message-toast.success {
-    border-color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-}
-
-.message-toast.error {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     .main-content-area {
@@ -1740,13 +1626,6 @@ onUnmounted(() => {document.removeEventListener('keydown', handleKeyPress)
         gap: 10px;
         bottom: 20px;
         padding: 12px 20px;
-    }
-    
-    .message-toast {
-        bottom: 2rem;
-        right: 1rem;
-        left: 1rem;
-        text-align: center;
     }
 }
 

@@ -1,23 +1,10 @@
 <template>
     <div class="text-compare">
-        <div class="compare-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="compare-title">文本比对</h2>
-            <div class="compare-actions">
-                <button class="action-btn" @click="clearAll" title="清空所有">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader title="文本比对" @back="$emit('back')">
+            <template #actions>
+                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
+            </template>
+        </PageHeader>
 
         <div class="compare-content">
             <!-- 文本比对工具 -->
@@ -196,12 +183,16 @@
                         
                         <!-- 统一视图 -->
                         <div v-if="viewMode === 'unified'" class="diff-content unified">
-                            <div v-for="(diff, index) in compareResult.diffs" :key="index" class="diff-line"
-                                :class="diff.type">
-                                <span class="line-number">{{ diff.lineNumber }}</span>
-                                <span class="line-prefix">{{ diff.prefix }}</span>
-                                <span class="line-content" v-html="highlightDifferences(diff.content, diff.type)"></span>
-                            </div>
+                            <template v-for="(diff, diffIndex) in compareResult.diffs" :key="diffIndex">
+                                <template v-for="(lineText, lineIndex) in diff.value.split('\n')" :key="`${diffIndex}-${lineIndex}`">
+                                    <div v-if="lineText || diff.value.endsWith('\n')"
+                                         class="diff-line" :class="diff.type">
+                                        <span class="line-number">{{ lineIndex + 1 }}</span>
+                                        <span class="line-prefix">{{ diff.type === 'added' ? '+' : diff.type === 'removed' ? '-' : ' ' }}</span>
+                                        <span class="line-content" v-html="highlightDifferences(lineText, diff.type)"></span>
+                                    </div>
+                                </template>
+                            </template>
                         </div>
                         
                         <!-- 并排视图 -->
@@ -228,6 +219,61 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 使用说明 -->
+            <div class="help-section">
+                <!-- 功能特点 - 4个卡片横向布局 -->
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📄</div>
+                        <h4>支持文件上传</h4>
+                        <p>支持手动输入文本或上传多种格式的文件进行比对。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚙️</div>
+                        <h4>灵活比对选项</h4>
+                        <p>可选择忽略大小写、空白字符或换行符进行灵活比对。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h4>多种视图模式</h4>
+                        <p>提供统一视图和并排视图两种方式展示文本差异。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h4>详细统计分析</h4>
+                        <p>显示相似度、差异行数等统计信息，帮助分析文本差异。</p>
+                    </div>
+                </div>
+
+                <!-- 技术说明框 -->
+                <div class="diff-info">
+                    <h4>⚡ 关于 Diff 算法</h4>
+                    <p>基于专业的 <a href="https://www.npmjs.com/package/diff" target="_blank" rel="noopener">diff</a> 库，采用 Myers 差分算法，被 Git、GitHub、VS Code 等工具广泛使用。该算法能够高效地计算两个文本序列之间的最小编辑距离，提供精确的差异分析结果。</p>
+                    <div class="tech-features">
+                        <div class="feature-row">
+                            <span class="feature-label">🔍 算法优势：</span>
+                            <span class="feature-desc">时间复杂度 O(ND)，空间复杂度优化，适合大文件比对</span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="feature-label">🌟 应用场景：</span>
+                            <span class="feature-desc">代码审查、版本控制、文档比较、数据同步等</span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="feature-label">🛠️ 技术特性：</span>
+                            <span class="feature-desc">支持字符级、单词级、行级比对，可自定义比较规则</span>
+                        </div>
+                    </div>
+                    <div class="tech-highlights">
+                        <span class="tech-tag">Myers 算法</span>
+                        <span class="tech-tag">高性能</span>
+                        <span class="tech-tag">广泛应用</span>
+                        <span class="tech-tag">开源可靠</span>
+                        <span class="tech-tag">精确比对</span>
+                        <span class="tech-tag">多级别支持</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div v-if="message" class="message-toast" :class="messageType">
@@ -235,18 +281,23 @@
         </div>
     </div>
 </template>
-
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import * as Diff from 'diff'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本状态
 // 使用页面标题管理
 usePageTitle('text-compare')
+
+// 使用通知系统
+const { success: showSuccess, error: showError } = useNotification()
 
 const textA = ref('')
 const textB = ref('')
@@ -272,10 +323,9 @@ const compareResult = ref<{
     addedLines: number
     removedLines: number
     diffs: Array<{
-        type: 'added' | 'removed' | 'modified' | 'unchanged'
-        lineNumber: number
-        prefix: string
-        content: string
+        type: 'added' | 'removed' | 'unchanged'
+        value: string
+        count?: number
     }>
 } | null>(null)
 
@@ -406,7 +456,7 @@ const preprocessText = (text: string): string => {
     return processed
 }
 
-// 计算文本相似度
+// 计算文本相似度（使用 Levenshtein 距离）
 const calculateSimilarity = (text1: string, text2: string): number => {
     if (text1 === text2) return 100
     if (!text1 || !text2) return 0
@@ -420,15 +470,13 @@ const calculateSimilarity = (text1: string, text2: string): number => {
     return ((longer.length - editDistance) / longer.length) * 100
 }
 
-// 计算编辑距离
+// 计算编辑距离（保留作为备用）
 const getEditDistance = (str1: string, str2: string): number => {
     const len1 = str1.length
     const len2 = str2.length
 
-    // 创建二维数组
     const dp: number[][] = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(0))
 
-    // 初始化第一行和第一列
     for (let i = 0; i <= len1; i++) {
         dp[0]![i] = i
     }
@@ -436,16 +484,15 @@ const getEditDistance = (str1: string, str2: string): number => {
         dp[i]![0] = i
     }
 
-    // 填充dp表
     for (let i = 1; i <= len2; i++) {
         for (let j = 1; j <= len1; j++) {
             if (str2[i - 1] === str1[j - 1]) {
                 dp[i]![j] = dp[i - 1]![j - 1]!
             } else {
                 dp[i]![j] = Math.min(
-                    dp[i - 1]![j]! + 1,     // 删除
-                    dp[i]![j - 1]! + 1,     // 插入
-                    dp[i - 1]![j - 1]! + 1  // 替换
+                    dp[i - 1]![j]! + 1,
+                    dp[i]![j - 1]! + 1,
+                    dp[i - 1]![j - 1]! + 1
                 )
             }
         }
@@ -454,7 +501,7 @@ const getEditDistance = (str1: string, str2: string): number => {
     return dp[len2]![len1]!
 }
 
-// 比对文本
+// 比对文本（使用 diff 库）
 const compareTexts = () => {
     if (!textA.value && !textB.value) {
         compareResult.value = null
@@ -469,84 +516,42 @@ const compareTexts = () => {
     const processedA = preprocessText(textA.value)
     const processedB = preprocessText(textB.value)
 
-    const linesA = processedA.split('\n')
-    const linesB = processedB.split('\n')
-
-    const similarity = calculateSimilarity(processedA, processedB)
-    const diffs = generateDiff(linesA, linesB)
-
+    // 使用 diff 库进行比对
+    const diffs = Diff.diffLines(processedA, processedB)
+    
+    // 计算统计信息
     let addedLines = 0
     let removedLines = 0
     let diffLines = 0
 
     diffs.forEach(diff => {
-        if (diff.type === 'added') addedLines++
-        else if (diff.type === 'removed') removedLines++
-        else if (diff.type === 'modified') diffLines++
+        if (diff.added) {
+            addedLines += diff.count || 0
+        } else if (diff.removed) {
+            removedLines += diff.count || 0
+        }
+        if (diff.added || diff.removed) {
+            diffLines += diff.count || 0
+        }
     })
+
+    // 计算相似度
+    const similarity = calculateSimilarity(processedA, processedB)
+
+    // 转换为我们的格式
+    const formattedDiffs = diffs.map(diff => ({
+        type: diff.added ? 'added' as const : diff.removed ? 'removed' as const : 'unchanged' as const,
+        value: diff.value,
+        count: diff.count
+    }))
 
     compareResult.value = {
         similarity,
         diffLines,
         addedLines,
         removedLines,
-        diffs
+        diffs: formattedDiffs
     }
-}
-
-// 生成差异
-const generateDiff = (linesA: string[], linesB: string[]) => {
-    const diffs: Array<{
-        type: 'added' | 'removed' | 'modified' | 'unchanged'
-        lineNumber: number
-        prefix: string
-        content: string
-    }> = []
-
-    const maxLines = Math.max(linesA.length, linesB.length)
-
-    for (let i = 0; i < maxLines; i++) {
-        const lineA = linesA[i]
-        const lineB = linesB[i]
-
-        if (lineA === undefined && lineB !== undefined) {
-            diffs.push({
-                type: 'added',
-                lineNumber: i + 1,
-                prefix: '+',
-                content: lineB
-            })
-        } else if (lineB === undefined && lineA !== undefined) {
-            diffs.push({
-                type: 'removed',
-                lineNumber: i + 1,
-                prefix: '-',
-                content: lineA
-            })
-        } else if (lineA !== undefined && lineB !== undefined && lineA !== lineB) {
-            diffs.push({
-                type: 'removed',
-                lineNumber: i + 1,
-                prefix: '-',
-                content: lineA
-            })
-            diffs.push({
-                type: 'added',
-                lineNumber: i + 1,
-                prefix: '+',
-                content: lineB
-            })
-        } else if (lineA !== undefined && lineB !== undefined && lineA === lineB) {
-            diffs.push({
-                type: 'unchanged',
-                lineNumber: i + 1,
-                prefix: ' ',
-                content: lineA
-            })
-        }
-    }
-
-    return diffs.filter(diff => diff.type !== 'unchanged')
 }
 
 // 获取相似度样式类
@@ -562,51 +567,43 @@ const splitDiffs = computed(() => {
     if (!compareResult.value) return []
     
     const pairs: Array<{
-        left?: { type: string; lineNumber: number; content: string }
-        right?: { type: string; lineNumber: number; content: string }
+        left?: { type: string; content: string; lineNumber: number }
+        right?: { type: string; content: string; lineNumber: number }
     }> = []
     
-    const linesA = textA.value.split('\n')
-    const linesB = textB.value.split('\n')
-    const maxLines = Math.max(linesA.length, linesB.length)
+    let leftLineNumber = 1
+    let rightLineNumber = 1
     
-    for (let i = 0; i < maxLines; i++) {
-        const lineA = linesA[i]
-        const lineB = linesB[i]
+    compareResult.value.diffs.forEach(diff => {
+        const lines = diff.value.split('\n').filter(line => line !== '' || diff.value.endsWith('\n'))
         
-        if (lineA === undefined && lineB !== undefined) {
-            pairs.push({
-                left: undefined,
-                right: { type: 'added', lineNumber: i + 1, content: lineB }
-            })
-        } else if (lineB === undefined && lineA !== undefined) {
-            pairs.push({
-                left: { type: 'removed', lineNumber: i + 1, content: lineA },
-                right: undefined
-            })
-        } else if (lineA !== undefined && lineB !== undefined) {
-            if (lineA === lineB) {
+        lines.forEach((line) => {
+            if (diff.type === 'unchanged') {
                 pairs.push({
-                    left: { type: 'unchanged', lineNumber: i + 1, content: lineA },
-                    right: { type: 'unchanged', lineNumber: i + 1, content: lineB }
+                    left: { type: 'unchanged', content: line, lineNumber: leftLineNumber++ },
+                    right: { type: 'unchanged', content: line, lineNumber: rightLineNumber++ }
                 })
-            } else {
+            } else if (diff.type === 'removed') {
                 pairs.push({
-                    left: { type: 'removed', lineNumber: i + 1, content: lineA },
-                    right: { type: 'added', lineNumber: i + 1, content: lineB }
+                    left: { type: 'removed', content: line, lineNumber: leftLineNumber++ },
+                    right: undefined
+                })
+            } else if (diff.type === 'added') {
+                pairs.push({
+                    left: undefined,
+                    right: { type: 'added', content: line, lineNumber: rightLineNumber++ }
                 })
             }
-        }
-    }
+        })
+    })
     
     return pairs
 })
 
 // 高亮差异
 const highlightDifferences = (content: string, type: string): string => {
-    if (type === 'unchanged') return content
+    if (type === 'unchanged') return escapeHtml(content)
     
-    // 简单的字符级差异高亮
     return `<span class="highlight-${type}">${escapeHtml(content)}</span>`
 }
 
@@ -619,6 +616,13 @@ const escapeHtml = (text: string): string => {
 
 // 显示消息
 const showMessage = (text: string, type: 'success' | 'error') => {
+    if (type === 'success') {
+        showSuccess(text)
+    } else {
+        showError(text)
+    }
+    
+    // 保留原有的toast消息系统作为备用
     message.value = text
     messageType.value = type
     setTimeout(() => {
@@ -630,9 +634,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
 onMounted(() => {
     // 页面初始化逻辑
 })
-
 </script>
-
 <style scoped>
 .text-compare {
     width: 100%;
@@ -644,69 +646,6 @@ onMounted(() => {
     overflow: hidden;
 }
 
-.compare-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.compare-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.compare-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
 .compare-content {
     flex: 1;
     padding: 1.5rem;
@@ -714,7 +653,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
@@ -1059,24 +998,6 @@ onMounted(() => {
     color: var(--warning-color);
 }
 
-/* 深色模式下的图例配色 */
-@media (prefers-color-scheme: dark) {
-    .legend-item.added {
-        background: #0d4427;
-        color: #28a745;
-    }
-
-    .legend-item.removed {
-        background: #5a1e1e;
-        color: #dc3545;
-    }
-
-    .legend-item.modified {
-        background: #4a3728;
-        color: #ffc107;
-    }
-}
-
 .diff-content {
     max-height: 400px;
     overflow-y: auto;
@@ -1205,24 +1126,6 @@ onMounted(() => {
     border-left: 3px solid var(--warning-color);
 }
 
-/* 深色模式下的配色 */
-@media (prefers-color-scheme: dark) {
-    .diff-line.added {
-        background: #0d4427;
-        border-left-color: #28a745;
-    }
-
-    .diff-line.removed {
-        background: #5a1e1e;
-        border-left-color: #dc3545;
-    }
-
-    .diff-line.modified {
-        background: #4a3728;
-        border-left-color: #ffc107;
-    }
-}
-
 .line-number {
     min-width: 3rem;
     color: var(--text-secondary);
@@ -1250,6 +1153,161 @@ onMounted(() => {
 .line-content {
     flex: 1;
     word-break: break-all;
+}
+
+/* 使用说明区域 */
+.help-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* 功能特点 - 4个卡片横向布局 */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 1.25rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.feature-card h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.feature-card p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* 技术说明框 */
+.diff-info {
+    padding: 1.5rem;
+    background: var(--primary-color-alpha);
+    border: 1px solid var(--primary-color);
+    border-radius: 0.5rem;
+}
+
+.diff-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.diff-info p {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0 0 1.25rem 0;
+}
+
+.diff-info a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.diff-info a:hover {
+    text-decoration: underline;
+}
+
+.tech-features {
+    margin-bottom: 1.25rem;
+}
+
+.feature-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.feature-row:last-child {
+    margin-bottom: 0;
+}
+
+.feature-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.feature-desc {
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.tech-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tech-tag {
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .feature-card {
+        padding: 1rem;
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* 消息提示样式 */
@@ -1330,14 +1388,6 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-    .compare-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .compare-title {
-        font-size: 1.125rem;
-    }
-
     .compare-content {
         padding: 0.75rem;
         gap: 1rem;
