@@ -30,7 +30,6 @@ import CrontabGenerator from './components/CrontabGenerator.vue'
 import BaseConverter from './components/BaseConverter.vue'
 import TextEncoder from './components/TextEncoder.vue'
 import StringCounter from './components/StringCounter.vue'
-import StringCounterNew from './components/StringCounter-new.vue'
 import PhpSerializer from './components/PhpSerializer.vue'
 import TextReplacer from './components/TextReplacer.vue'
 import ChineseConverter from './components/ChineseConverter.vue'
@@ -42,6 +41,7 @@ import JwtGenerator from './components/JwtGenerator.vue'
 import ImageBase64Converter from './components/ImageBase64Converter.vue'
 import SurnameLookup from './components/SurnameLookup.vue'
 import RegexTester from './components/RegexTester.vue'
+import RegexTesterNew from './components/RegexTester-new.vue'
 import ApiTester from './components/ApiTester.vue'
 import TextCompare from './components/TextCompare.vue'
 import MimeTypeReference from './components/MimeTypeReference.vue'
@@ -210,9 +210,9 @@ const getToolIdByPageName = (pageName: string): string | null => {
         'screen-test': 'screen-test',
         'text-compare': 'text-compare',
         'string-counter': 'string-counter',
-        'string-counter-new': 'string-counter-new',
         'ascii-lookup': 'ascii-lookup',
         'regex-tester': 'regex-tester',
+        'regex-tester-new': 'regex-tester-new',
         'color-reference': 'color-reference',
         'surname-lookup': 'surname-lookup',
         'mime-type-reference': 'mime-type-reference',
@@ -433,6 +433,9 @@ const executeFunction = async (action: string) => {
                 return // 不需要loading状态
             case 'testRegex':
                 openPage('regex-tester')
+                return // 不需要loading状态
+            case 'testRegexNew':
+                openPage('regex-tester-new')
                 return // 不需要loading状态
 
             // 导航工具
@@ -882,6 +885,7 @@ const getToolAction = (toolId: string): string | null => {
         'string-counter-new': 'countStringNew',
         'ascii-lookup': 'lookupAscii',
         'regex-tester': 'testRegex',
+        'regex-tester-new': 'testRegexNew',
         'color-reference': 'convertColor',
         'surname-lookup': 'lookupSurname',
         'mime-type-reference': 'mimeTypeReference',
@@ -975,7 +979,6 @@ const updateUrl = (category?: string, tool?: string) => {
                 <BaseConverter v-if="currentPage === 'base-converter'" @back="closePage" />
                 <TextEncoder v-if="currentPage === 'text-encoder'" @back="closePage" />
                 <StringCounter v-if="currentPage === 'string-counter'" @back="closePage" />
-                <StringCounterNew v-if="currentPage === 'string-counter-new'" @back="closePage" />
                 <SurnameLookup v-if="currentPage === 'surname-lookup'" @back="closePage" />
                 <Settings v-if="currentPage === 'settings'" @back="closePage" />
                 <PhpSerializer v-if="currentPage === 'php-serializer'" @back="closePage" />
@@ -987,6 +990,7 @@ const updateUrl = (category?: string, tool?: string) => {
                 <ColorReference v-if="currentPage === 'color-reference'" @back="closePage" />
                 <JwtGenerator v-if="currentPage === 'jwt-generator'" @back="closePage" />
                 <RegexTester v-if="currentPage === 'regex-tester'" @back="closePage" />
+                <RegexTesterNew v-if="currentPage === 'regex-tester-new'" @back="closePage" />
                 <TextCompare v-if="currentPage === 'text-compare'" @back="closePage" />
                 <MimeTypeReference v-if="currentPage === 'mime-type-reference'" @back="closePage" />
                 <DynastyQuery v-if="currentPage === 'dynasty-query'" @back="closePage" />
