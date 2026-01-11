@@ -859,7 +859,7 @@ const formatFileSize = (bytes: number): string => {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }

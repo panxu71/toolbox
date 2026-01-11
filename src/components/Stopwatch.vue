@@ -33,14 +33,14 @@
 
                         <!-- 控制按钮 -->
                         <div class="control-buttons">
-                            <button v-if="!isRunning && currentTime === 0" class="control-btn start-btn" @click="start">
+                            <button v-if="!isRunning && currentTime === 0" class="control-btn start-btn" @click="start" @dblclick.stop>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5 3 19 12 5 21 5 3" />
                                 </svg>
                                 开始
                             </button>
 
-                            <button v-if="isRunning" class="control-btn pause-btn" @click="pause">
+                            <button v-if="isRunning" class="control-btn pause-btn" @click="pause" @dblclick.stop>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="6" y="4" width="4" height="16" />
                                     <rect x="14" y="4" width="4" height="16" />
@@ -48,14 +48,14 @@
                                 暂停
                             </button>
 
-                            <button v-if="!isRunning && currentTime > 0" class="control-btn resume-btn" @click="resume">
+                            <button v-if="!isRunning && currentTime > 0" class="control-btn resume-btn" @click="resume" @dblclick.stop>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5 3 19 12 5 21 5 3" />
                                 </svg>
                                 继续
                             </button>
 
-                            <button v-if="isRunning" class="control-btn lap-btn" @click="recordLap">
+                            <button v-if="isRunning" class="control-btn lap-btn" @click="recordLap" @dblclick.stop>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10" />
                                     <polyline points="12,6 12,12 16,14" />
@@ -63,7 +63,7 @@
                                 计次
                             </button>
 
-                            <button v-if="currentTime > 0" class="control-btn reset-btn" @click="reset">
+                            <button v-if="currentTime > 0" class="control-btn reset-btn" @click="reset" @dblclick.stop>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                                     <path d="M21 3v5h-5" />
