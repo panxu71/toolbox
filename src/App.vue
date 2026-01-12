@@ -128,6 +128,9 @@ const handleToolSelection = (toolId: string, action: string) => {
         'http-status': 'query',
         'regex-tester': 'query',
         'color-reference': 'query',
+        'surname-lookup': 'query',
+        'mime-type-reference': 'query',
+        'dynasty-query': 'query',
         'countries-capitals': 'query',
         'emoji-reference': 'query',
 

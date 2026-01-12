@@ -1,25 +1,13 @@
 <template>
     <div class="mime-type-reference">
-        <div class="reference-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="reference-title">MIME-Type 速查表</h2>
-            <div class="reference-actions">
-                <button class="action-btn" @click="exportData" title="导出数据">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7,10 12,15 17,10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="pageTitle" @back="handleBack">
+            <template #actions>
+                <HeaderActionButton icon="download" tooltip="导出数据" @click="exportData" />
+                <HeaderActionButton icon="refresh" tooltip="重置筛选" @click="resetFilters" />
+            </template>
+        </PageHeader>
 
-        <div class="reference-content">
+        <div class="converter-content">
             <!-- 搜索和筛选 -->
             <div class="search-section">
                 <div class="search-container">
@@ -80,13 +68,8 @@
                                     <span class="description">{{ mimeType.description }}</span>
                                 </td>
                                 <td class="action-cell">
-                                    <button @click="copyMimeType(mimeType.mimeType)" class="copy-btn" title="复制MIME类型">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                        </svg>
-                                    </button>
+                                    <HeaderActionButton icon="copy" tooltip="复制MIME类型"
+                                        @click="copyMimeType(mimeType.mimeType)" class="copy-btn-table" />
                                 </td>
                             </tr>
                         </tbody>
@@ -112,32 +95,52 @@
             </div>
         </div>
 
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
+        <!-- 回到顶部按钮 -->
+        <ScrollToTop :threshold="200" container=".converter-content" />
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import ScrollToTop from './common/ScrollToTop.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import cardsConfig from '../config/cards.json'
 
-defineEmits<{
+const emit = defineEmits<{
     back: []
 }>()
 
-// 基本状态
+interface MimeTypeInfo {
+    extension: string
+    mimeType: string
+    description: string
+    category: string
+}
+
 // 使用页面标题管理
 usePageTitle('mime-type-reference')
+const { success, error } = useNotification()
 
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'mime-type-reference')
+        if (card) {
+            return card.title
+        }
+    }
+    return 'MIME-Type 速查表'
+})
+
+// 基本状态
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const currentPage = ref(1)
 const pageSize = 20
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 分类定义
 const categories = [
@@ -151,7 +154,7 @@ const categories = [
 ]
 
 // MIME类型数据
-const mimeTypes = ref([
+const mimeTypes = ref<MimeTypeInfo[]>([
     // 文本类型
     { extension: '.txt', mimeType: 'text/plain', description: '纯文本文件', category: 'text' },
     { extension: '.html', mimeType: 'text/html', description: 'HTML文档', category: 'text' },
@@ -264,6 +267,14 @@ const clearSearch = () => {
     filterMimeTypes()
 }
 
+// 重置筛选
+const resetFilters = () => {
+    searchQuery.value = ''
+    activeCategory.value = 'all'
+    currentPage.value = 1
+    success('已重置筛选条件')
+}
+
 // 设置活动分类
 const setActiveCategory = (category: string) => {
     activeCategory.value = category
@@ -287,9 +298,10 @@ const goToPage = (page: number) => {
 const copyMimeType = async (mimeType: string) => {
     try {
         await navigator.clipboard.writeText(mimeType)
-        showMessage('MIME类型已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
+        success(`已复制MIME类型: ${mimeType}`)
+    } catch (err) {
+        console.error('复制失败:', err)
+        error('复制失败，请手动复制')
     }
 }
 
@@ -314,23 +326,19 @@ const exportData = () => {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
-    showMessage('数据已导出', 'success')
+    success('数据已导出为 mime-types.json')
 }
 
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+// 处理返回事件
+const handleBack = () => {
+    emit('back')
 }
 
-onMounted(() => {// 组件挂载时的初始化逻辑
+// 初始化
+onMounted(() => {
+    success(`共收录 ${mimeTypes.value.length} 种文件类型`)
 })
-
 </script>
-
 <style scoped>
 .mime-type-reference {
     width: 100%;
@@ -338,91 +346,32 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
-    color: var(--text-primary);
-    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.reference-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.reference-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.reference-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.reference-content {
+.converter-content {
     flex: 1;
-    padding: 1.5rem;
+    padding: 2rem;
     overflow-y: auto;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
 
 /* 搜索区域样式 */
 .search-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
     margin-bottom: 2rem;
 }
 
 .search-container {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .search-input-wrapper {
@@ -440,24 +389,25 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 
 .search-input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 1rem 1rem 1rem 2.5rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
     color: var(--text-primary);
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-sizing: border-box;
 }
 
 .search-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .clear-search-btn {
     position: absolute;
-    right: 0.75rem;
+    right: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -465,14 +415,14 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     height: 1.5rem;
     background: var(--bg-tertiary);
     border: none;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
 }
 
 .clear-search-btn:hover {
-    background: var(--bg-hover);
+    background: var(--border-color);
     color: var(--text-primary);
 }
 
@@ -483,19 +433,20 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 }
 
 .category-btn {
-    padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
     font-size: 0.875rem;
     font-weight: 500;
 }
 
 .category-btn:hover {
-    background: var(--bg-hover);
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 
 .category-btn.active {
@@ -508,20 +459,22 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 .mime-table-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .table-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding: 1.5rem 2rem;
     border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
 }
 
 .table-header h3 {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
@@ -536,6 +489,7 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 .info-text {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    font-weight: 500;
 }
 
 .table-container {
@@ -549,18 +503,20 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 
 .mime-table th {
     background: var(--bg-tertiary);
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     text-align: left;
     font-weight: 600;
     color: var(--text-primary);
     border-bottom: 1px solid var(--border-color);
     font-size: 0.875rem;
+    white-space: nowrap;
 }
 
 .mime-table td {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.875rem;
+    vertical-align: middle;
 }
 
 .mime-row:hover {
@@ -569,51 +525,37 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 
 .extension-cell .extension {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: var(--primary-color-alpha);
-    color: var(--primary-color);
-    border-radius: 0.25rem;
-    font-weight: 500;
-    font-family: 'Courier New', monospace;
+    padding: 0.375rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
 }
 
 .mime-cell .mime-type {
     background: var(--bg-tertiary);
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-family: 'Courier New', monospace;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 0.8rem;
     color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .description-cell .description {
     color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 .action-cell {
     text-align: center;
 }
 
-.copy-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.copy-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+.copy-btn-table {
+    width: 32px !important;
+    height: 32px !important;
 }
 
 /* 分页样式 */
@@ -622,8 +564,9 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    padding: 1.5rem;
+    padding: 1.5rem 2rem;
     border-top: 1px solid var(--border-color);
+    background: var(--bg-primary);
 }
 
 .page-btn {
@@ -634,14 +577,16 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     height: 2.5rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition);
 }
 
 .page-btn:hover:not(:disabled) {
-    background: var(--bg-hover);
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
@@ -649,71 +594,58 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 .page-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: var(--bg-tertiary);
 }
 
 .page-info {
     font-size: 0.875rem;
     color: var(--text-secondary);
     font-weight: 500;
-}
-
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    padding: 0 1rem;
 }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
+    .converter-content {
+        padding: 1.5rem;
+        padding-bottom: 5rem;
+    }
 
     .mime-table th,
     .mime-table td {
-        padding: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .table-header {
+        padding: 1.25rem 1.5rem;
     }
 }
 
 @media (max-width: 768px) {
-    .reference-content {
+    .converter-content {
         padding: 1rem;
+        padding-bottom: 4rem;
+        gap: 1.5rem;
+    }
+
+    .search-section {
+        padding: 1.5rem;
     }
 
     .table-header {
         padding: 1rem;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
         align-items: flex-start;
     }
 
     .category-filter {
         justify-content: center;
+    }
+
+    .category-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
     }
 
     .mime-table {
@@ -722,30 +654,56 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 
     .mime-table th,
     .mime-table td {
-        padding: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .extension-cell .extension {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .mime-cell .mime-type {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .pagination {
+        padding: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .reference-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .reference-title {
-        font-size: 1.125rem;
-    }
-
-    .reference-content {
+    .converter-content {
         padding: 0.75rem;
+        padding-bottom: 3rem;
+    }
+
+    .search-section {
+        padding: 1rem;
     }
 
     .search-container {
-        gap: 0.75rem;
+        gap: 1rem;
     }
 
     .category-btn {
         padding: 0.375rem 0.75rem;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .table-header h3 {
+        font-size: 1.125rem;
+    }
+
+    .mime-table th,
+    .mime-table td {
+        padding: 0.5rem;
+    }
+
+    /* 在小屏幕上隐藏描述列 */
+    .mime-table th:nth-child(3),
+    .mime-table td:nth-child(3) {
+        display: none;
     }
 }
 </style>

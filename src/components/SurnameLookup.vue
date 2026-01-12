@@ -1,16 +1,13 @@
 <template>
     <div class="surname-lookup">
-        <div class="lookup-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="lookup-title">百家姓查询</h2>
-        </div>
+        <PageHeader :title="pageTitle" @back="handleBack">
+            <template #actions>
+                <HeaderActionButton icon="refresh" tooltip="重置搜索" @click="resetSearch" />
+                <HeaderActionButton icon="clear" tooltip="清空选择" @click="clearSelection" />
+            </template>
+        </PageHeader>
 
-        <div class="lookup-content">
+        <div class="converter-content">
             <!-- 搜索区域 -->
             <div class="search-section">
                 <div class="search-container">
@@ -46,13 +43,8 @@
                 <div class="results-grid">
                     <div v-for="result in searchResults" :key="result.surname" class="result-card"
                         @click="selectSurname(result)">
-                        <button class="copy-btn-corner" @click.stop="copySurnameFromList(result.surname)" title="复制姓氏">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                        </button>
+                        <HeaderActionButton icon="copy" tooltip="复制姓氏" class="copy-btn-corner"
+                            @click.stop="copySurnameFromList(result.surname)" />
                         <div class="surname-content">
                             <div class="pinyin-display">{{ result.pinyin }}</div>
                             <div class="surname-display">{{ result.surname }}</div>
@@ -65,17 +57,34 @@
                 </div>
             </div>
 
+            <!-- 百家姓全览 -->
+            <div v-if="!searchQuery && !selectedSurname" class="overview-section">
+                <h3 class="section-title">百家姓排行榜（前{{ allSurnames.length }}位）</h3>
+                <div class="ranking-grid">
+                    <div v-for="surname in allSurnames" :key="surname.surname" class="ranking-item"
+                        :class="getRankingClass(surname.rank)" @click="selectSurname(surname)">
+                        <HeaderActionButton icon="copy" tooltip="复制姓氏" class="copy-btn-corner-small"
+                            @click.stop="copySurnameFromList(surname.surname)" />
+                        <div class="ranking-header">
+                            <div class="ranking-number">{{ surname.rank }}</div>
+                        </div>
+                        <div class="ranking-main">
+                            <div class="ranking-pinyin">{{ surname.pinyin }}</div>
+                            <div class="ranking-surname">{{ surname.surname }}</div>
+                        </div>
+                        <div class="ranking-footer">
+                            <div class="ranking-population">{{ surname.population }}万人</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 详细信息 -->
             <div v-if="selectedSurname" class="detail-section">
                 <div class="detail-card">
                     <div class="detail-header">
-                        <button class="back-to-list-btn" @click="clearSelection" title="返回列表">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="m15 18-6-6 6-6" />
-                            </svg>
-                            返回列表
-                        </button>
+                        <HeaderActionButton icon="back" tooltip="返回列表" @click="clearSelection"
+                            class="back-to-list-btn" />
                         <div class="surname-title">
                             <div class="surname-main">
                                 <span class="surname-char">{{ selectedSurname.surname }}</span>
@@ -129,34 +138,6 @@
                 </div>
             </div>
 
-            <!-- 百家姓全览 -->
-            <div v-if="!searchQuery && !selectedSurname" class="overview-section">
-                <h3 class="section-title">百家姓排行榜（前{{ allSurnames.length }}位）</h3>
-                <div class="ranking-grid">
-                    <div v-for="surname in allSurnames" :key="surname.surname" class="ranking-item"
-                        @click="selectSurname(surname)">
-                        <button class="copy-btn-corner-small" @click.stop="copySurnameFromList(surname.surname)"
-                            title="复制姓氏">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                        </button>
-                        <div class="ranking-header">
-                            <div class="ranking-number">{{ surname.rank }}</div>
-                        </div>
-                        <div class="ranking-main">
-                            <div class="ranking-pinyin">{{ surname.pinyin }}</div>
-                            <div class="ranking-surname">{{ surname.surname }}</div>
-                        </div>
-                        <div class="ranking-footer">
-                            <div class="ranking-population">{{ surname.population }}万人</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- 无结果提示 -->
             <div v-if="searchQuery && searchResults.length === 0" class="no-results">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -168,19 +149,22 @@
             </div>
         </div>
 
-        <!-- 消息提示 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-        </div>
+        <!-- 回到顶部按钮 -->
+        <ScrollToTop :threshold="200" container=".converter-content" />
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted  } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import ScrollToTop from './common/ScrollToTop.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import cardsConfig from '../config/cards.json'
 import surnameConfig from '../config/surnames.json'
 
-defineEmits<{
+const emit = defineEmits<{
     back: []
 }>()
 
@@ -196,16 +180,25 @@ interface SurnameInfo {
     celebrities?: string[]
 }
 
-// 搜索相关
 // 使用页面标题管理
 usePageTitle('surname-lookup')
+const { success, error } = useNotification()
 
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'surname-lookup')
+        if (card) {
+            return card.title
+        }
+    }
+    return '百家姓查询'
+})
+
+// 搜索相关
 const searchQuery = ref('')
 const selectedSurname = ref<SurnameInfo | null>(null)
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 // 从配置文件读取数据
 const surnameData = ref<SurnameInfo[]>(surnameConfig.surnames)
@@ -280,6 +273,13 @@ const clearSearch = () => {
     selectedSurname.value = null
 }
 
+// 重置搜索
+const resetSearch = () => {
+    searchQuery.value = ''
+    selectedSurname.value = null
+    success('已重置搜索')
+}
+
 // 搜索指定姓氏
 const searchSurname = (surname: string) => {
     searchQuery.value = surname
@@ -290,39 +290,45 @@ const searchSurname = (surname: string) => {
 const selectSurname = (surname: SurnameInfo) => {
     selectedSurname.value = surname
     searchQuery.value = ''
-    showMessage(`已选择 ${surname.surname} 姓`, 'success')
+    success(`已选择 ${surname.surname} 姓`)
 }
 
 // 清除选择，返回列表
 const clearSelection = () => {
     selectedSurname.value = null
-    showMessage('已返回列表', 'success')
+    success('已清空选择')
 }
 
 // 从列表复制姓氏
 const copySurnameFromList = async (surname: string) => {
     try {
         await navigator.clipboard.writeText(surname)
-        showMessage('姓氏已复制到剪贴板', 'success')
-    } catch (error) {
-        console.error('复制失败:', error)
-        showMessage('复制失败，请手动复制', 'error')
+        success(`已复制姓氏: ${surname}`)
+    } catch (err) {
+        console.error('复制失败:', err)
+        error('复制失败，请手动复制')
     }
 }
 
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+// 处理返回事件
+const handleBack = () => {
+    emit('back')
 }
 
-onMounted(() => {const version = surnameConfig.metadata.version
-    showMessage(`百家姓查询已加载，当前版本 v${version}，收录 ${allSurnames.value.length} 个姓氏`, 'success')
-})
+// 获取排名样式类
+const getRankingClass = (rank: number) => {
+    if (rank === 1) return 'rank-first'
+    if (rank === 2) return 'rank-second'
+    if (rank === 3) return 'rank-third'
+    if (rank <= 10) return 'rank-top-ten'
+    return ''
+}
 
+// 初始化
+onMounted(() => {
+    const version = surnameConfig.metadata.version
+    success(`当前版本 v${version}，收录 ${allSurnames.value.length} 个姓氏`)
+})
 </script>
 
 <style scoped>
@@ -331,47 +337,11 @@ onMounted(() => {const version = surnameConfig.metadata.version
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: var(--bg-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.lookup-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem 2rem;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
-}
-
-.lookup-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: #1e293b;
-}
-
-.lookup-content {
+.converter-content {
     flex: 1;
     padding: 2rem;
     padding-bottom: 6rem;
@@ -379,18 +349,19 @@ onMounted(() => {const version = surnameConfig.metadata.version
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    min-height: calc(100vh - 120px);
 }
 
 /* 搜索区域 */
 .search-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-container {
@@ -408,27 +379,26 @@ onMounted(() => {const version = surnameConfig.metadata.version
 .search-icon {
     position: absolute;
     left: 1rem;
-    color: #9ca3af;
+    color: var(--text-secondary);
     z-index: 1;
 }
 
 .search-input {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    color: #1f2937;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
     font-size: 1rem;
-    transition: all 0.2s;
+    transition: var(--transition);
     box-sizing: border-box;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background: white;
 }
 
 .clear-btn {
@@ -439,17 +409,17 @@ onMounted(() => {const version = surnameConfig.metadata.version
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    background: #f3f4f6;
+    background: var(--bg-tertiary);
     border: none;
-    border-radius: 0.5rem;
-    color: #6b7280;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .clear-btn:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 
 .quick-search {
@@ -461,45 +431,45 @@ onMounted(() => {const version = surnameConfig.metadata.version
 
 .quick-label {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-weight: 500;
     white-space: nowrap;
 }
 
 .quick-btn {
     padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .quick-btn:hover {
-    background: #3b82f6;
+    background: var(--primary-color);
     color: white;
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
 }
 
 /* 结果区域 */
 .results-section,
 .overview-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 1.5rem 0;
-    color: #1e293b;
+    color: var(--text-primary);
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .results-grid {
@@ -510,13 +480,13 @@ onMounted(() => {const version = surnameConfig.metadata.version
 
 .result-card {
     position: relative;
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 20px 16px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--transition);
     overflow: hidden;
     min-height: 140px;
     display: flex;
@@ -525,44 +495,27 @@ onMounted(() => {const version = surnameConfig.metadata.version
 }
 
 .result-card:hover {
-    border-color: #3b82f6;
-    background: white;
+    border-color: var(--primary-color);
+    background: var(--bg-secondary);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    box-shadow: var(--shadow-md);
 }
 
 .copy-btn-corner {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 28px !important;
+    height: 28px !important;
     opacity: 0;
     transform: translateY(-4px);
-    backdrop-filter: blur(8px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 2;
 }
 
 .result-card:hover .copy-btn-corner {
     opacity: 1;
     transform: translateY(0);
-}
-
-.copy-btn-corner:hover {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .surname-content {
@@ -578,24 +531,24 @@ onMounted(() => {const version = surnameConfig.metadata.version
 .surname-display {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-primary);
     line-height: 1;
 }
 
 .result-card:hover .surname-display {
-    color: #3b82f6;
+    color: var(--primary-color);
 }
 
 .pinyin-display {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--text-secondary);
     font-weight: 500;
     font-style: italic;
     opacity: 0.8;
 }
 
 .result-card:hover .pinyin-display {
-    color: #3b82f6;
+    color: var(--primary-color);
     opacity: 1;
 }
 
@@ -607,21 +560,286 @@ onMounted(() => {const version = surnameConfig.metadata.version
 
 .rank {
     font-size: 0.875rem;
-    color: #3b82f6;
+    color: var(--primary-color);
     font-weight: 600;
 }
 
 .population {
     font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* 排行榜 */
+.ranking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.ranking-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition);
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.ranking-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.copy-btn-corner-small {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    width: 24px !important;
+    height: 24px !important;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+}
+
+.ranking-item:hover .copy-btn-corner-small {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-header {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+}
+
+.ranking-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 20px;
+    padding: 0 8px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.ranking-item:hover .ranking-number {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.ranking-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.ranking-pinyin {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-style: italic;
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.ranking-item:hover .ranking-pinyin {
+    color: var(--primary-color);
+    opacity: 1;
+}
+
+.ranking-surname {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    text-align: center;
+}
+
+.ranking-item:hover .ranking-surname {
+    color: var(--primary-color);
+}
+
+.ranking-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+}
+
+.ranking-population {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 4px 8px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.ranking-item:hover .ranking-population {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 排行榜特殊样式 */
+.ranking-item.rank-first {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border-color: #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.ranking-item.rank-first .ranking-number {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    border-color: #dc2626;
+    font-weight: 700;
+}
+
+.ranking-item.rank-first .ranking-surname {
+    color: #92400e;
+}
+
+.ranking-item.rank-first .ranking-pinyin {
+    color: #a16207;
+}
+
+.ranking-item.rank-first .ranking-population {
+    background: #92400e;
+    color: white;
+    border-color: #92400e;
+}
+
+.ranking-item.rank-second {
+    background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+    border-color: #9ca3af;
+    box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
+}
+
+.ranking-item.rank-second .ranking-number {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    color: white;
+    border-color: #6b7280;
+    font-weight: 700;
+}
+
+.ranking-item.rank-second .ranking-surname {
+    color: #374151;
+}
+
+.ranking-item.rank-second .ranking-pinyin {
     color: #6b7280;
+}
+
+.ranking-item.rank-second .ranking-population {
+    background: #6b7280;
+    color: white;
+    border-color: #6b7280;
+}
+
+.ranking-item.rank-third {
+    background: linear-gradient(135deg, #cd7f32 0%, #d4a574 100%);
+    border-color: #b45309;
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.3);
+}
+
+.ranking-item.rank-third .ranking-number {
+    background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
+    color: white;
+    border-color: #92400e;
+    font-weight: 700;
+}
+
+.ranking-item.rank-third .ranking-surname {
+    color: #78350f;
+}
+
+.ranking-item.rank-third .ranking-pinyin {
+    color: #92400e;
+}
+
+.ranking-item.rank-third .ranking-population {
+    background: #78350f;
+    color: white;
+    border-color: #78350f;
+}
+
+.ranking-item.rank-top-ten {
+    background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.ranking-item.rank-top-ten .ranking-number {
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+    color: white;
+    border-color: #3b82f6;
+    font-weight: 600;
+}
+
+.ranking-item.rank-top-ten .ranking-surname {
+    color: #1e40af;
+}
+
+.ranking-item.rank-top-ten .ranking-pinyin {
+    color: #3b82f6;
+}
+
+.ranking-item.rank-top-ten .ranking-population {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* 无结果 */
+.no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.no-results svg {
+    margin-bottom: 1rem;
+}
+
+.no-results h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.no-results p {
+    margin: 0;
+    font-size: 0.875rem;
 }
 
 /* 详细信息 */
 .detail-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .detail-card {
@@ -630,34 +848,25 @@ onMounted(() => {const version = surnameConfig.metadata.version
 }
 
 .detail-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
     color: white;
     padding: 2rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    border-radius: 1rem 1rem 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .back-to-list-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0.5rem;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-    font-weight: 500;
-    align-self: flex-start;
+    align-self: flex-start !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
 }
 
 .back-to-list-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .surname-title {
@@ -692,8 +901,6 @@ onMounted(() => {const version = surnameConfig.metadata.version
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
 }
-
-
 
 .surname-meta {
     display: flex;
@@ -731,13 +938,13 @@ onMounted(() => {const version = surnameConfig.metadata.version
 
 .info-label {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
 .info-value {
     font-size: 1rem;
-    color: #1e293b;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
@@ -745,13 +952,13 @@ onMounted(() => {const version = surnameConfig.metadata.version
 .celebrities-section h4 {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
 }
 
 .description-text {
     font-size: 0.875rem;
-    color: #4b5563;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 }
@@ -764,224 +971,16 @@ onMounted(() => {const version = surnameConfig.metadata.version
 
 .celebrity-tag {
     padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
     font-size: 0.875rem;
-    color: #475569;
-}
-
-/* 排行榜 */
-.ranking-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-}
-
-.ranking-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-    min-height: 120px;
-}
-
-.ranking-item:hover {
-    background: white;
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
-}
-
-.copy-btn-corner-small {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0;
-    transform: translateY(-4px);
-    backdrop-filter: blur(8px);
-    z-index: 2;
-}
-
-.ranking-item:hover .copy-btn-corner-small {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.copy-btn-corner-small:hover {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.ranking-header {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 8px;
-}
-
-.ranking-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 28px;
-    height: 20px;
-    padding: 0 8px;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #64748b;
-    border: 1px solid #cbd5e1;
-}
-
-.ranking-item:hover .ranking-number {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #3b82f6;
-    border-color: #93c5fd;
-}
-
-.ranking-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 8px 0;
-}
-
-.ranking-pinyin {
-    font-size: 10px;
-    color: #64748b;
-    font-weight: 500;
-    font-style: italic;
-    text-align: center;
-    opacity: 0.8;
-    margin-bottom: 2px;
-}
-
-.ranking-item:hover .ranking-pinyin {
-    color: #3b82f6;
-    opacity: 1;
-}
-
-.ranking-surname {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e293b;
-    line-height: 1;
-    text-align: center;
-}
-
-.ranking-item:hover .ranking-surname {
-    color: #3b82f6;
-}
-
-.ranking-footer {
-    display: flex;
-    justify-content: center;
-    margin-top: auto;
-}
-
-.ranking-population {
-    font-size: 10px;
-    color: #94a3b8;
-    font-weight: 500;
-    padding: 4px 8px;
-    background: #f1f5f9;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.ranking-item:hover .ranking-population {
-    background: #dbeafe;
-    color: #3b82f6;
-    border-color: #bfdbfe;
-}
-
-/* 无结果 */
-.no-results {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
-    text-align: center;
-    color: #9ca3af;
-}
-
-.no-results svg {
-    margin-bottom: 1rem;
-}
-
-.no-results h3 {
-    margin: 0 0 0.5rem 0;
-    color: #6b7280;
-}
-
-.no-results p {
-    margin: 0;
-    font-size: 0.875rem;
-}
-
-/* 消息提示 */
-.message {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    z-index: 9998;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    color: var(--text-secondary);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .lookup-content {
+    .converter-content {
         padding: 1rem;
         padding-bottom: 5rem;
         gap: 1.5rem;
@@ -994,6 +993,10 @@ onMounted(() => {const version = surnameConfig.metadata.version
     }
 
     .detail-content {
+        padding: 1.5rem;
+    }
+
+    .detail-header {
         padding: 1.5rem;
     }
 
@@ -1032,15 +1035,10 @@ onMounted(() => {const version = surnameConfig.metadata.version
     }
 
     .copy-btn-corner-small {
-        width: 20px;
-        height: 20px;
-        top: 6px;
-        right: 6px;
-    }
-
-    .copy-btn-corner-small svg {
-        width: 8px;
-        height: 8px;
+        width: 20px !important;
+        height: 20px !important;
+        top: 6px !important;
+        right: 6px !important;
     }
 }
 </style>
