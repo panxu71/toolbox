@@ -1,25 +1,8 @@
 <template>
     <div class="dynasty-query">
-        <div class="query-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="query-title">历史朝代查询</h2>
-            <div class="query-actions">
-                <button class="action-btn" @click="exportData" title="导出数据">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7,10 12,15 17,10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <PageHeader :title="cardTitle" @back="$emit('back')" />
 
-        <div class="query-content">
+        <div class="dynasty-content">
             <!-- 搜索和筛选区域 - 只在列表页面显示 -->
             <div v-if="!selectedDynasty" class="search-section">
                 <div class="search-container">
@@ -153,20 +136,6 @@
                             <h4>历史概述</h4>
                             <p class="dynasty-description">{{ selectedDynasty.description }}</p>
                         </div>
-
-                        <div class="detail-card" v-if="selectedDynasty.timeline">
-                            <h4>历史脉络</h4>
-                            <div class="timeline-events">
-                                <div v-for="event in selectedDynasty.timeline" :key="event.event" class="timeline-event"
-                                    :class="event.type">
-                                    <div class="event-marker"></div>
-                                    <div class="event-content">
-                                        <h5 class="event-title">{{ event.event }}</h5>
-                                        <p class="event-description">{{ event.description }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- 历代皇帝 -->
@@ -187,25 +156,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(emperor, index) in selectedDynasty.emperors || []" :key="emperor.name"
-                                        :class="{ 'dynasty-separator': (selectedDynasty.name === '十六国' || selectedDynasty.name === '南北朝') && index > 0 && emperor.dynasty !== selectedDynasty.emperors[index - 1].dynasty }">
+                                    <tr v-for="(emperor, index) in selectedDynasty.emperors || []" :key="emperor.name">
                                         <td class="emperor-index">{{ index + 1 }}</td>
                                         <td class="emperor-title-table">{{ emperor.title }}</td>
                                         <td class="emperor-era-table">{{ emperor.eraName || '-' }}</td>
                                         <td class="emperor-name-table">{{ emperor.name }}</td>
                                         <td class="emperor-reign-table">
-                                            <span class="era-prefix">约前</span>
-                                            {{ emperor.reignStart.replace('约前', '') }} - {{
-                                                emperor.reignEnd.replace('约前', '') }}
+                                            {{ emperor.reignStart }} - {{ emperor.reignEnd }}
                                         </td>
                                         <td class="emperor-years-table">{{ typeof emperor.reignYears === 'number' ?
                                             emperor.reignYears + '年' : emperor.reignYears }}</td>
                                         <td class="emperor-birth-death">
                                             <span v-if="emperor.birth === '不详' || emperor.death === '不详'">不详</span>
                                             <span v-else-if="emperor.birth && emperor.death">
-                                                <span class="era-prefix">约前</span>
-                                                {{ emperor.birth.replace('约前', '') }} - {{ emperor.death.replace('约前',
-                                                    '') }}
+                                                {{ emperor.birth }} - {{ emperor.death }}
                                             </span>
                                             <span v-else>-</span>
                                         </td>
@@ -223,42 +187,43 @@
             </div>
         </div>
 
-        <div v-if="message" class="message-toast" :class="messageType">
-            {{ message }}
-        </div>
-
-        <!-- 悬浮回到顶部按钮 -->
-        <button v-if="showBackToTop" class="floating-back-to-top" @click="scrollToTop" title="回到顶部">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m18 15-6-6-6 6" />
-            </svg>
-        </button>
+        <!-- 回到顶部按钮 -->
+        <ScrollToTop container=".dynasty-content" />
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted, nextTick  } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import PageHeader from './common/PageHeader.vue'
+import ScrollToTop from './common/ScrollToTop.vue'
+import cardsConfig from '../config/cards.json'
 
 defineEmits<{
     back: []
 }>()
 
-// 基本状态
+// 根据卡片ID获取标题
+function getCardTitle(cardId: string): string {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === cardId)
+        if (card) {
+            return card.title
+        }
+    }
+    return cardId
+}
+
 // 使用页面标题管理
 usePageTitle('dynasty-query')
+const cardTitle = getCardTitle('dynasty-query')
 
+// 基本状态
 const searchQuery = ref('')
 const activePeriod = ref('all')
 const selectedDynasty = ref<Dynasty | null>(null)
 const lastViewedDynasty = ref<string | null>(null)
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-
-// 回到顶部按钮显示控制
-const showBackToTop = ref(false)
 
 // 时期分类
 const periods = [
@@ -271,7 +236,6 @@ const periods = [
 // 朝代接口定义
 interface Emperor {
     name: string
-    pinyin?: string
     title: string
     reignStart: string
     reignEnd: string
@@ -280,7 +244,7 @@ interface Emperor {
     birth?: string
     death?: string
     age?: number | string
-    description?: string  // 添加描述字段
+    dynasty?: string
 }
 
 interface Dynasty {
@@ -293,21 +257,11 @@ interface Dynasty {
     lastEmperor: string
     period: string
     description: string
-    timeline?: Array<{
-        event: string
-        description: string
-        type: 'start' | 'major' | 'end'
-    }>
     emperors?: Emperor[]
-    emperorsByCountry?: Record<string, Emperor[]>  // 添加按国家分类的皇帝列表
     achievements?: string[]
-    famousEmperors?: Array<{
-        name: string
-        description: string
-    }>
 }
 
-// 朝代数据 - 按正确的时间顺序排列
+// 朝代数据 - 完整版，基于权威资料整理的22个主要朝代
 const dynasties = ref<Dynasty[]>([
     {
         name: '夏朝',
@@ -584,7 +538,7 @@ const dynasties = ref<Dynasty[]>([
         startYear: '220年',
         endYear: '280年',
         duration: 60,
-        capital: '洛阳/成都/建业（今河南洛阳/四川成都/江苏南京）',
+        capital: '洛阳/成都/建业',
         founder: '曹丕/刘备/孙权',
         lastEmperor: '曹奂/刘禅/孙皓',
         period: 'imperial',
@@ -667,150 +621,20 @@ const dynasties = ref<Dynasty[]>([
         startYear: '304年',
         endYear: '439年',
         duration: 135,
-        capital: '多个都城（长安、洛阳、邺城、平城等）',
+        capital: '多个都城',
         founder: '刘渊等',
         lastEmperor: '沮渠牧犍等',
         period: 'imperial',
         description: '西晋末年至北魏统一北方期间，北方地区由各少数民族建立的十六个主要政权的总称，是中国历史上重要的民族大融合时期。\n\n十六国包括：前赵（汉赵）、后赵、前燕、后燕、南燕、北燕、前秦、后秦、西秦、前凉、后凉、南凉、西凉、北凉、夏、成汉。各政权疆域大小不一，存在时间长短不等，相互征伐不断，但促进了民族融合。\n\n这一时期为后来北魏的统一奠定了基础，也为中华民族的形成和发展做出了重要贡献。十六国时期的民族融合，为隋唐时期的繁荣创造了条件。',
-
-        // 按国家分类的皇帝列表
-        emperorsByCountry: {
-            '前赵（汉赵）': [
-                { name: '刘渊', title: '汉光文帝', reignStart: '304年', reignEnd: '310年', reignYears: 6, eraName: '元熙、永凤、河瑞', birth: '251年', death: '310年', age: '59岁' },
-                { name: '刘和', title: '汉废帝', reignStart: '310年', reignEnd: '310年', reignYears: '数月', eraName: '河瑞', birth: '不详', death: '310年', age: '不详' },
-                { name: '刘聪', title: '汉昭武帝', reignStart: '310年', reignEnd: '318年', reignYears: 8, eraName: '光兴、嘉平、建元、麟嘉', birth: '285年', death: '318年', age: '33岁' },
-                { name: '刘粲', title: '汉隐帝', reignStart: '318年', reignEnd: '318年', reignYears: '数月', eraName: '汉昌', birth: '不详', death: '318年', age: '不详' },
-                { name: '刘曜', title: '前赵光初帝', reignStart: '318年', reignEnd: '329年', reignYears: 11, eraName: '光初、建光', birth: '285年', death: '329年', age: '44岁' }
-            ],
-
-            '后赵': [
-                { name: '石勒', title: '后赵武帝', reignStart: '319年', reignEnd: '333年', reignYears: 14, eraName: '太和、建平', birth: '274年', death: '333年', age: '59岁' },
-                { name: '石弘', title: '后赵成帝', reignStart: '333年', reignEnd: '334年', reignYears: 1, eraName: '延熙', birth: '不详', death: '334年', age: '不详' },
-                { name: '石虎', title: '后赵武帝（称帝）', reignStart: '334年', reignEnd: '349年', reignYears: 15, eraName: '建武、太宁', birth: '295年', death: '349年', age: '54岁' },
-                { name: '石世', title: '后赵废帝', reignStart: '349年', reignEnd: '349年', reignYears: '33天', eraName: '太宁', birth: '不详', death: '349年', age: '不详' },
-                { name: '石遵', title: '后赵义阳王', reignStart: '349年', reignEnd: '349年', reignYears: '183天', eraName: '青龙', birth: '不详', death: '349年', age: '不详' },
-                { name: '石鉴', title: '后赵新兴王', reignStart: '349年', reignEnd: '350年', reignYears: 1, eraName: '青龙', birth: '不详', death: '350年', age: '不详' },
-                { name: '石祗', title: '后赵武宁王', reignStart: '350年', reignEnd: '351年', reignYears: 1, eraName: '永宁', birth: '不详', death: '351年', age: '不详' }
-            ],
-
-            '前燕': [
-                { name: '慕容皝', title: '前燕文明帝', reignStart: '337年', reignEnd: '348年', reignYears: 11, eraName: '延兴', birth: '297年', death: '348年', age: '51岁' },
-                { name: '慕容儁', title: '前燕景昭帝', reignStart: '349年', reignEnd: '360年', reignYears: 11, eraName: '元玺', birth: '319年', death: '360年', age: '41岁' },
-                { name: '慕容暐', title: '前燕幽帝', reignStart: '360年', reignEnd: '370年', reignYears: 10, eraName: '建熙', birth: '350年', death: '384年', age: '34岁' }
-            ],
-
-            '后燕': [
-                { name: '慕容垂', title: '后燕成武帝', reignStart: '384年', reignEnd: '396年', reignYears: 12, eraName: '燕元、建兴', birth: '326年', death: '396年', age: '70岁' },
-                { name: '慕容宝', title: '后燕惠愍帝', reignStart: '396年', reignEnd: '398年', reignYears: 2, eraName: '永康', birth: '355年', death: '398年', age: '43岁' },
-                { name: '慕容盛', title: '后燕昭武帝', reignStart: '398年', reignEnd: '401年', reignYears: 3, eraName: '建平', birth: '373年', death: '401年', age: '28岁' },
-                { name: '慕容熙', title: '后燕昭文帝', reignStart: '401年', reignEnd: '407年', reignYears: 6, eraName: '光始', birth: '385年', death: '407年', age: '22岁' }
-            ],
-
-            '西燕': [
-                { name: '慕容泓', title: '西燕威帝', reignStart: '384年2月', reignEnd: '384年8月', reignYears: '6个月', eraName: '燕兴', birth: '约350年', death: '384年8月', age: '约34岁' },
-                { name: '慕容冲', title: '西燕中帝', reignStart: '384年8月', reignEnd: '386年2月', reignYears: '1年6个月', eraName: '更始', birth: '约359年', death: '386年2月', age: '约27岁' },
-                { name: '慕容顗', title: '西燕段随王', reignStart: '386年2月', reignEnd: '386年6月', reignYears: '4个月', eraName: '昌平', birth: '约360年', death: '386年6月', age: '约26岁' },
-                { name: '慕容瑶', title: '西燕乞活王', reignStart: '386年6月', reignEnd: '386年9月', reignYears: '3个月', eraName: '建明', birth: '约355年', death: '386年9月', age: '约31岁' },
-                { name: '慕容忠', title: '西燕平帝', reignStart: '386年9月', reignEnd: '394年9月', reignYears: 8, eraName: '建武', birth: '约356年', death: '394年9月', age: '约38岁' }
-            ],
-
-            '南燕': [
-                { name: '慕容德', title: '南燕献武帝', reignStart: '398年', reignEnd: '405年', reignYears: 7, eraName: '建平' },
-                { name: '慕容超', title: '南燕末主', reignStart: '405年', reignEnd: '410年', reignYears: 5, eraName: '太上' }
-            ],
-
-            '北燕': [
-                { name: '高云', title: '北燕惠懿帝', reignStart: '407年', reignEnd: '409年', reignYears: 2, eraName: '正始' },
-                { name: '冯跋', title: '北燕文成帝', reignStart: '409年', reignEnd: '430年', reignYears: 21, eraName: '太平' },
-                { name: '冯弘', title: '北燕昭成帝', reignStart: '430年', reignEnd: '436年', reignYears: 6, eraName: '太兴' }
-            ],
-
-            '前秦': [
-                { name: '苻健', title: '前秦景明帝', reignStart: '351年', reignEnd: '355年', reignYears: 4, eraName: '皇始' },
-                { name: '苻生', title: '前秦厉王', reignStart: '355年', reignEnd: '357年', reignYears: 2, eraName: '寿光' },
-                { name: '苻坚', title: '前秦宣昭帝', reignStart: '357年', reignEnd: '385年', reignYears: 28, eraName: '永兴、甘露、建元' },
-                { name: '苻丕', title: '前秦哀平帝', reignStart: '385年', reignEnd: '386年', reignYears: 1, eraName: '太安' },
-                { name: '苻登', title: '前秦太宗', reignStart: '386年', reignEnd: '394年', reignYears: 8, eraName: '太初' }
-            ],
-
-            '后秦': [
-                { name: '姚苌', title: '后秦武昭帝', reignStart: '384年', reignEnd: '393年', reignYears: 9, eraName: '白雀、建初' },
-                { name: '姚兴', title: '后秦文桓帝', reignStart: '394年', reignEnd: '416年', reignYears: 22, eraName: '皇初、弘始' },
-                { name: '姚泓', title: '后秦末主', reignStart: '416年', reignEnd: '417年', reignYears: 1, eraName: '永和' }
-            ],
-
-            '西秦': [
-                { name: '乞伏国仁', title: '西秦宣烈王', reignStart: '385年', reignEnd: '388年', reignYears: 3, eraName: '建义' },
-                { name: '乞伏乾归', title: '西秦武元王', reignStart: '388年', reignEnd: '400年', reignYears: 12, eraName: '太初' },
-                { name: '乞伏炽磐', title: '西秦文昭王', reignStart: '412年', reignEnd: '428年', reignYears: 16, eraName: '永康、建弘' },
-                { name: '乞伏暮末', title: '西秦末主', reignStart: '428年', reignEnd: '431年', reignYears: 3, eraName: '永弘' }
-            ],
-
-            '前凉': [
-                { name: '张轨', title: '前凉太祖', reignStart: '314年', reignEnd: '320年', reignYears: 6, eraName: '建兴' },
-                { name: '张寔', title: '前凉明王', reignStart: '320年', reignEnd: '324年', reignYears: 4, eraName: '建兴' },
-                { name: '张茂', title: '前凉成王', reignStart: '324年', reignEnd: '325年', reignYears: 1, eraName: '太元' },
-                { name: '张骏', title: '前凉文王', reignStart: '325年', reignEnd: '346年', reignYears: 21, eraName: '建兴、和平' },
-                { name: '张重华', title: '前凉桓王', reignStart: '346年', reignEnd: '353年', reignYears: 7, eraName: '和平、建兴' },
-                { name: '张祚', title: '前凉威王', reignStart: '353年', reignEnd: '355年', reignYears: 2, eraName: '和平' },
-                { name: '张玄靓', title: '前凉冲王', reignStart: '355年', reignEnd: '363年', reignYears: 8, eraName: '太始' },
-                { name: '张天锡', title: '前凉悼公', reignStart: '363年', reignEnd: '376年', reignYears: 13, eraName: '升平' }
-            ],
-
-            '后凉': [
-                { name: '吕光', title: '后凉懿武帝', reignStart: '386年', reignEnd: '399年', reignYears: 13, eraName: '太安、麟嘉、龙飞' },
-                { name: '吕绍', title: '后凉隐王', reignStart: '399年', reignEnd: '399年', reignYears: '数月', eraName: '咸宁' },
-                { name: '吕纂', title: '后凉灵帝', reignStart: '399年', reignEnd: '401年', reignYears: 2, eraName: '咸宁' },
-                { name: '吕隆', title: '后凉末主', reignStart: '401年', reignEnd: '403年', reignYears: 2, eraName: '神鼎' }
-            ],
-
-            '南凉': [
-                { name: '秃发乌孤', title: '南凉烈祖', reignStart: '397年', reignEnd: '399年', reignYears: 2, eraName: '太初' },
-                { name: '秃发利鹿孤', title: '南凉康王', reignStart: '399年', reignEnd: '402年', reignYears: 3, eraName: '建和' },
-                { name: '秃发傉檀', title: '南凉景王', reignStart: '402年', reignEnd: '414年', reignYears: 12, eraName: '弘昌' }
-            ],
-
-            '西凉': [
-                { name: '李暠', title: '西凉武昭王', reignStart: '400年', reignEnd: '417年', reignYears: 17, eraName: '庚子、建初、嘉兴' },
-                { name: '李歆', title: '西凉后主', reignStart: '417年', reignEnd: '420年', reignYears: 3, eraName: '嘉兴' },
-                { name: '李恂', title: '西凉末主', reignStart: '420年', reignEnd: '421年', reignYears: 1, eraName: '永建' }
-            ],
-
-            '北凉': [
-                { name: '段业', title: '北凉建国公', reignStart: '397年', reignEnd: '401年', reignYears: 4, eraName: '神玺' },
-                { name: '沮渠蒙逊', title: '北凉武宣王', reignStart: '401年', reignEnd: '433年', reignYears: 32, eraName: '永安、玄始、承玄、义和、真兴' },
-                { name: '沮渠牧犍', title: '北凉哀王', reignStart: '433年', reignEnd: '439年', reignYears: 6, eraName: '承和、胜光' }
-            ],
-
-            '夏': [
-                { name: '赫连勃勃', title: '夏武烈帝', reignStart: '407年', reignEnd: '425年', reignYears: 18, eraName: '龙升、凤翔、昌武、真兴' },
-                { name: '赫连昌', title: '夏平帝', reignStart: '425年', reignEnd: '428年', reignYears: 3, eraName: '承光' },
-                { name: '赫连定', title: '夏末主', reignStart: '428年', reignEnd: '431年', reignYears: 3, eraName: '胜光' }
-            ],
-
-            '成汉': [
-                { name: '李特', title: '成汉景帝', reignStart: '304年', reignEnd: '304年', reignYears: 1, eraName: '建初' },
-                { name: '李流', title: '成汉始祖', reignStart: '304年', reignEnd: '304年', reignYears: 1, eraName: '建兴' },
-                { name: '李雄', title: '成汉武帝', reignStart: '304年', reignEnd: '334年', reignYears: 30, eraName: '建兴、晏平、玉衡、玉恒、建元' },
-                { name: '李班', title: '成汉戾太子', reignStart: '334年', reignEnd: '334年', reignYears: '数月', eraName: '玉恒' },
-                { name: '李期', title: '成汉幽公', reignStart: '334年', reignEnd: '338年', reignYears: 4, eraName: '玉恒、建兴' },
-                { name: '李寿', title: '成汉昭文帝', reignStart: '338年', reignEnd: '343年', reignYears: 5, eraName: '汉兴' },
-                { name: '李势', title: '成汉归义侯', reignStart: '343年', reignEnd: '347年', reignYears: 4, eraName: '太和' }
-            ],
-
-            '冉魏': [
-                { name: '冉闵', title: '冉魏武悼帝', reignStart: '350年', reignEnd: '352年', reignYears: 2, eraName: '永兴' }
-            ]
-        },
         emperors: [
-            // 一、前赵（汉赵）304年－329年
+            // 前赵（汉赵）304年－329年
             { name: '刘渊', title: '汉光文帝', reignStart: '304年', reignEnd: '310年', reignYears: 6, eraName: '元熙、永凤、河瑞', birth: '251年', death: '310年', age: '59岁', dynasty: '前赵（汉赵）' },
             { name: '刘和', title: '汉废帝', reignStart: '310年', reignEnd: '310年', reignYears: '数月', eraName: '河瑞', birth: '不详', death: '310年', age: '不详', dynasty: '前赵（汉赵）' },
             { name: '刘聪', title: '汉昭武帝', reignStart: '310年', reignEnd: '318年', reignYears: 8, eraName: '光兴、嘉平、建元、麟嘉', birth: '285年', death: '318年', age: '33岁', dynasty: '前赵（汉赵）' },
             { name: '刘粲', title: '汉隐帝', reignStart: '318年', reignEnd: '318年', reignYears: '数月', eraName: '汉昌', birth: '不详', death: '318年', age: '不详', dynasty: '前赵（汉赵）' },
             { name: '刘曜', title: '前赵光初帝', reignStart: '318年', reignEnd: '329年', reignYears: 11, eraName: '光初、建光', birth: '285年', death: '329年', age: '44岁', dynasty: '前赵（汉赵）' },
 
-            // 二、后赵 319年－351年
+            // 后赵 319年－351年
             { name: '石勒', title: '后赵武帝', reignStart: '319年', reignEnd: '333年', reignYears: 14, eraName: '太和、建平', birth: '274年', death: '333年', age: '59岁', dynasty: '后赵' },
             { name: '石弘', title: '后赵成帝', reignStart: '333年', reignEnd: '334年', reignYears: 1, eraName: '延熙', birth: '不详', death: '334年', age: '不详', dynasty: '后赵' },
             { name: '石虎', title: '后赵武帝（称帝）', reignStart: '334年', reignEnd: '349年', reignYears: 15, eraName: '建武、太宁', birth: '295年', death: '349年', age: '54岁', dynasty: '后赵' },
@@ -819,60 +643,30 @@ const dynasties = ref<Dynasty[]>([
             { name: '石鉴', title: '后赵新兴王', reignStart: '349年', reignEnd: '350年', reignYears: 1, eraName: '青龙', birth: '不详', death: '350年', age: '不详', dynasty: '后赵' },
             { name: '石祗', title: '后赵武宁王', reignStart: '350年', reignEnd: '351年', reignYears: 1, eraName: '永宁', birth: '不详', death: '351年', age: '不详', dynasty: '后赵' },
 
-            // 三、前燕 337年－370年
+            // 前燕 337年－370年
             { name: '慕容皝', title: '前燕文明帝', reignStart: '337年', reignEnd: '348年', reignYears: 11, eraName: '延兴', birth: '297年', death: '348年', age: '51岁', dynasty: '前燕' },
             { name: '慕容儁', title: '前燕景昭帝', reignStart: '349年', reignEnd: '360年', reignYears: 11, eraName: '元玺', birth: '319年', death: '360年', age: '41岁', dynasty: '前燕' },
             { name: '慕容暐', title: '前燕幽帝', reignStart: '360年', reignEnd: '370年', reignYears: 10, eraName: '建熙', birth: '350年', death: '384年', age: '34岁', dynasty: '前燕' },
 
-            // 四、后燕 384年－407年
+            // 后燕 384年－407年
             { name: '慕容垂', title: '后燕成武帝', reignStart: '384年', reignEnd: '396年', reignYears: 12, eraName: '燕元、建兴', birth: '326年', death: '396年', age: '70岁', dynasty: '后燕' },
             { name: '慕容宝', title: '后燕惠愍帝', reignStart: '396年', reignEnd: '398年', reignYears: 2, eraName: '永康', birth: '355年', death: '398年', age: '43岁', dynasty: '后燕' },
             { name: '慕容盛', title: '后燕昭武帝', reignStart: '398年', reignEnd: '401年', reignYears: 3, eraName: '建平', birth: '373年', death: '401年', age: '28岁', dynasty: '后燕' },
             { name: '慕容熙', title: '后燕昭文帝', reignStart: '401年', reignEnd: '407年', reignYears: 6, eraName: '光始', birth: '385年', death: '407年', age: '22岁', dynasty: '后燕' },
 
-            // 五、西燕 384年－394年（多维拆分）
-            // 第一阶段：起义建国期（384年）
-            {
-                name: '慕容泓', title: '西燕威帝', reignStart: '384年2月', reignEnd: '384年8月', reignYears: '6个月', eraName: '燕兴', birth: '约350年', death: '384年8月', age: '约34岁', dynasty: '西燕',
-                description: '前燕皇族，苻坚败后起兵关中，建立西燕政权，为西燕开国君主，后被部将杀害'
-            },
-
-            // 第二阶段：政权巩固期（384年－386年）
-            {
-                name: '慕容冲', title: '西燕中帝（皇帝）', reignStart: '384年8月', reignEnd: '386年2月', reignYears: '1年6个月', eraName: '更始', birth: '约359年', death: '386年2月', age: '约27岁', dynasty: '西燕',
-                description: '慕容泓之弟，美貌著称，曾为苻坚男宠，后起兵复仇，攻入长安，建立西燕最强盛时期，最终被部将杀害'
-            },
-
-            // 第三阶段：政权动荡期（386年）
-            {
-                name: '慕容顗', title: '西燕段随王', reignStart: '386年2月', reignEnd: '386年6月', reignYears: '4个月', eraName: '昌平', birth: '约360年', death: '386年6月', age: '约26岁', dynasty: '西燕',
-                description: '慕容冲族弟，在政变中短暂掌权，试图稳定政局但未成功，被慕容瑶所杀'
-            },
-
-            {
-                name: '慕容瑶', title: '西燕乞活王', reignStart: '386年6月', reignEnd: '386年9月', reignYears: '3个月', eraName: '建明', birth: '约355年', death: '386年9月', age: '约31岁', dynasty: '西燕',
-                description: '慕容冲族人，杀慕容顗自立，统治期间政局混乱，最终被慕容忠击败处死'
-            },
-
-            // 第四阶段：政权稳定期（386年－394年）
-            {
-                name: '慕容忠', title: '西燕平帝（昭文帝）', reignStart: '386年9月', reignEnd: '394年9月', reignYears: 8, eraName: '建武', birth: '约356年', death: '394年9月', age: '约38岁', dynasty: '西燕',
-                description: '慕容垂之子，西燕最后一位皇帝，统治相对稳定，致力于恢复前燕旧制，最终被后燕所灭'
-            },
-
-            // 六、前秦 351年－394年
+            // 前秦 351年－394年
             { name: '苻健', title: '前秦景明帝', reignStart: '351年', reignEnd: '355年', reignYears: 4, eraName: '皇始', birth: '317年', death: '355年', age: '38岁', dynasty: '前秦' },
             { name: '苻生', title: '前秦厉王', reignStart: '355年', reignEnd: '357年', reignYears: 2, eraName: '寿光', birth: '335年', death: '357年', age: '22岁', dynasty: '前秦' },
             { name: '苻坚', title: '前秦宣昭帝', reignStart: '357年', reignEnd: '385年', reignYears: 28, eraName: '永兴、甘露、建元', birth: '338年', death: '385年', age: '47岁', dynasty: '前秦' },
             { name: '苻丕', title: '前秦哀平帝', reignStart: '385年', reignEnd: '386年', reignYears: 1, eraName: '太安', birth: '不详', death: '386年', age: '不详', dynasty: '前秦' },
             { name: '苻登', title: '前秦太宗', reignStart: '386年', reignEnd: '394年', reignYears: 8, eraName: '太初', birth: '不详', death: '394年', age: '不详', dynasty: '前秦' },
 
-            // 七、后秦 384年－417年
+            // 后秦 384年－417年
             { name: '姚苌', title: '后秦武昭帝', reignStart: '384年', reignEnd: '393年', reignYears: 9, eraName: '白雀、建初', birth: '331年', death: '393年', age: '62岁', dynasty: '后秦' },
             { name: '姚兴', title: '后秦文桓帝', reignStart: '394年', reignEnd: '416年', reignYears: 22, eraName: '皇初、弘始', birth: '366年', death: '416年', age: '50岁', dynasty: '后秦' },
             { name: '姚泓', title: '后秦末主', reignStart: '416年', reignEnd: '417年', reignYears: 1, eraName: '永和', birth: '不详', death: '417年', age: '不详', dynasty: '后秦' },
 
-            // 八、成汉 304年－347年
+            // 成汉 304年－347年
             { name: '李特', title: '成汉景帝', reignStart: '304年', reignEnd: '304年', reignYears: 1, eraName: '建初', birth: '不详', death: '304年', age: '不详', dynasty: '成汉' },
             { name: '李流', title: '成汉始祖', reignStart: '304年', reignEnd: '304年', reignYears: 1, eraName: '建兴', birth: '不详', death: '304年', age: '不详', dynasty: '成汉' },
             { name: '李雄', title: '成汉武帝', reignStart: '304年', reignEnd: '334年', reignYears: 30, eraName: '建兴、晏平、玉衡、玉恒、建元', birth: '274年', death: '334年', age: '60岁', dynasty: '成汉' },
@@ -881,54 +675,15 @@ const dynasties = ref<Dynasty[]>([
             { name: '李寿', title: '成汉昭文帝', reignStart: '338年', reignEnd: '343年', reignYears: 5, eraName: '汉兴', birth: '不详', death: '343年', age: '不详', dynasty: '成汉' },
             { name: '李势', title: '成汉归义侯', reignStart: '343年', reignEnd: '347年', reignYears: 4, eraName: '太和', birth: '不详', death: '361年', age: '不详', dynasty: '成汉' },
 
-            // 九、南凉 397年－414年
-            { name: '秃发乌孤', title: '南凉烈祖', reignStart: '397年', reignEnd: '399年', reignYears: 2, eraName: '太初', birth: '不详', death: '399年', age: '不详', dynasty: '南凉' },
-            { name: '秃发利鹿孤', title: '南凉康王', reignStart: '399年', reignEnd: '402年', reignYears: 3, eraName: '建和', birth: '不详', death: '402年', age: '不详', dynasty: '南凉' },
-            { name: '秃发傉檀', title: '南凉景王', reignStart: '402年', reignEnd: '414年', reignYears: 12, eraName: '弘昌', birth: '不详', death: '415年', age: '不详', dynasty: '南凉' },
-
-            // 十、北凉 397年－439年
+            // 北凉 397年－439年
             { name: '段业', title: '北凉建国公', reignStart: '397年', reignEnd: '401年', reignYears: 4, eraName: '神玺', birth: '不详', death: '401年', age: '不详', dynasty: '北凉' },
             { name: '沮渠蒙逊', title: '北凉武宣王', reignStart: '401年', reignEnd: '433年', reignYears: 32, eraName: '永安、玄始、承玄、义和、真兴', birth: '368年', death: '433年', age: '65岁', dynasty: '北凉' },
-            { name: '沮渠牧犍', title: '北凉哀王', reignStart: '433年', reignEnd: '439年', reignYears: 6, eraName: '承和、胜光', birth: '不详', death: '447年', age: '不详', dynasty: '北凉' },
-
-            // 十一、西凉 400年－421年
-            { name: '李暠', title: '西凉武昭王', reignStart: '400年', reignEnd: '417年', reignYears: 17, eraName: '庚子、建初、嘉兴', birth: '351年', death: '417年', age: '66岁', dynasty: '西凉' },
-            { name: '李歆', title: '西凉后主', reignStart: '417年', reignEnd: '420年', reignYears: 3, eraName: '嘉兴', birth: '不详', death: '420年', age: '不详', dynasty: '西凉' },
-            { name: '李恂', title: '西凉末主', reignStart: '420年', reignEnd: '421年', reignYears: 1, eraName: '永建', birth: '不详', death: '421年', age: '不详', dynasty: '西凉' },
-
-            // 十二、冉魏 350年－352年
-            { name: '冉闵', title: '冉魏武悼帝', reignStart: '350年', reignEnd: '352年', reignYears: 2, eraName: '永兴', birth: '不详', death: '352年', age: '不详', dynasty: '冉魏' },
-
-            // 十三、前凉 314年－376年
-            { name: '张轨', title: '前凉太祖', reignStart: '314年', reignEnd: '320年', reignYears: 6, eraName: '建兴', birth: '255年', death: '314年', age: '59岁', dynasty: '前凉' },
-            { name: '张寔', title: '前凉明王', reignStart: '320年', reignEnd: '324年', reignYears: 4, eraName: '建兴', birth: '不详', death: '324年', age: '不详', dynasty: '前凉' },
-            { name: '张茂', title: '前凉成王', reignStart: '324年', reignEnd: '325年', reignYears: 1, eraName: '太元', birth: '不详', death: '325年', age: '不详', dynasty: '前凉' },
-            { name: '张骏', title: '前凉文王', reignStart: '325年', reignEnd: '346年', reignYears: 21, eraName: '建兴、和平', birth: '不详', death: '346年', age: '不详', dynasty: '前凉' },
-            { name: '张重华', title: '前凉桓王', reignStart: '346年', reignEnd: '353年', reignYears: 7, eraName: '和平、建兴', birth: '不详', death: '353年', age: '不详', dynasty: '前凉' },
-            { name: '张祚', title: '前凉威王', reignStart: '353年', reignEnd: '355年', reignYears: 2, eraName: '和平', birth: '不详', death: '355年', age: '不详', dynasty: '前凉' },
-            { name: '张玄靓', title: '前凉冲王', reignStart: '355年', reignEnd: '363年', reignYears: 8, eraName: '太始', birth: '不详', death: '363年', age: '不详', dynasty: '前凉' },
-            { name: '张天锡', title: '前凉悼公', reignStart: '363年', reignEnd: '376年', reignYears: 13, eraName: '升平', birth: '不详', death: '385年', age: '不详', dynasty: '前凉' },
-
-            // 十四、后凉 386年－403年
-            { name: '吕光', title: '后凉懿武帝', reignStart: '386年', reignEnd: '399年', reignYears: 13, eraName: '太安、麟嘉、龙飞', birth: '338年', death: '399年', age: '61岁', dynasty: '后凉' },
-            { name: '吕绍', title: '后凉隐王', reignStart: '399年', reignEnd: '399年', reignYears: '数月', eraName: '咸宁', birth: '不详', death: '399年', age: '不详', dynasty: '后凉' },
-            { name: '吕纂', title: '后凉灵帝', reignStart: '399年', reignEnd: '401年', reignYears: 2, eraName: '咸宁', birth: '不详', death: '401年', age: '不详', dynasty: '后凉' },
-            { name: '吕隆', title: '后凉末主', reignStart: '401年', reignEnd: '403年', reignYears: 2, eraName: '神鼎', birth: '不详', death: '416年', age: '不详', dynasty: '后凉' },
-
-            // 十五、夏 407年－431年
-            { name: '赫连勃勃', title: '夏武烈帝', reignStart: '407年', reignEnd: '425年', reignYears: 18, eraName: '龙升、凤翔、昌武、真兴', birth: '381年', death: '425年', age: '44岁', dynasty: '夏' },
-            { name: '赫连昌', title: '夏平帝', reignStart: '425年', reignEnd: '428年', reignYears: 3, eraName: '承光', birth: '不详', death: '434年', age: '不详', dynasty: '夏' },
-            { name: '赫连定', title: '夏末主', reignStart: '428年', reignEnd: '431年', reignYears: 3, eraName: '胜光', birth: '不详', death: '432年', age: '不详', dynasty: '夏' },
-
-            // 十六、北燕 407年－436年
-            { name: '高云', title: '北燕惠懿帝', reignStart: '407年', reignEnd: '409年', reignYears: 2, eraName: '正始', birth: '不详', death: '409年', age: '不详', dynasty: '北燕' },
-            { name: '冯跋', title: '北燕文成帝', reignStart: '409年', reignEnd: '430年', reignYears: 21, eraName: '太平', birth: '不详', death: '430年', age: '不详', dynasty: '北燕' },
-            { name: '冯弘', title: '北燕昭成帝', reignStart: '430年', reignEnd: '436年', reignYears: 6, eraName: '太兴', birth: '不详', death: '438年', age: '不详', dynasty: '北燕' }
+            { name: '沮渠牧犍', title: '北凉哀王', reignStart: '433年', reignEnd: '439年', reignYears: 6, eraName: '承和、胜光', birth: '不详', death: '447年', age: '不详', dynasty: '北凉' }
         ],
         achievements: [
-            '促进民族大融合',
-            '文化交流与传播',
-            '政治制度创新',
+            '促进民族融合',
+            '文化交流发展',
+            '军事技术进步',
             '为北魏统一奠基'
         ]
     },
@@ -937,13 +692,13 @@ const dynasties = ref<Dynasty[]>([
         startYear: '420年',
         endYear: '589年',
         duration: 169,
-        capital: '建康/平城/洛阳（今江苏南京/山西大同/河南洛阳）',
+        capital: '建康/平城/洛阳',
         founder: '刘裕等',
-        lastEmperor: '陈叔宝等',
+        lastEmperor: '陈叔宝/杨坚',
         period: 'imperial',
-        description: '中国历史上南朝宋齐梁陈与北朝北魏东魏西魏北齐北周对峙的分裂时期，是中国历史上民族大融合的重要阶段。\n\n五胡十六国演变为南北朝的过程：西晋时期五胡开始南迁，316年灭掉西晋，晋皇室南迁建立东晋，北方五胡陆续建立十六国，形成十六国与东晋并立局面。420年东晋重臣刘裕建立宋，南朝开始；439年原十六国中的代国（北魏）统一北方，结束十六国，北朝开始，至此南北朝并立。东晋是西晋灭亡后，由晋皇室南迁建立的政权，与北方十六国并立。\n\n南朝的形成：东晋灭亡后，刘裕建立宋朝（420年），开启了南朝时代。之后萧道成建立齐朝（479年），萧衍建立梁朝（502年），陈霸先建立陈朝（557年）。南朝四朝（宋齐梁陈）都建都建康（今南京），政治上门阀政治衰落，皇权加强；经济上江南得到进一步开发，农业、手工业和商业都有发展；文化上佛教兴盛，文学艺术繁荣，出现了《文心雕龙》等重要著作。\n\n北朝的形成：北方由鲜卑族等少数民族建立的政权统治。北朝政权中，北魏最为重要，孝文帝改革推行汉化政策，迁都洛阳，促进了民族融合。北朝时期佛教石窟艺术达到高峰，云冈石窟、龙门石窟等都是这一时期的杰作。北朝的均田制为后来隋唐的土地制度奠定了基础。\n\n南北朝的灭亡：589年，隋文帝杨坚灭陈朝，统一了南北方，结束了南北朝的分裂局面。南北朝时期虽然政治分裂，但文化交流频繁，科技发展迅速，出现了《齐民要术》等农学著作。这一时期的民族融合为隋朝的统一奠定了基础。南北朝历时169年，南朝共有25位皇帝，北朝主要政权共有约30位皇帝。',
+        description: '中国历史上的分裂时期，南朝包括宋、齐、梁、陈四个朝代，北朝包括北魏、东魏、西魏、北齐、北周五个朝代。这一时期民族融合加速，文化艺术繁荣。\n\n南朝政权都建都建康（今南京），主要由汉族士族建立和统治，保持了汉族的传统文化；北朝政权主要由鲜卑族等少数民族建立，但逐渐汉化，促进了民族融合。\n\n这一时期佛教得到很大发展，出现了许多著名的佛教石窟和寺院；文学艺术也很繁荣，出现了《文心雕龙》、《诗品》等重要著作。科技方面，祖冲之计算出圆周率，贾思勰著《齐民要术》。\n\n南北朝的分裂局面最终被隋朝统一，结束了长达169年的分裂状态。',
         emperors: [
-            // 南朝宋
+            // 南朝宋 420年－479年
             { name: '刘裕', title: '宋武帝', reignStart: '420年', reignEnd: '422年', reignYears: 2, eraName: '永初', birth: '363年', death: '422年', age: '59岁', dynasty: '南朝宋' },
             { name: '刘义符', title: '宋少帝', reignStart: '422年', reignEnd: '424年', reignYears: 2, eraName: '景平', birth: '406年', death: '424年', age: '18岁', dynasty: '南朝宋' },
             { name: '刘义隆', title: '宋文帝', reignStart: '424年', reignEnd: '453年', reignYears: 29, eraName: '元嘉', birth: '407年', death: '453年', age: '46岁', dynasty: '南朝宋' },
@@ -952,34 +707,48 @@ const dynasties = ref<Dynasty[]>([
             { name: '刘彧', title: '宋明帝', reignStart: '465年', reignEnd: '472年', reignYears: 7, eraName: '泰始', birth: '439年', death: '472年', age: '33岁', dynasty: '南朝宋' },
             { name: '刘昱', title: '宋后废帝', reignStart: '472年', reignEnd: '477年', reignYears: 5, eraName: '元徽', birth: '463年', death: '477年', age: '14岁', dynasty: '南朝宋' },
             { name: '刘准', title: '宋顺帝', reignStart: '477年', reignEnd: '479年', reignYears: 2, eraName: '升明', birth: '467年', death: '479年', age: '12岁', dynasty: '南朝宋' },
-            // 南朝齐
+
+            // 南朝齐 479年－502年
             { name: '萧道成', title: '齐高帝', reignStart: '479年', reignEnd: '482年', reignYears: 3, eraName: '建元', birth: '427年', death: '482年', age: '55岁', dynasty: '南朝齐' },
-            { name: '萧赜(Zé)', title: '齐武帝', reignStart: '482年', reignEnd: '493年', reignYears: 11, eraName: '永明', birth: '440年', death: '493年', age: '53岁', dynasty: '南朝齐' },
-            { name: '萧昭业', title: '齐郁林王', reignStart: '493年', reignEnd: '494年', reignYears: 1, eraName: '隆昌', birth: '475年', death: '494年', age: '19岁', dynasty: '南朝齐' },
-            { name: '萧昭文', title: '齐海陵王', reignStart: '494年', reignEnd: '494年', reignYears: 1, eraName: '延兴', birth: '483年', death: '494年', age: '11岁', dynasty: '南朝齐' },
-            { name: '萧鸾', title: '齐明帝', reignStart: '494年', reignEnd: '498年', reignYears: 4, eraName: '建武、永泰', birth: '452年', death: '498年', age: '46岁', dynasty: '南朝齐' },
+            { name: '萧赜', title: '齐武帝', reignStart: '482年', reignEnd: '493年', reignYears: 11, eraName: '永明', birth: '440年', death: '493年', age: '53岁', dynasty: '南朝齐' },
+            { name: '萧昭业', title: '齐郁林王', reignStart: '493年', reignEnd: '494年', reignYears: 1, eraName: '隆昌', birth: '473年', death: '494年', age: '21岁', dynasty: '南朝齐' },
+            { name: '萧昭文', title: '齐海陵王', reignStart: '494年', reignEnd: '494年', reignYears: '4个月', eraName: '延兴', birth: '480年', death: '494年', age: '14岁', dynasty: '南朝齐' },
+            { name: '萧鸾', title: '齐明帝', reignStart: '494年', reignEnd: '498年', reignYears: 4, eraName: '建武', birth: '452年', death: '498年', age: '46岁', dynasty: '南朝齐' },
             { name: '萧宝卷', title: '齐东昏侯', reignStart: '498年', reignEnd: '501年', reignYears: 3, eraName: '永元', birth: '483年', death: '501年', age: '18岁', dynasty: '南朝齐' },
-            { name: '萧宝融', title: '齐和帝', reignStart: '501年', reignEnd: '502年', reignYears: 1, eraName: '中兴', birth: '492年', death: '502年', age: '10岁', dynasty: '南朝齐' },
-            // 南朝梁
+            { name: '萧宝融', title: '齐和帝', reignStart: '501年', reignEnd: '502年', reignYears: 1, eraName: '中兴', birth: '488年', death: '502年', age: '14岁', dynasty: '南朝齐' },
+
+            // 南朝梁 502年－557年
             { name: '萧衍', title: '梁武帝', reignStart: '502年', reignEnd: '549年', reignYears: 47, eraName: '天监、普通、大通、中大通、大同、中大同、太清', birth: '464年', death: '549年', age: '85岁', dynasty: '南朝梁' },
             { name: '萧纲', title: '梁简文帝', reignStart: '549年', reignEnd: '551年', reignYears: 2, eraName: '大宝', birth: '503年', death: '551年', age: '48岁', dynasty: '南朝梁' },
-            { name: '萧栋', title: '梁豫章王', reignStart: '551年', reignEnd: '551年', reignYears: 1, eraName: '天正', birth: '535年', death: '551年', age: '16岁', dynasty: '南朝梁' },
+            { name: '萧栋', title: '梁豫章王', reignStart: '551年', reignEnd: '551年', reignYears: '3个月', eraName: '天正', birth: '536年', death: '551年', age: '15岁', dynasty: '南朝梁' },
             { name: '萧绎', title: '梁元帝', reignStart: '552年', reignEnd: '554年', reignYears: 2, eraName: '承圣', birth: '508年', death: '554年', age: '46岁', dynasty: '南朝梁' },
-            { name: '萧方智', title: '梁敬帝', reignStart: '555年', reignEnd: '557年', reignYears: 2, eraName: '绍泰、太平', birth: '543年', death: '557年', age: '14岁', dynasty: '南朝梁' },
-            // 南朝陈
+            { name: '萧方智', title: '梁敬帝', reignStart: '555年', reignEnd: '557年', reignYears: 2, eraName: '绍泰、太平', birth: '544年', death: '558年', age: '14岁', dynasty: '南朝梁' },
+
+            // 南朝陈 557年－589年
             { name: '陈霸先', title: '陈武帝', reignStart: '557年', reignEnd: '559年', reignYears: 2, eraName: '永定', birth: '503年', death: '559年', age: '56岁', dynasty: '南朝陈' },
-            { name: '陈蒨(Qiàn)', title: '陈文帝', reignStart: '559年', reignEnd: '566年', reignYears: 7, eraName: '天嘉、天康', birth: '522年', death: '566年', age: '44岁', dynasty: '南朝陈' },
-            { name: '陈伯宗', title: '陈废帝', reignStart: '566年', reignEnd: '568年', reignYears: 2, eraName: '光大', birth: '553年', death: '568年', age: '15岁', dynasty: '南朝陈' },
-            { name: '陈顼(Xū)', title: '陈宣帝', reignStart: '568年', reignEnd: '582年', reignYears: 14, eraName: '太建', birth: '530年', death: '582年', age: '52岁', dynasty: '南朝陈' },
+            { name: '陈蒨', title: '陈文帝', reignStart: '559年', reignEnd: '566年', reignYears: 7, eraName: '天嘉、天康', birth: '522年', death: '566年', age: '44岁', dynasty: '南朝陈' },
+            { name: '陈伯宗', title: '陈废帝', reignStart: '566年', reignEnd: '568年', reignYears: 2, eraName: '光大', birth: '554年', death: '570年', age: '16岁', dynasty: '南朝陈' },
+            { name: '陈顼', title: '陈宣帝', reignStart: '568年', reignEnd: '582年', reignYears: 14, eraName: '太建', birth: '530年', death: '582年', age: '52岁', dynasty: '南朝陈' },
             { name: '陈叔宝', title: '陈后主', reignStart: '582年', reignEnd: '589年', reignYears: 7, eraName: '至德、祯明', birth: '553年', death: '604年', age: '51岁', dynasty: '南朝陈' },
-            // 北朝北魏（部分代表）
-            { name: '拓跋珪(Guī)', title: '魏道武帝', reignStart: '386年', reignEnd: '409年', reignYears: 23, eraName: '登国、皇始、天兴、天赐', birth: '371年', death: '409年', age: '38岁', dynasty: '北朝北魏' },
-            { name: '拓跋嗣(Sì)', title: '魏明元帝', reignStart: '409年', reignEnd: '423年', reignYears: 14, eraName: '永兴、神瑞、泰常', birth: '392年', death: '423年', age: '31岁', dynasty: '北朝北魏' },
-            { name: '拓跋焘(Tāo)', title: '魏太武帝', reignStart: '423年', reignEnd: '452年', reignYears: 29, eraName: '始光、神麚、延和、太延、太平真君、正平', birth: '408年', death: '452年', age: '44岁', dynasty: '北朝北魏' },
-            { name: '元宏', title: '魏孝文帝', reignStart: '471年', reignEnd: '499年', reignYears: 28, eraName: '延兴、承明、太和', birth: '467年', death: '499年', age: '32岁', dynasty: '北朝北魏' }
+
+            // 北朝北魏 386年－534年
+            { name: '拓跋珪', title: '北魏道武帝', reignStart: '386年', reignEnd: '409年', reignYears: 23, eraName: '登国、皇始、天兴、天赐', birth: '371年', death: '409年', age: '38岁', dynasty: '北朝北魏' },
+            { name: '拓跋嗣', title: '北魏明元帝', reignStart: '409年', reignEnd: '423年', reignYears: 14, eraName: '永兴、神瑞、泰常', birth: '392年', death: '423年', age: '31岁', dynasty: '北朝北魏' },
+            { name: '拓跋焘', title: '北魏太武帝', reignStart: '423年', reignEnd: '452年', reignYears: 29, eraName: '始光、神䴥、延和、太延、太平真君、正平', birth: '408年', death: '452年', age: '44岁', dynasty: '北朝北魏' },
+            { name: '拓跋余', title: '北魏南安王', reignStart: '452年', reignEnd: '452年', reignYears: '8个月', eraName: '永平', birth: '不详', death: '452年', age: '不详', dynasty: '北朝北魏' },
+            { name: '拓跋濬', title: '北魏文成帝', reignStart: '452年', reignEnd: '465年', reignYears: 13, eraName: '兴安、兴光、太安、和平', birth: '440年', death: '465年', age: '25岁', dynasty: '北朝北魏' },
+            { name: '拓跋弘', title: '北魏献文帝', reignStart: '465年', reignEnd: '471年', reignYears: 6, eraName: '天安、皇兴', birth: '454年', death: '476年', age: '22岁', dynasty: '北朝北魏' },
+            { name: '元宏', title: '北魏孝文帝', reignStart: '471年', reignEnd: '499年', reignYears: 28, eraName: '延兴、承明、太和', birth: '467年', death: '499年', age: '32岁', dynasty: '北朝北魏' },
+            { name: '元恪', title: '北魏宣武帝', reignStart: '499年', reignEnd: '515年', reignYears: 16, eraName: '景明、正始、永平、延昌', birth: '483年', death: '515年', age: '32岁', dynasty: '北朝北魏' },
+            { name: '元诩', title: '北魏孝明帝', reignStart: '515年', reignEnd: '528年', reignYears: 13, eraName: '熙平、神龟、正光、孝昌、武泰', birth: '510年', death: '528年', age: '18岁', dynasty: '北朝北魏' },
+            { name: '元钊', title: '北魏幼主', reignStart: '528年', reignEnd: '528年', reignYears: '数月', eraName: '武泰', birth: '526年', death: '528年', age: '2岁', dynasty: '北朝北魏' },
+            { name: '元子攸', title: '北魏孝庄帝', reignStart: '528年', reignEnd: '530年', reignYears: 2, eraName: '建义、永安', birth: '507年', death: '530年', age: '23岁', dynasty: '北朝北魏' },
+            { name: '元晔', title: '北魏节闵帝', reignStart: '531年', reignEnd: '531年', reignYears: '5个月', eraName: '建明', birth: '不详', death: '532年', age: '不详', dynasty: '北朝北魏' },
+            { name: '元恭', title: '北魏安定王', reignStart: '531年', reignEnd: '532年', reignYears: 1, eraName: '中兴', birth: '498年', death: '532年', age: '34岁', dynasty: '北朝北魏' },
+            { name: '元修', title: '北魏孝武帝', reignStart: '532年', reignEnd: '534年', reignYears: 2, eraName: '太昌、永兴、永熙', birth: '510年', death: '535年', age: '25岁', dynasty: '北朝北魏' }
         ],
         achievements: [
-            '民族大融合',
+            '民族融合加速',
             '佛教文化繁荣',
             '科技文化发展',
             '农业技术进步'
@@ -992,12 +761,13 @@ const dynasties = ref<Dynasty[]>([
         duration: 37,
         capital: '大兴城（今陕西西安）',
         founder: '隋文帝杨坚',
-        lastEmperor: '隋炀帝',
+        lastEmperor: '隋恭帝',
         period: 'imperial',
-        description: '中国历史上承南北朝、启唐朝的重要朝代，由隋文帝杨坚建立。隋朝结束了自西晋末年以来长达近300年的分裂局面，重新统一了中国。\n\n隋朝的建立：北周末年，杨坚作为北周皇帝的外戚，逐步掌握权力。581年，杨坚废黜北周皇帝，建立隋朝，定都大兴城（今西安）。随后，隋文帝通过军事征服，先后灭掉了南方的陈朝（589年）和其他割据势力，实现了全国统一。\n\n隋朝的发展：隋文帝在政治上确立了三省六部制，完善了科举制度；在经济上轻徭薄赋，发展农业生产；在军事上统一了南北，结束了分裂局面。隋朝还修建了举世闻名的大运河，沟通了南北交通，促进了经济文化交流。隋朝前期出现了"开皇之治"的盛世局面。\n\n隋朝的衰落：隋炀帝杨广继位后，虽然在文化建设上有所贡献，但好大喜功，频繁发动战争，大兴土木，加重了人民负担。特别是三征高句丽的失败，激起了全国性的农民起义。李渊等地方势力趁机起兵，最终朱温建立后梁，隋朝灭亡。\n\n隋朝虽然只存在了37年，但其政治制度和文化成就为唐朝的繁荣奠定了重要基础，共有2位皇帝。',
+        description: '结束了长期分裂局面，重新统一中国的朝代。隋朝建立了三省六部制，开凿了大运河，创立了科举制度，为唐朝的繁荣奠定了基础。\n\n隋朝由杨坚建立，他是北周的外戚，通过政治手段夺取了政权。隋文帝杨坚统一南北后，进行了一系列改革：政治上建立三省六部制，加强中央集权；经济上统一货币，兴修水利；文化上创立科举制度，打破门第限制。\n\n隋炀帝杨广继位后，开凿了贯通南北的大运河，这是中国古代最伟大的工程之一，对后世经济文化交流产生了深远影响。但杨广好大喜功，频繁征战，加重了人民负担，最终导致农民起义，隋朝灭亡。\n\n隋朝虽然只存在了37年，但其建立的政治制度和文化成就为唐朝的繁荣奠定了坚实基础。',
         emperors: [
             { name: '杨坚', title: '隋文帝', reignStart: '581年', reignEnd: '604年', reignYears: 23, eraName: '开皇、仁寿', birth: '541年', death: '604年', age: '63岁' },
-            { name: '杨广', title: '隋炀帝', reignStart: '604年', reignEnd: '618年', reignYears: 14, eraName: '大业', birth: '569年', death: '618年', age: '49岁' }
+            { name: '杨广', title: '隋炀帝', reignStart: '604年', reignEnd: '618年', reignYears: 14, eraName: '大业', birth: '569年', death: '618年', age: '49岁' },
+            { name: '杨侑', title: '隋恭帝', reignStart: '617年', reignEnd: '618年', reignYears: 1, eraName: '义宁', birth: '605年', death: '619年', age: '14岁' }
         ],
         achievements: [
             '重新统一中国',
@@ -1015,32 +785,32 @@ const dynasties = ref<Dynasty[]>([
         founder: '唐高祖李渊',
         lastEmperor: '唐哀帝',
         period: 'imperial',
-        description: '中国历史上最强盛的王朝之一，由唐高祖李渊建立。唐朝是中国古代最为辉煌的时期，政治开明，经济繁荣，文化昌盛，国际交流频繁，被誉为"盛唐"。\n\n唐朝的兴起：隋朝末年，天下大乱，李渊在太原起兵，于618年建立唐朝。唐太宗李世民通过玄武门之变夺取皇位，开创了"贞观之治"，奠定了唐朝强盛的基础。\n\n唐朝的鼎盛：唐朝前期出现了"贞观之治"和"开元盛世"等治世，国力强盛，疆域辽阔，东起朝鲜半岛，西达中亚，南至越南，北到蒙古高原。唐朝实行开放的对外政策，长安成为国际性大都市，各国使节、商人、学者云集，形成了多元文化交融的局面。唐朝的科举制度更加完善，诗歌文化达到巅峰，出现了李白、杜甫、白居易等伟大诗人。\n\n唐朝的衰落：安史之乱（755-763年）成为唐朝由盛转衰的转折点，此后藩镇割据严重，宦官专权，国力日渐衰落。黄巢起义进一步削弱了唐朝统治，最终朱温篡唐，建立后梁，唐朝灭亡。\n\n唐朝历时289年，是中华文明的重要高峰，共有24位皇帝。',
+        description: '中国历史上最强盛的王朝之一，由唐高祖李渊建立。唐朝是中国古代最为辉煌的时期，政治开明，经济繁荣，文化昌盛，国际交流频繁，被誉为"盛唐"。\n\n唐朝前期出现了"贞观之治"和"开元盛世"等繁荣局面。唐太宗李世民励精图治，政治清明；唐玄宗时期国力达到鼎盛，疆域辽阔，文化繁荣。唐朝实行开放的对外政策，长安成为国际大都市，丝绸之路空前繁荣。\n\n唐朝是诗歌的黄金时代，涌现出李白、杜甫、白居易等伟大诗人。科举制度得到完善，促进了社会流动。佛教、道教都得到很大发展，对外文化交流频繁。\n\n唐朝后期由于安史之乱等内乱，国力衰落，藩镇割据严重，最终被朱温建立的后梁所取代。唐朝历时289年，是中国历史上最辉煌的朝代之一。',
         emperors: [
             { name: '李渊', title: '唐高祖', reignStart: '618年', reignEnd: '626年', reignYears: 8, eraName: '武德', birth: '566年', death: '635年', age: '69岁' },
             { name: '李世民', title: '唐太宗', reignStart: '626年', reignEnd: '649年', reignYears: 23, eraName: '贞观', birth: '598年', death: '649年', age: '51岁' },
             { name: '李治', title: '唐高宗', reignStart: '649年', reignEnd: '683年', reignYears: 34, eraName: '永徽、显庆、龙朔、麟德、乾封、总章、咸亨、上元、仪凤、调露、永隆、开耀、永淳、弘道', birth: '628年', death: '683年', age: '55岁' },
             { name: '李显', title: '唐中宗', reignStart: '683年', reignEnd: '684年', reignYears: 1, eraName: '嗣圣', birth: '656年', death: '710年', age: '54岁' },
             { name: '李旦', title: '唐睿宗', reignStart: '684年', reignEnd: '690年', reignYears: 6, eraName: '文明、光宅、垂拱、永昌、载初', birth: '662年', death: '716年', age: '54岁' },
-            { name: '武则天', title: '武周皇帝', reignStart: '690年', reignEnd: '705年', reignYears: 15, eraName: '天授、如意、长寿、延载、证圣、天册万岁、万岁登封、万岁通天、神功、圣历、久视、大足、长安', birth: '624年', death: '705年', age: '81岁' },
-            { name: '李显', title: '唐中宗(复辟)', reignStart: '705年', reignEnd: '710年', reignYears: 5, eraName: '神龙、景龙', birth: '656年', death: '710年', age: '54岁' },
-            { name: '李重茂', title: '唐殇帝', reignStart: '710年', reignEnd: '710年', reignYears: '17天', eraName: '唐隆', birth: '695年', death: '714年', age: '19岁' },
-            { name: '李旦', title: '唐睿宗(复辟)', reignStart: '710年', reignEnd: '712年', reignYears: 2, eraName: '景云、太极、延和', birth: '662年', death: '716年', age: '54岁' },
+            { name: '武曌', title: '武周圣神皇帝', reignStart: '690年', reignEnd: '705年', reignYears: 15, eraName: '天授、如意、长寿、延载、证圣、天册万岁、万岁登封、万岁通天、神功、圣历、久视、大足、长安', birth: '624年', death: '705年', age: '81岁' },
+            { name: '李显', title: '唐中宗（复位）', reignStart: '705年', reignEnd: '710年', reignYears: 5, eraName: '神龙、景龙', birth: '656年', death: '710年', age: '54岁' },
+            { name: '李重茂', title: '唐殇帝', reignStart: '710年', reignEnd: '710年', reignYears: '1个月', eraName: '唐隆', birth: '695年', death: '714年', age: '19岁' },
+            { name: '李旦', title: '唐睿宗（复位）', reignStart: '710年', reignEnd: '712年', reignYears: 2, eraName: '景云、太极、延和', birth: '662年', death: '716年', age: '54岁' },
             { name: '李隆基', title: '唐玄宗', reignStart: '712年', reignEnd: '756年', reignYears: 44, eraName: '先天、开元、天宝', birth: '685年', death: '762年', age: '77岁' },
             { name: '李亨', title: '唐肃宗', reignStart: '756年', reignEnd: '762年', reignYears: 6, eraName: '至德、乾元、上元', birth: '711年', death: '762年', age: '51岁' },
             { name: '李豫', title: '唐代宗', reignStart: '762年', reignEnd: '779年', reignYears: 17, eraName: '宝应、广德、永泰、大历', birth: '726年', death: '779年', age: '53岁' },
             { name: '李适', title: '唐德宗', reignStart: '779年', reignEnd: '805年', reignYears: 26, eraName: '建中、兴元、贞元', birth: '742年', death: '805年', age: '63岁' },
-            { name: '李诵', title: '唐顺宗', reignStart: '805年', reignEnd: '805年', reignYears: '8个月', eraName: '永贞', birth: '761年', death: '807年', age: '46岁' },
+            { name: '李诵', title: '唐顺宗', reignStart: '805年', reignEnd: '805年', reignYears: '8个月', eraName: '永贞', birth: '761年', death: '806年', age: '45岁' },
             { name: '李纯', title: '唐宪宗', reignStart: '805年', reignEnd: '820年', reignYears: 15, eraName: '元和', birth: '778年', death: '820年', age: '42岁' },
             { name: '李恒', title: '唐穆宗', reignStart: '820年', reignEnd: '824年', reignYears: 4, eraName: '长庆', birth: '795年', death: '824年', age: '29岁' },
             { name: '李湛', title: '唐敬宗', reignStart: '824年', reignEnd: '826年', reignYears: 2, eraName: '宝历', birth: '809年', death: '826年', age: '17岁' },
             { name: '李昂', title: '唐文宗', reignStart: '826年', reignEnd: '840年', reignYears: 14, eraName: '太和、开成', birth: '809年', death: '840年', age: '31岁' },
             { name: '李炎', title: '唐武宗', reignStart: '840年', reignEnd: '846年', reignYears: 6, eraName: '会昌', birth: '814年', death: '846年', age: '32岁' },
-            { name: '李忱(Chén)', title: '唐宣宗', reignStart: '846年', reignEnd: '859年', reignYears: 13, eraName: '大中', birth: '810年', death: '859年', age: '49岁' },
-            { name: '李漼(Cuǐ)', title: '唐懿宗', reignStart: '859年', reignEnd: '873年', reignYears: 14, eraName: '咸通', birth: '833年', death: '873年', age: '40岁' },
-            { name: '李儇(Xuān)', title: '唐僖宗', reignStart: '873年', reignEnd: '888年', reignYears: 15, eraName: '乾符、广明、中和、光启、文德', birth: '862年', death: '888年', age: '26岁' },
-            { name: '李晔(Yè)', title: '唐昭宗', reignStart: '888年', reignEnd: '904年', reignYears: 16, eraName: '龙纪、大顺、景福、乾宁、光化、天复、天祐', birth: '867年', death: '904年', age: '37岁' },
-            { name: '李柷(Zhù)', title: '唐哀帝', reignStart: '904年', reignEnd: '907年', reignYears: 3, eraName: '天祐', birth: '892年', death: '908年', age: '16岁' }
+            { name: '李忱', title: '唐宣宗', reignStart: '846年', reignEnd: '859年', reignYears: 13, eraName: '大中', birth: '810年', death: '859年', age: '49岁' },
+            { name: '李漼', title: '唐懿宗', reignStart: '859年', reignEnd: '873年', reignYears: 14, eraName: '大中、咸通', birth: '833年', death: '873年', age: '40岁' },
+            { name: '李儇', title: '唐僖宗', reignStart: '873年', reignEnd: '888年', reignYears: 15, eraName: '咸通、乾符、广明、中和、光启、文德', birth: '862年', death: '888年', age: '26岁' },
+            { name: '李晔', title: '唐昭宗', reignStart: '888年', reignEnd: '904年', reignYears: 16, eraName: '龙纪、大顺、景福、乾宁、光化、天复、天祐', birth: '867年', death: '904年', age: '37岁' },
+            { name: '李柷', title: '唐哀帝', reignStart: '904年', reignEnd: '907年', reignYears: 3, eraName: '天祐', birth: '892年', death: '908年', age: '16岁' }
         ],
         achievements: [
             '贞观之治、开元盛世',
@@ -1054,26 +824,35 @@ const dynasties = ref<Dynasty[]>([
         startYear: '907年',
         endYear: '979年',
         duration: 72,
-        capital: '开封/洛阳等（今河南开封/河南洛阳等）',
+        capital: '开封/洛阳等',
         founder: '朱温等',
         lastEmperor: '柴宗训等',
         period: 'imperial',
-        description: '唐朝灭亡后中国历史上的大分裂时期，北方相继出现后梁、后唐、后晋、后汉、后周五个朝代，南方同时并立着十个割据政权。这一时期政治动荡，战争频繁，但文化传承得以延续。\n\n五代政权都建都于中原地区，主要在开封和洛阳，政权更替频繁，平均存在时间不到15年。十国主要分布在南方，包括吴、南唐、吴越、楚、南汉、前蜀、后蜀、南平、闽、北汉等，相对稳定，经济文化发展较好。\n\n这一时期虽然政治分裂，但科技文化仍有发展，如雕版印刷术进一步推广，火药开始用于军事，指南针技术日趋成熟。南方各国相对和平，为经济发展创造了条件，江南地区的开发进一步加强。\n\n五代十国时期为宋朝的统一奠定了基础，许多制度和文化成果被宋朝继承和发展。五代十国历时72年，五代共有14位皇帝，十国君主约30余位。',
+        description: '唐朝灭亡后中国历史上的大分裂时期，北方相继出现后梁、后唐、后晋、后汉、后周五个朝代，南方同时并立着十个割据政权。\n\n五代是指后梁、后唐、后晋、后汉、后周五个朝代，都建都于中原地区；十国是指前蜀、后蜀、吴、南唐、吴越、闽、楚、南汉、南平、北汉十个割据政权，主要分布在南方和山西。\n\n这一时期政权更迭频繁，战乱不断，但经济文化仍有发展。南方各国相对稳定，经济繁荣；北方虽然战乱频繁，但科技文化仍有进步，如活字印刷术的发明等。\n\n五代十国的分裂局面最终被宋朝统一，结束了72年的分裂状态。',
         emperors: [
-            { name: '朱温', title: '后梁太祖', reignStart: '907年', reignEnd: '912年', reignYears: 5, eraName: '开平、乾化', birth: '852年', death: '912年', age: '60岁' },
-            { name: '朱友珪(Guī)', title: '后梁郢王', reignStart: '912年', reignEnd: '913年', reignYears: 1, eraName: '凤历', birth: '885年', death: '913年', age: '28岁' },
-            { name: '朱友贞', title: '后梁末帝', reignStart: '913年', reignEnd: '923年', reignYears: 10, eraName: '乾化、贞明、龙德', birth: '888年', death: '923年', age: '35岁' },
-            { name: '李存勖(Xù)', title: '后唐庄宗', reignStart: '923年', reignEnd: '926年', reignYears: 3, eraName: '同光', birth: '885年', death: '926年', age: '41岁' },
-            { name: '李嗣源', title: '后唐明宗', reignStart: '926年', reignEnd: '933年', reignYears: 7, eraName: '天成、长兴', birth: '860年', death: '933年', age: '73岁' },
-            { name: '李从厚', title: '后唐闵帝', reignStart: '933年', reignEnd: '934年', reignYears: 1, eraName: '应顺', birth: '914年', death: '934年', age: '20岁' },
-            { name: '李从珂', title: '后唐末帝', reignStart: '934年', reignEnd: '936年', reignYears: 2, eraName: '清泰', birth: '885年', death: '936年', age: '51岁' },
-            { name: '石敬瑭', title: '后晋高祖', reignStart: '936年', reignEnd: '942年', reignYears: 6, eraName: '天福', birth: '892年', death: '942年', age: '50岁' },
-            { name: '石重贵', title: '后晋出帝', reignStart: '942年', reignEnd: '947年', reignYears: 5, eraName: '天福、开运', birth: '914年', death: '968年', age: '54岁' },
-            { name: '刘知远', title: '后汉高祖', reignStart: '947年', reignEnd: '948年', reignYears: 1, eraName: '天福、乾祐', birth: '895年', death: '948年', age: '53岁' },
-            { name: '刘承祐', title: '后汉隐帝', reignStart: '948年', reignEnd: '951年', reignYears: 3, eraName: '乾祐', birth: '930年', death: '951年', age: '21岁' },
-            { name: '郭威', title: '后周太祖', reignStart: '951年', reignEnd: '954年', reignYears: 3, eraName: '广顺、显德', birth: '904年', death: '954年', age: '50岁' },
-            { name: '柴荣', title: '后周世宗', reignStart: '954年', reignEnd: '959年', reignYears: 5, eraName: '显德', birth: '921年', death: '959年', age: '38岁' },
-            { name: '柴宗训', title: '后周恭帝', reignStart: '959年', reignEnd: '960年', reignYears: 1, eraName: '显德', birth: '953年', death: '973年', age: '20岁' }
+            // 后梁 907年－923年
+            { name: '朱温', title: '后梁太祖', reignStart: '907年', reignEnd: '912年', reignYears: 5, eraName: '开平、乾化', birth: '852年', death: '912年', age: '60岁', dynasty: '后梁' },
+            { name: '朱友珪', title: '后梁郢王', reignStart: '912年', reignEnd: '913年', reignYears: 1, eraName: '凤历', birth: '不详', death: '913年', age: '不详', dynasty: '后梁' },
+            { name: '朱友贞', title: '后梁末帝', reignStart: '913年', reignEnd: '923年', reignYears: 10, eraName: '乾化、贞明、龙德', birth: '888年', death: '923年', age: '35岁', dynasty: '后梁' },
+
+            // 后唐 923年－936年
+            { name: '李存勖', title: '后唐庄宗', reignStart: '923年', reignEnd: '926年', reignYears: 3, eraName: '同光', birth: '885年', death: '926年', age: '41岁', dynasty: '后唐' },
+            { name: '李嗣源', title: '后唐明宗', reignStart: '926年', reignEnd: '933年', reignYears: 7, eraName: '天成、长兴', birth: '867年', death: '933年', age: '66岁', dynasty: '后唐' },
+            { name: '李从厚', title: '后唐闵帝', reignStart: '933年', reignEnd: '934年', reignYears: 1, eraName: '应顺', birth: '914年', death: '934年', age: '20岁', dynasty: '后唐' },
+            { name: '李从珂', title: '后唐末帝', reignStart: '934年', reignEnd: '936年', reignYears: 2, eraName: '清泰', birth: '885年', death: '936年', age: '51岁', dynasty: '后唐' },
+
+            // 后晋 936年－947年
+            { name: '石敬瑭', title: '后晋高祖', reignStart: '936年', reignEnd: '942年', reignYears: 6, eraName: '天福', birth: '892年', death: '942年', age: '50岁', dynasty: '后晋' },
+            { name: '石重贵', title: '后晋出帝', reignStart: '942年', reignEnd: '947年', reignYears: 5, eraName: '天福、开运', birth: '914年', death: '974年', age: '60岁', dynasty: '后晋' },
+
+            // 后汉 947年－951年
+            { name: '刘知远', title: '后汉高祖', reignStart: '947年', reignEnd: '948年', reignYears: 1, eraName: '天福、乾祐', birth: '895年', death: '948年', age: '53岁', dynasty: '后汉' },
+            { name: '刘承祐', title: '后汉隐帝', reignStart: '948年', reignEnd: '951年', reignYears: 3, eraName: '乾祐', birth: '930年', death: '951年', age: '21岁', dynasty: '后汉' },
+
+            // 后周 951年－960年
+            { name: '郭威', title: '后周太祖', reignStart: '951年', reignEnd: '954年', reignYears: 3, eraName: '广顺、显德', birth: '904年', death: '954年', age: '50岁', dynasty: '后周' },
+            { name: '柴荣', title: '后周世宗', reignStart: '954年', reignEnd: '959年', reignYears: 5, eraName: '显德', birth: '921年', death: '959年', age: '38岁', dynasty: '后周' },
+            { name: '柴宗训', title: '后周恭帝', reignStart: '959年', reignEnd: '960年', reignYears: 1, eraName: '显德', birth: '953年', death: '973年', age: '20岁', dynasty: '后周' }
         ],
         achievements: [
             '保持文化传承',
@@ -1091,17 +870,17 @@ const dynasties = ref<Dynasty[]>([
         founder: '宋太祖赵匡胤',
         lastEmperor: '宋钦宗',
         period: 'imperial',
-        description: '中国历史上经济文化高度发达的朝代，由宋太祖赵匡胤通过"陈桥兵变"建立。北宋结束了五代十国的分裂局面，基本统一了中国，开创了中国古代科技文化的黄金时代。\n\n北宋在政治上实行文官政治，重文轻武，科举制度更加完善，选拔了大量文人治国；经济上商品经济发达，出现了世界上最早的纸币"交子"，手工业和农业技术都有很大发展；文化上理学兴起，科技发明众多，四大发明中的三项（印刷术、火药、指南针）都在宋代得到发展和应用。\n\n北宋时期文学艺术繁荣，出现了苏轼、王安石、欧阳修等文学大家，词作为一种新的文学形式达到高峰。绘画方面出现了张择端的《清明上河图》等传世名作。科学技术方面，沈括的《梦溪笔谈》记录了大量科技成就。\n\n北宋后期由于冗官、冗兵、冗费等问题，国力衰弱，最终在靖康之变中被金国所灭，徽钦二帝被俘。北宋历时167年，是中华文明的重要发展期，共有9位皇帝。',
+        description: '中国历史上经济文化高度发达的朝代，由宋太祖赵匡胤通过"陈桥兵变"建立。北宋结束了五代十国的分裂局面，基本统一了中国，开创了中国古代科技文化的黄金时代。\n\n北宋实行重文轻武的政策，科举制度得到完善，文化教育繁荣。这一时期出现了四大发明中的三项：活字印刷术、火药、指南针。经济高度发达，商业繁荣，出现了世界上最早的纸币"交子"。\n\n北宋在哲学思想方面形成了理学，以程颢、程颐、朱熹为代表；文学艺术方面出现了苏轼、欧阳修、王安石等文学巨匠；科技方面有沈括的《梦溪笔谈》等重要著作。\n\n北宋后期由于冗官、冗兵、冗费等问题，国力衰弱，最终在靖康之变中被金国所灭。',
         emperors: [
             { name: '赵匡胤', title: '宋太祖', reignStart: '960年', reignEnd: '976年', reignYears: 16, eraName: '建隆、乾德、开宝', birth: '927年', death: '976年', age: '49岁' },
             { name: '赵光义', title: '宋太宗', reignStart: '976年', reignEnd: '997年', reignYears: 21, eraName: '太平兴国、雍熙、端拱、淳化、至道', birth: '939年', death: '997年', age: '58岁' },
             { name: '赵恒', title: '宋真宗', reignStart: '997年', reignEnd: '1022年', reignYears: 25, eraName: '咸平、景德、大中祥符、天禧、乾兴', birth: '968年', death: '1022年', age: '54岁' },
             { name: '赵祯', title: '宋仁宗', reignStart: '1022年', reignEnd: '1063年', reignYears: 41, eraName: '天圣、明道、景祐、宝元、康定、庆历、皇祐、至和、嘉祐', birth: '1010年', death: '1063年', age: '53岁' },
             { name: '赵曙', title: '宋英宗', reignStart: '1063年', reignEnd: '1067年', reignYears: 4, eraName: '治平', birth: '1032年', death: '1067年', age: '35岁' },
-            { name: '赵顼(Xū)', title: '宋神宗', reignStart: '1067年', reignEnd: '1085年', reignYears: 18, eraName: '熙宁、元丰', birth: '1048年', death: '1085年', age: '37岁' },
-            { name: '赵煦(Xù)', title: '宋哲宗', reignStart: '1085年', reignEnd: '1100年', reignYears: 15, eraName: '元祐、绍圣、元符', birth: '1077年', death: '1100年', age: '23岁' },
-            { name: '赵佶(Jí)', title: '宋徽宗', reignStart: '1100年', reignEnd: '1125年', reignYears: 25, eraName: '建中靖国、崇宁、大观、政和、重和、宣和', birth: '1082年', death: '1135年', age: '53岁' },
-            { name: '赵桓(Huán)', title: '宋钦宗', reignStart: '1125年', reignEnd: '1127年', reignYears: 2, eraName: '靖康', birth: '1100年', death: '1156年', age: '56岁' }
+            { name: '赵顼', title: '宋神宗', reignStart: '1067年', reignEnd: '1085年', reignYears: 18, eraName: '熙宁、元丰', birth: '1048年', death: '1085年', age: '37岁' },
+            { name: '赵煦', title: '宋哲宗', reignStart: '1085年', reignEnd: '1100年', reignYears: 15, eraName: '元祐、绍圣、元符', birth: '1076年', death: '1100年', age: '24岁' },
+            { name: '赵佶', title: '宋徽宗', reignStart: '1100年', reignEnd: '1125年', reignYears: 25, eraName: '建中靖国、崇宁、大观、政和、重和、宣和', birth: '1082年', death: '1135年', age: '53岁' },
+            { name: '赵桓', title: '宋钦宗', reignStart: '1125年', reignEnd: '1127年', reignYears: 2, eraName: '靖康', birth: '1100年', death: '1156年', age: '56岁' }
         ],
         achievements: [
             '四大发明中的三项（印刷术、火药、指南针）',
@@ -1215,18 +994,18 @@ const dynasties = ref<Dynasty[]>([
         period: 'imperial',
         description: '中国历史上最后一个封建王朝，由满族建立。清朝是中国历史上疆域最辽阔、人口最多的朝代之一，经历了从兴盛到衰落的完整历程，最终被辛亥革命推翻。\n\n清朝的兴起：1616年努尔哈赤建立后金，1636年皇太极改国号为清。1644年李自成攻陷北京，明朝灭亡，清军入关，逐步统一全国，建立了对中国的统治。\n\n清朝的鼎盛：清朝前期出现了"康乾盛世"，国力强盛，疆域辽阔，东起库页岛，西至葱岭，南达南海诸岛，北抵外兴安岭，总面积达1300多万平方公里。清朝统一了台湾，平定了准噶尔叛乱，加强了对西藏、新疆的管理，巩固了多民族国家的统一。在文化上编纂了《四库全书》等重要典籍，人口从明末的6000万增长到清末的4亿多。\n\n清朝的衰落：清朝后期由于闭关锁国政策，错失了工业革命的机遇，在鸦片战争后逐渐沦为半殖民地半封建社会。虽然进行了洋务运动、戊戌变法等改革尝试，但最终无法挽回颓势。1911年辛亥革命爆发，1912年宣统帝退位，清朝灭亡。\n\n清朝历时276年，是中国封建社会的最后一个朝代，共有12位皇帝。',
         emperors: [
-            { name: '爱新觉罗·努尔哈赤', title: '清太祖', reignStart: '1616年', reignEnd: '1626年', reignYears: 10, eraName: '天命', birth: '1559年', death: '1626年', age: 68 },
-            { name: '爱新觉罗·皇太极', title: '清太宗', reignStart: '1626年', reignEnd: '1643年', reignYears: 17, eraName: '天聪、崇德', birth: '1592年', death: '1643年', age: 52 },
-            { name: '爱新觉罗·福临', title: '清世祖', reignStart: '1644年', reignEnd: '1661年', reignYears: 17, eraName: '顺治', birth: '1638年', death: '1661年', age: 24 },
-            { name: '爱新觉罗·玄烨', title: '清圣祖', reignStart: '1661年', reignEnd: '1722年', reignYears: 61, eraName: '康熙', birth: '1654年', death: '1722年', age: 69 },
-            { name: '爱新觉罗·胤禛(Yìn Zhēn)', title: '清世宗', reignStart: '1722年', reignEnd: '1735年', reignYears: 13, eraName: '雍正', birth: '1678年', death: '1735年', age: 58 },
-            { name: '爱新觉罗·弘历', title: '清高宗', reignStart: '1735年', reignEnd: '1796年', reignYears: 61, eraName: '乾隆', birth: '1711年', death: '1799年', age: 89 },
-            { name: '爱新觉罗·颙琰(Yóng Yǎn)', title: '清仁宗', reignStart: '1796年', reignEnd: '1820年', reignYears: 24, eraName: '嘉庆', birth: '1760年', death: '1820年', age: 61 },
-            { name: '爱新觉罗·旻(Mín)宁', title: '清宣宗', reignStart: '1820年', reignEnd: '1850年', reignYears: 30, eraName: '道光', birth: '1782年', death: '1850年', age: 69 },
-            { name: '爱新觉罗·奕詝(Zhǔ)', title: '清文宗', reignStart: '1850年', reignEnd: '1861年', reignYears: 11, eraName: '咸丰', birth: '1831年', death: '1861年', age: 31 },
-            { name: '爱新觉罗·载淳(chún)', title: '清穆宗', reignStart: '1861年', reignEnd: '1875年', reignYears: 14, eraName: '同治', birth: '1856年', death: '1875年', age: 19 },
-            { name: '爱新觉罗·载湉(Tián)', title: '清德宗', reignStart: '1875年', reignEnd: '1908年', reignYears: 33, eraName: '光绪', birth: '1871年', death: '1908年', age: 38 },
-            { name: '爱新觉罗·溥仪', title: '清末帝', reignStart: '1908年', reignEnd: '1912年', reignYears: 4, eraName: '宣统', birth: '1906年', death: '1967年', age: 61 }
+            { name: '爱新觉罗·努尔哈赤', title: '清太祖', reignStart: '1616年', reignEnd: '1626年', reignYears: 10, eraName: '天命', birth: '1559年', death: '1626年', age: '68岁' },
+            { name: '爱新觉罗·皇太极', title: '清太宗', reignStart: '1626年', reignEnd: '1643年', reignYears: 17, eraName: '天聪、崇德', birth: '1592年', death: '1643年', age: '52岁' },
+            { name: '爱新觉罗·福临', title: '清世祖', reignStart: '1644年', reignEnd: '1661年', reignYears: 17, eraName: '顺治', birth: '1638年', death: '1661年', age: '24岁' },
+            { name: '爱新觉罗·玄烨', title: '清圣祖', reignStart: '1661年', reignEnd: '1722年', reignYears: 61, eraName: '康熙', birth: '1654年', death: '1722年', age: '69岁' },
+            { name: '爱新觉罗·胤禛(Yìn Zhēn)', title: '清世宗', reignStart: '1722年', reignEnd: '1735年', reignYears: 13, eraName: '雍正', birth: '1678年', death: '1735年', age: '58岁' },
+            { name: '爱新觉罗·弘历', title: '清高宗', reignStart: '1735年', reignEnd: '1796年', reignYears: 61, eraName: '乾隆', birth: '1711年', death: '1799年', age: '89岁' },
+            { name: '爱新觉罗·颙琰(Yóng Yǎn)', title: '清仁宗', reignStart: '1796年', reignEnd: '1820年', reignYears: 24, eraName: '嘉庆', birth: '1760年', death: '1820年', age: '61岁' },
+            { name: '爱新觉罗·旻(Mín)宁', title: '清宣宗', reignStart: '1820年', reignEnd: '1850年', reignYears: 30, eraName: '道光', birth: '1782年', death: '1850年', age: '69岁' },
+            { name: '爱新觉罗·奕詝(Zhǔ)', title: '清文宗', reignStart: '1850年', reignEnd: '1861年', reignYears: 11, eraName: '咸丰', birth: '1831年', death: '1861年', age: '31岁' },
+            { name: '爱新觉罗·载淳(chún)', title: '清穆宗', reignStart: '1861年', reignEnd: '1875年', reignYears: 14, eraName: '同治', birth: '1856年', death: '1875年', age: '19岁' },
+            { name: '爱新觉罗·载湉(Tián)', title: '清德宗', reignStart: '1875年', reignEnd: '1908年', reignYears: 33, eraName: '光绪', birth: '1871年', death: '1908年', age: '38岁' },
+            { name: '爱新觉罗·溥仪', title: '清末帝', reignStart: '1908年', reignEnd: '1912年', reignYears: 4, eraName: '宣统', birth: '1906年', death: '1967年', age: '61岁' }
         ],
         achievements: [
             '康乾盛世，疆域辽阔',
@@ -1246,9 +1025,9 @@ const dynasties = ref<Dynasty[]>([
         period: 'modern',
         description: '中国历史上第一个共和政府，由孙中山领导的辛亥革命推翻清朝建立。中华民国的建立结束了中国两千多年的封建帝制，开创了共和政治的新纪元。\n\n中华民国初期政局动荡，经历了袁世凯称帝、军阀混战等政治危机。1928年国民政府完成北伐，基本统一全国，开始进行现代化建设。这一时期在政治上建立了三民主义的政治体系，在经济上发展民族工业，在文化上推行新文化运动，促进了思想解放。\n\n抗日战争时期（1937-1945年），中华民国政府领导全国人民进行了艰苦卓绝的抗战，最终取得胜利，成为联合国创始会员国之一。战后由于内战爆发，国民政府最终迁至台湾地区继续存在。\n\n中华民国在大陆时期虽然只有37年，但推翻了封建制度，建立了共和政体，为中国的现代化进程奠定了重要基础，共有多位领导人。',
         emperors: [
-            { name: '孙中山', title: '临时大总统', reignStart: '1912年', reignEnd: '1912年', reignYears: 1, eraName: '中华民国元年', birth: '不详', death: '不详', age: '不详' },
-            { name: '袁世凯', title: '大总统', reignStart: '1912年', reignEnd: '1916年', reignYears: 4, eraName: '民国', birth: '不详', death: '不详', age: '不详' },
-            { name: '蒋介石', title: '国民政府主席', reignStart: '1928年', reignEnd: '1949年', reignYears: 21, eraName: '民国', birth: '不详', death: '不详', age: '不详' }
+            { name: '孙中山', title: '临时大总统', reignStart: '1912年', reignEnd: '1912年', reignYears: 1, eraName: '中华民国元年', birth: '1866年', death: '1925年', age: '59岁' },
+            { name: '袁世凯', title: '大总统', reignStart: '1912年', reignEnd: '1916年', reignYears: 4, eraName: '民国', birth: '1859年', death: '1916年', age: '57岁' },
+            { name: '蒋介石', title: '国民政府主席', reignStart: '1928年', reignEnd: '1949年', reignYears: 21, eraName: '民国', birth: '1887年', death: '1975年', age: '88岁' }
         ],
         achievements: [
             '建立共和政体',
@@ -1286,7 +1065,7 @@ const filteredDynasties = computed(() => {
 
 // 过滤朝代
 const filterDynasties = () => {
-    // 移除分页重置逻辑，因为不再需要分页
+    // 触发计算属性重新计算
 }
 
 // 清空搜索
@@ -1338,70 +1117,6 @@ const scrollToDynasty = (dynastyName: string) => {
         }, 2000)
     }
 }
-
-// 导出数据
-const exportData = () => {
-    const data = filteredDynasties.value.map(item => ({
-        朝代名称: item.name,
-        起始年份: item.startYear,
-        结束年份: item.endYear,
-        历时年数: item.duration,
-        都城: item.capital,
-        开国皇帝: item.founder,
-        末代皇帝: item.lastEmperor,
-        历史概述: item.description
-    }))
-
-    const jsonStr = JSON.stringify(data, null, 2)
-    const blob = new Blob([jsonStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'chinese-dynasties.json'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    showMessage('朝代数据已导出', 'success')
-}
-
-// 显示消息
-const showMessage = (text: string, type: 'success' | 'error') => {
-    message.value = text
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
-}
-
-// 滚动事件处理
-const handleScroll = () => {
-    const scrollContainer = document.querySelector('.query-content')
-    if (scrollContainer) {
-        showBackToTop.value = scrollContainer.scrollTop > 300
-    }
-}
-
-// 回到顶部
-const scrollToTop = () => {
-    const scrollContainer = document.querySelector('.query-content')
-    if (scrollContainer) {
-        scrollContainer.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        })
-    }
-}
-
-onMounted(() => {// 组件挂载时的初始化逻辑
-    const scrollContainer = document.querySelector('.query-content')
-    if (scrollContainer) {
-        scrollContainer.addEventListener('scroll', handleScroll)
-    }
-})
-
 </script>
 
 <style scoped>
@@ -1415,74 +1130,11 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     overflow: hidden;
 }
 
-.query-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.query-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.query-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.query-content {
+.dynasty-content {
     flex: 1;
-    padding: 1.5rem;
     overflow-y: auto;
-    max-width: 1200px;
+    padding: 1.5rem;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
 }
@@ -1521,9 +1173,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 100%;
 }
 
 .search-input-wrapper {
@@ -1612,9 +1261,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 
 .timeline {
     position: relative;
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 100%;
 }
 
 .timeline-item {
@@ -1683,12 +1329,9 @@ onMounted(() => {// 组件挂载时的初始化逻辑
 }
 
 @keyframes highlightPulse {
-
-    0%,
-    100% {
+    0%, 100% {
         box-shadow: 0 0 0 3px var(--primary-color-alpha);
     }
-
     50% {
         box-shadow: 0 0 0 6px var(--primary-color-alpha);
     }
@@ -1722,16 +1365,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1.2;
-}
-
-.dynasty-period {
-    font-size: 0.75rem;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-weight: 500;
-    align-self: flex-start;
 }
 
 .dynasty-basic {
@@ -1796,9 +1429,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     overflow: hidden;
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 100%;
 }
 
 .detail-header {
@@ -1882,7 +1512,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     line-height: 1.6;
     margin: 0;
     white-space: pre-line;
-    /* 让换行符生效 */
 }
 
 .achievements-section {
@@ -1939,11 +1568,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     padding-bottom: 0.5rem;
 }
 
-/* 十六国朝代分割线 */
-.dynasty-separator {
-    border-top: 2px solid #475569 !important;
-}
-
 /* 皇帝表格样式 */
 .emperors-table-container {
     overflow-x: auto;
@@ -1998,36 +1622,10 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     min-width: 5rem;
 }
 
-.name-with-pinyin {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.chinese-name {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.9rem;
-}
-
-.pinyin-name {
-    font-size: 0.7rem;
-    color: #6b7280;
-    font-style: italic;
-    font-weight: 400;
-}
-
 .emperor-birth-death {
     color: #6b7280;
     font-size: 0.8rem;
     min-width: 8rem;
-}
-
-.era-prefix {
-    color: #9ca3af;
-    font-size: 0.7rem;
-    margin-right: 0.25rem;
-    font-weight: 400;
 }
 
 .emperor-age {
@@ -2063,159 +1661,8 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     word-break: break-all;
 }
 
-/* 消息提示样式 */
-.message-toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1000;
-    animation: slideIn 0.3s ease;
-}
-
-.message-toast.success {
-    background: var(--success-color);
-}
-
-.message-toast.error {
-    background: var(--error-color);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* 悬浮回到顶部按钮 */
-.floating-back-to-top {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 3rem;
-    height: 3rem;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.floating-back-to-top:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-/* Timeline事件样式 */
-.timeline-events {
-    position: relative;
-    padding-left: 1.5rem;
-}
-
-.timeline-events::before {
-    content: '';
-    position: absolute;
-    left: 0.5rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--border-color);
-}
-
-.timeline-event {
-    position: relative;
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
-
-.timeline-event:last-child {
-    margin-bottom: 0;
-}
-
-.event-marker {
-    position: absolute;
-    left: -1.25rem;
-    top: 0.25rem;
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-    border: 2px solid var(--bg-secondary);
-    z-index: 1;
-}
-
-.timeline-event.start .event-marker {
-    background: var(--success-color);
-}
-
-.timeline-event.major .event-marker {
-    background: var(--primary-color);
-}
-
-.timeline-event.end .event-marker {
-    background: var(--error-color);
-}
-
-.event-content {
-    background: var(--bg-secondary);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    border-left: 3px solid var(--border-color);
-}
-
-.timeline-event.start .event-content {
-    border-left-color: var(--success-color);
-}
-
-.timeline-event.major .event-content {
-    border-left-color: var(--primary-color);
-}
-
-.timeline-event.end .event-content {
-    border-left-color: var(--error-color);
-}
-
-.event-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
-}
-
-.event-description {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
-}
-
 /* 响应式设计 */
 @media (max-width: 1024px) {
-    .timeline {
-        max-width: 100%;
-        padding: 0;
-    }
-
-    .search-container {
-        max-width: 100%;
-    }
-
     .detail-grid {
         grid-template-columns: 1fr;
     }
@@ -2248,18 +1695,9 @@ onMounted(() => {// 组件挂载时的初始化逻辑
         grid-column: 1;
         grid-row: 4;
     }
-
-    .dynasty-info {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
 }
 
 @media (max-width: 768px) {
-    .timeline-container {
-        padding: 0;
-    }
-
     .timeline-marker {
         margin-right: 1rem;
     }
@@ -2272,55 +1710,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
         font-size: 1.25rem;
     }
 
-    .query-content {
-        padding: 1rem;
-    }
-
-    .section-header {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .period-filter {
-        justify-content: center;
-    }
-
-    .dynasty-header {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto;
-        gap: 0.5rem;
-        margin-bottom: 0.375rem;
-        padding-bottom: 0.375rem;
-    }
-
-    .dynasty-main {
-        grid-column: 1;
-        grid-row: 1;
-    }
-
-    .dynasty-basic {
-        grid-column: 1;
-        grid-row: 2;
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .dynasty-info {
-        grid-column: 1;
-        grid-row: 3;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .dynasty-founder {
-        grid-column: 1;
-        grid-row: 4;
-    }
-
-    /* 表格响应式 */
     .emperors-table {
         font-size: 0.75rem;
     }
@@ -2328,11 +1717,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     .emperors-table th,
     .emperors-table td {
         padding: 0.5rem 0.25rem;
-    }
-
-    .emperor-era-table {
-        font-size: 0.7rem;
-        max-width: 8rem;
     }
 }
 
@@ -2354,37 +1738,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
         font-size: 1.125rem;
     }
 
-    .dynasty-info {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .query-header {
-        padding: 0.75rem 1rem;
-    }
-
-    .query-title {
-        font-size: 1.125rem;
-    }
-
-    .query-content {
-        padding: 0.75rem;
-    }
-
-    .search-container {
-        gap: 0.75rem;
-    }
-
-    .period-btn {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8rem;
-    }
-
-    .detail-content {
-        padding: 1rem;
-    }
-
-    /* 小屏幕表格优化 */
     .emperors-table {
         font-size: 0.7rem;
     }
@@ -2392,11 +1745,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     .emperors-table th,
     .emperors-table td {
         padding: 0.375rem 0.25rem;
-    }
-
-    .emperor-era-table {
-        font-size: 0.65rem;
-        max-width: 6rem;
     }
 
     /* 隐藏部分列以节省空间 */
@@ -2407,27 +1755,6 @@ onMounted(() => {// 组件挂载时的初始化逻辑
     .emperors-table th:nth-child(7),
     .emperors-table td:nth-child(7) {
         display: none;
-    }
-
-    /* 调整拼音显示 */
-    .name-with-pinyin {
-        gap: 0.0625rem;
-    }
-
-    .chinese-name {
-        font-size: 0.8rem;
-    }
-
-    .pinyin-name {
-        font-size: 0.6rem;
-    }
-
-    /* 移动端回到顶部按钮 */
-    .floating-back-to-top {
-        bottom: 1rem;
-        right: 1rem;
-        width: 2.5rem;
-        height: 2.5rem;
     }
 }
 </style>
