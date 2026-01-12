@@ -1,16 +1,13 @@
 <template>
     <div class="color-reference">
-        <div class="converter-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="converter-title">颜色对照表</h2>
-        </div>
+        <PageHeader :title="pageTitle" @back="handleBack">
+            <template #actions>
+                <HeaderActionButton icon="refresh" tooltip="重置筛选" @click="resetFilters" />
+                <HeaderActionButton icon="clear" tooltip="清空选择" @click="clearSelection" />
+            </template>
+        </PageHeader>
 
-        <div ref="converterContentRef" class="converter-content">
+        <div class="converter-content">
             <!-- 搜索和筛选 -->
             <div class="search-section">
                 <div class="search-wrapper">
@@ -48,95 +45,74 @@
                 </div>
             </div>
 
-            <!-- 选中颜色详情 -->
-            <div v-if="selectedColor" ref="colorDetailsRef" class="color-details">
-                <h3 class="section-title">颜色详情</h3>
-                <div class="details-content">
-                    <div class="color-display">
-                        <div class="large-preview" :style="{ backgroundColor: selectedColor.hex }"></div>
-                        <div class="color-name-large">{{ selectedColor.name }}</div>
-                    </div>
 
-                    <div class="color-formats">
+        </div>
+
+        <!-- 回到顶部按钮 -->
+        <ScrollToTop :threshold="200" container=".converter-content" />
+
+        <!-- 颜色详情弹窗 -->
+        <Modal v-model:visible="showColorModal" title="颜色详情" max-width="700px" max-height="550px"
+            content-class="color-modal-content">
+            <div class="color-details-content">
+                <div class="color-display">
+                    <div class="large-preview" :style="{ backgroundColor: selectedColor?.hex }"></div>
+                    <div class="color-name-large">{{ selectedColor?.name }}</div>
+                </div>
+
+                <div class="color-formats">
+                    <div class="format-row">
                         <div class="format-item">
                             <label>HEX</label>
                             <div class="format-value">
-                                <input :value="selectedColor.hex" readonly class="format-input" />
-                                <button class="copy-btn" @click="copyFormat(selectedColor.hex)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
+                                <input :value="selectedColor?.hex" readonly class="format-input" />
+                                <HeaderActionButton icon="copy" tooltip="复制HEX值" @click="copyHex" />
                             </div>
                         </div>
 
                         <div class="format-item">
                             <label>RGB</label>
                             <div class="format-value">
-                                <input :value="selectedColor.rgb" readonly class="format-input" />
-                                <button class="copy-btn" @click="copyFormat(selectedColor.rgb)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
+                                <input :value="selectedColor?.rgb" readonly class="format-input" />
+                                <HeaderActionButton icon="copy" tooltip="复制RGB值" @click="copyRgb" />
                             </div>
                         </div>
+                    </div>
 
+                    <div class="format-row">
                         <div class="format-item">
                             <label>HSL</label>
                             <div class="format-value">
-                                <input :value="selectedColor.hsl" readonly class="format-input" />
-                                <button class="copy-btn" @click="copyFormat(selectedColor.hsl)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
+                                <input :value="selectedColor?.hsl" readonly class="format-input" />
+                                <HeaderActionButton icon="copy" tooltip="复制HSL值" @click="copyHsl" />
                             </div>
                         </div>
 
                         <div class="format-item">
                             <label>CSS</label>
                             <div class="format-value">
-                                <input :value="`color: ${selectedColor.hex};`" readonly class="format-input" />
-                                <button class="copy-btn" @click="copyFormat(`color: ${selectedColor.hex};`)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                </button>
+                                <input :value="`color: ${selectedColor?.hex};`" readonly class="format-input" />
+                                <HeaderActionButton icon="copy" tooltip="复制CSS样式" @click="copyCss" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 悬浮回到顶部按钮 -->
-        <button v-if="showBackToTop" class="floating-back-to-top" @click="scrollToTop" title="回到顶部">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m18 15-6-6-6 6" />
-            </svg>
-        </button>
-
-        <!-- 消息提示 -->
-        <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-        </div>
+        </Modal>
     </div>
 </template>
 
 <script setup lang="ts">
-import {  ref, computed, onMounted, onUnmounted, nextTick  } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import PageHeader from './common/PageHeader.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
+import ScrollToTop from './common/ScrollToTop.vue'
+import Modal from './common/Modal.vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import { useNotification } from '../composables/useNotification'
+import cardsConfig from '../config/cards.json'
 
-defineEmits<{
+const emit = defineEmits<{
     back: []
 }>()
 
@@ -148,24 +124,30 @@ interface Color {
     category: string
 }
 
-// 搜索和筛选
 // 使用页面标题管理
 usePageTitle('color-reference')
+const { success } = useNotification()
 
+// 获取页面标题
+const pageTitle = computed(() => {
+    for (const categoryKey in cardsConfig.cards) {
+        const cards = cardsConfig.cards[categoryKey as keyof typeof cardsConfig.cards]
+        const card = cards.find((card: any) => card.id === 'color-reference')
+        if (card) {
+            return card.title
+        }
+    }
+    return '颜色对照表'
+})
+
+// 搜索和筛选
 const searchQuery = ref('')
 const selectedCategory = ref('all')
 const selectedColor = ref<Color | null>(null)
+const showColorModal = ref(false)
 
 // DOM引用
-const colorDetailsRef = ref<HTMLElement | null>(null)
-const converterContentRef = ref<HTMLElement | null>(null)
-
-// 回到顶部按钮显示控制
-const showBackToTop = ref(false)
-
-// 消息提示
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
+// const colorDetailsRef = ref<HTMLElement | null>(null) // 不再需要
 
 // 颜色数据
 const colors = ref<Color[]>([
@@ -183,7 +165,7 @@ const colors = ref<Color[]>([
     { name: '深灰', hex: '#404040', rgb: 'rgb(64, 64, 64)', hsl: 'hsl(0, 0%, 25%)', category: 'basic' },
     { name: '浅灰', hex: '#D3D3D3', rgb: 'rgb(211, 211, 211)', hsl: 'hsl(0, 0%, 83%)', category: 'basic' },
 
-    // 网页安全色和常用颜色
+    // 网页安全色
     { name: '深红', hex: '#8B0000', rgb: 'rgb(139, 0, 0)', hsl: 'hsl(0, 100%, 27%)', category: 'web' },
     { name: '火砖红', hex: '#B22222', rgb: 'rgb(178, 34, 34)', hsl: 'hsl(0, 68%, 42%)', category: 'web' },
     { name: '印度红', hex: '#CD5C5C', rgb: 'rgb(205, 92, 92)', hsl: 'hsl(0, 53%, 58%)', category: 'web' },
@@ -192,7 +174,6 @@ const colors = ref<Color[]>([
     { name: '热粉', hex: '#FF69B4', rgb: 'rgb(255, 105, 180)', hsl: 'hsl(330, 100%, 71%)', category: 'web' },
     { name: '粉色', hex: '#FFC0CB', rgb: 'rgb(255, 192, 203)', hsl: 'hsl(350, 100%, 88%)', category: 'web' },
     { name: '浅粉', hex: '#FFB6C1', rgb: 'rgb(255, 182, 193)', hsl: 'hsl(351, 100%, 86%)', category: 'web' },
-
     { name: '橙红', hex: '#FF4500', rgb: 'rgb(255, 69, 0)', hsl: 'hsl(16, 100%, 50%)', category: 'web' },
     { name: '橙色', hex: '#FFA500', rgb: 'rgb(255, 165, 0)', hsl: 'hsl(39, 100%, 50%)', category: 'web' },
     { name: '深橙', hex: '#FF8C00', rgb: 'rgb(255, 140, 0)', hsl: 'hsl(33, 100%, 50%)', category: 'web' },
@@ -290,7 +271,6 @@ const colors = ref<Color[]>([
     { name: 'Material Grey 500', hex: '#9E9E9E', rgb: 'rgb(158, 158, 158)', hsl: 'hsl(0, 0%, 62%)', category: 'material' },
     { name: 'Material Blue Grey 500', hex: '#607D8B', rgb: 'rgb(96, 125, 139)', hsl: 'hsl(200, 18%, 46%)', category: 'material' }
 ])
-
 // 筛选后的颜色
 const filteredColors = computed(() => {
     let result = colors.value
@@ -324,135 +304,78 @@ const filterColors = () => {
     selectedColor.value = null
 }
 
-// 监听滚动事件
-const handleScroll = () => {
-    if (converterContentRef.value) {
-        const scrollTop = converterContentRef.value.scrollTop
-        showBackToTop.value = scrollTop > 300
-        console.log('Scroll top:', scrollTop, 'Show button:', showBackToTop.value) // 调试信息
-    } else {
-        showBackToTop.value = window.scrollY > 300
+// 处理返回事件
+const handleBack = () => {
+    emit('back')
+}
+
+// 重置筛选
+const resetFilters = () => {
+    searchQuery.value = ''
+    selectedCategory.value = 'all'
+    selectedColor.value = null
+}
+
+// 清空选择
+const clearSelection = () => {
+    selectedColor.value = null
+    showColorModal.value = false
+}
+
+// 复制功能
+const copyToClipboard = async (text: string, label: string) => {
+    try {
+        await navigator.clipboard.writeText(text)
+        success(`已复制${label}: ${text}`)
+    } catch (error) {
+        console.error('复制失败:', error)
+        success('复制失败，请手动复制')
+    }
+}
+
+const copyHex = () => {
+    if (selectedColor.value) {
+        copyToClipboard(selectedColor.value.hex, 'HEX值')
+    }
+}
+
+const copyRgb = () => {
+    if (selectedColor.value) {
+        copyToClipboard(selectedColor.value.rgb, 'RGB值')
+    }
+}
+
+const copyHsl = () => {
+    if (selectedColor.value) {
+        copyToClipboard(selectedColor.value.hsl, 'HSL值')
+    }
+}
+
+const copyCss = () => {
+    if (selectedColor.value) {
+        copyToClipboard(`color: ${selectedColor.value.hex};`, 'CSS样式')
     }
 }
 
 // 选择颜色
-const selectColor = async (color: Color) => {
+const selectColor = (color: Color) => {
     selectedColor.value = color
-
-    // 等待DOM更新后滚动到颜色详情
-    await nextTick()
-    if (colorDetailsRef.value) {
-        colorDetailsRef.value.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        })
-    }
-}
-
-// 回到顶部
-const scrollToTop = () => {
-    if (converterContentRef.value) {
-        converterContentRef.value.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        })
-    } else {
-        // 备用方案：滚动window
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        })
-    }
-}
-
-// 复制格式
-const copyFormat = async (text: string) => {
-    try {
-        await navigator.clipboard.writeText(text)
-        showMessage('已复制到剪贴板', 'success')
-    } catch (error) {
-        showMessage('复制失败', 'error')
-    }
-}
-
-// 显示消息
-const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
-    message.value = msg
-    messageType.value = type
-    setTimeout(() => {
-        message.value = ''
-    }, 3000)
+    showColorModal.value = true
 }
 
 // 初始化
-onMounted(() => {// 默认选择第一个颜色
-    if (colors.value.length > 0) {
-        selectedColor.value = colors.value[0] || null
-    }
-
-    // 等待DOM更新后添加滚动监听
-    nextTick(() => {
-        if (converterContentRef.value) {
-            converterContentRef.value.addEventListener('scroll', handleScroll)
-        } else {
-            window.addEventListener('scroll', handleScroll)
-        }
-    })
-})
-
-// 清理
-onUnmounted(() => {if (converterContentRef.value) {
-        converterContentRef.value.removeEventListener('scroll', handleScroll)
-    } else {
-        window.removeEventListener('scroll', handleScroll)
-    }
+onMounted(() => {
+    // 不再默认选择第一个颜色，让用户主动选择
 })
 </script>
-
 <style scoped>
 .color-reference {
     width: 100%;
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: var(--bg-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.converter-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem 2rem;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-}
-
-.back-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
-}
-
-.converter-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: #1e293b;
 }
 
 .converter-content {
@@ -463,7 +386,7 @@ onUnmounted(() => {if (converterContentRef.value) {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
     width: 100%;
     min-height: calc(100vh - 120px);
@@ -471,11 +394,11 @@ onUnmounted(() => {if (converterContentRef.value) {
 
 /* 搜索区域 */
 .search-section {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-wrapper {
@@ -487,18 +410,18 @@ onUnmounted(() => {if (converterContentRef.value) {
 .search-input {
     width: 100%;
     padding: 1rem 1.5rem;
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 0.75rem;
-    color: #1e293b;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
     font-size: 1rem;
-    transition: all 0.2s;
+    transition: var(--transition);
     box-sizing: border-box;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -510,24 +433,24 @@ onUnmounted(() => {if (converterContentRef.value) {
 
 .filter-btn {
     padding: 0.75rem 1.5rem;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    color: #475569;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .filter-btn:hover {
-    background: #e2e8f0;
-    color: #334155;
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 
 .filter-btn.active {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
     color: white;
 }
 
@@ -539,25 +462,25 @@ onUnmounted(() => {if (converterContentRef.value) {
 }
 
 .color-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
 }
 
 .color-card:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
 .color-preview {
     width: 100%;
     height: 80px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .color-info {
@@ -567,83 +490,30 @@ onUnmounted(() => {if (converterContentRef.value) {
 .color-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
 .color-hex {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-secondary);
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 /* 颜色详情 */
 .color-details {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 1.5rem 0;
-    color: #1e293b;
-}
-
-/* 悬浮回到顶部按钮 */
-.floating-back-to-top {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 3rem;
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #3b82f6;
-    border: none;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    transition: all 0.3s ease;
-    z-index: 9999;
-}
-
-.floating-back-to-top:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
-}
-
-.details-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.back-to-top-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: #3b82f6;
-    border: none;
-    border-radius: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.back-to-top-btn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
+    color: var(--text-primary);
 }
 
 .details-content {
@@ -663,15 +533,15 @@ onUnmounted(() => {if (converterContentRef.value) {
 .large-preview {
     width: 150px;
     height: 150px;
-    border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 .color-name-large {
     font-size: 1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     text-align: center;
 }
 
@@ -690,7 +560,7 @@ onUnmounted(() => {if (converterContentRef.value) {
 .format-item label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
 }
 
 .format-value {
@@ -702,68 +572,88 @@ onUnmounted(() => {if (converterContentRef.value) {
 .format-input {
     flex: 1;
     padding: 0.75rem 1rem;
-    background: #f9fafb;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    color: #1f2937;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 0.875rem;
 }
 
-.copy-btn {
+/* 弹窗内容样式 */
+.color-details-content {
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.color-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.large-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.color-name-large {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.color-formats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.format-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.format-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.format-item label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.format-value {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    background: transparent;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.375rem;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 0.375rem;
 }
 
-.copy-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    color: #475569;
-}
-
-/* 消息提示 */
-.message {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    z-index: 9998;
-    animation: slideUp 0.3s ease-out;
-}
-
-.message.success {
-    background: #10b981;
-    color: white;
-}
-
-.message.error {
-    background: #ef4444;
-    color: white;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.format-input {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.7rem;
+    min-width: 0;
 }
 
 /* 响应式设计 */
@@ -803,21 +693,36 @@ onUnmounted(() => {if (converterContentRef.value) {
         justify-content: center;
     }
 
-    .floating-back-to-top {
-        bottom: 1rem;
-        right: 1rem;
-        width: 2.5rem;
-        height: 2.5rem;
-    }
-
-    .details-header {
-        flex-direction: column;
+    /* 弹窗内容移动端适配 */
+    .color-details-content {
+        padding: 1rem;
+        grid-template-columns: 1fr;
         gap: 1rem;
-        align-items: stretch;
     }
 
-    .back-to-top-btn {
+    .color-display {
+        flex-direction: row;
         justify-content: center;
+        gap: 1rem;
+    }
+
+    .large-preview {
+        width: 80px;
+        height: 80px;
+    }
+
+    .color-name-large {
+        font-size: 0.75rem;
+    }
+
+    .format-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .format-input {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
     }
 }
 </style>

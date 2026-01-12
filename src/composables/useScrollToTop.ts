@@ -1,9 +1,9 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
 export function useScrollToTop(options?: {
     threshold?: number
     behavior?: ScrollBehavior
-    container?: string | HTMLElement
+    container?: string | HTMLElement | { value: HTMLElement | null }
 }) {
     const {
         threshold = 300,
@@ -14,7 +14,8 @@ export function useScrollToTop(options?: {
     const isVisible = ref(false)
     const isScrolling = ref(false)
 
-    let scrollContainer: HTMLElement | Window
+    let scrollContainer: HTMLElement | Window = window
+    let cleanupFn: (() => void) | null = null
 
     /**
      * 滚动到顶部
@@ -24,32 +25,27 @@ export function useScrollToTop(options?: {
 
         isScrolling.value = true
 
-        const targetElement = scrollContainer === window ? document.documentElement : scrollContainer as HTMLElement
-
-        if (behavior === 'smooth' && 'scrollTo' in targetElement) {
-            targetElement.scrollTo({
+        if (scrollContainer === window) {
+            window.scrollTo({
                 top: 0,
-                behavior: 'smooth'
+                behavior: behavior
             })
-
-            // 监听滚动结束
-            const checkScrollEnd = () => {
-                if (getScrollTop() <= 10) {
-                    isScrolling.value = false
-                } else {
-                    requestAnimationFrame(checkScrollEnd)
-                }
-            }
-            requestAnimationFrame(checkScrollEnd)
         } else {
-            // 降级方案：立即滚动
-            if (scrollContainer === window) {
-                window.scrollTo(0, 0)
-            } else {
-                (scrollContainer as HTMLElement).scrollTop = 0
-            }
-            isScrolling.value = false
+            (scrollContainer as HTMLElement).scrollTo({
+                top: 0,
+                behavior: behavior
+            })
         }
+
+        // 监听滚动结束
+        const checkScrollEnd = () => {
+            if (getScrollTop() <= 10) {
+                isScrolling.value = false
+            } else {
+                requestAnimationFrame(checkScrollEnd)
+            }
+        }
+        requestAnimationFrame(checkScrollEnd)
     }
 
     /**
@@ -99,17 +95,32 @@ export function useScrollToTop(options?: {
     const throttledHandleScroll = throttle(handleScroll, 100)
 
     /**
-     * 初始化
+     * 设置滚动容器
      */
-    const init = () => {
-        // 确定滚动容器
-        if (typeof container === 'string') {
-            const element = document.querySelector(container)
-            scrollContainer = element || window
-        } else if (container instanceof HTMLElement) {
-            scrollContainer = container
-        } else {
-            scrollContainer = window
+    const setupScrollContainer = () => {
+        // 清理之前的监听
+        if (cleanupFn) {
+            cleanupFn()
+            cleanupFn = null
+        }
+
+        // 确定滚动容器 - 默认使用window
+        scrollContainer = window
+
+        if (container) {
+            if (typeof container === 'string') {
+                const element = document.querySelector(container) as HTMLElement
+                if (element) {
+                    scrollContainer = element
+                }
+            } else if (container && 'value' in container) {
+                // 处理 Vue ref 对象
+                if (container.value) {
+                    scrollContainer = container.value
+                }
+            } else if (container instanceof HTMLElement) {
+                scrollContainer = container
+            }
         }
 
         // 添加滚动监听
@@ -117,14 +128,35 @@ export function useScrollToTop(options?: {
 
         // 初始检查
         handleScroll()
+
+        // 返回清理函数
+        cleanupFn = () => {
+            scrollContainer.removeEventListener('scroll', throttledHandleScroll)
+        }
+    }
+
+    /**
+     * 初始化
+     */
+    const init = () => {
+        nextTick(() => {
+            setupScrollContainer()
+
+            // 如果容器是 ref，监听其变化
+            if (container && typeof container === 'object' && 'value' in container) {
+                watch(() => (container as any).value, () => {
+                    nextTick(setupScrollContainer)
+                })
+            }
+        })
     }
 
     /**
      * 清理
      */
     const cleanup = () => {
-        if (scrollContainer) {
-            scrollContainer.removeEventListener('scroll', throttledHandleScroll)
+        if (cleanupFn) {
+            cleanupFn()
         }
     }
 

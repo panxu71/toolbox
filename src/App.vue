@@ -41,7 +41,6 @@ import JwtGenerator from './components/JwtGenerator.vue'
 import ImageBase64Converter from './components/ImageBase64Converter.vue'
 import SurnameLookup from './components/SurnameLookup.vue'
 import RegexTester from './components/RegexTester.vue'
-import RegexTesterNew from './components/RegexTester-new.vue'
 import ApiTester from './components/ApiTester.vue'
 import TextCompare from './components/TextCompare.vue'
 import MimeTypeReference from './components/MimeTypeReference.vue'
@@ -990,7 +989,6 @@ const updateUrl = (category?: string, tool?: string) => {
                 <ColorReference v-if="currentPage === 'color-reference'" @back="closePage" />
                 <JwtGenerator v-if="currentPage === 'jwt-generator'" @back="closePage" />
                 <RegexTester v-if="currentPage === 'regex-tester'" @back="closePage" />
-                <RegexTesterNew v-if="currentPage === 'regex-tester-new'" @back="closePage" />
                 <TextCompare v-if="currentPage === 'text-compare'" @back="closePage" />
                 <MimeTypeReference v-if="currentPage === 'mime-type-reference'" @back="closePage" />
                 <DynastyQuery v-if="currentPage === 'dynasty-query'" @back="closePage" />
