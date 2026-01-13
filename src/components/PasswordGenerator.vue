@@ -121,14 +121,14 @@
                         <div class="password-actions">
                             <button class="password-action-btn" @click="togglePasswordVisibility"
                                 :title="hidePassword ? '显示密码' : '隐藏密码'">
-                                <svg v-if="hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
+                                <svg v-if="hidePassword" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
                                     <path
                                         d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                                     <line x1="1" y1="1" x2="23" y2="23" />
                                 </svg>
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2">
+                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>
@@ -456,7 +456,7 @@ const generatePassword = (showNotification = false) => {
 
     // 打乱密码字符顺序
     generatedPassword.value = shuffleString(password)
-    
+
     // 如果是手动重新生成，显示通知
     if (showNotification) {
         success('密码已重新生成')
@@ -524,7 +524,7 @@ const applyPreset = (preset: string) => {
     generatePassword()
     const presetNames = {
         simple: '简单',
-        standard: '标准', 
+        standard: '标准',
         secure: '安全',
         pin: 'PIN码'
     }
@@ -692,6 +692,16 @@ onMounted(() => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.generator-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .generator-section {
@@ -1185,6 +1195,16 @@ onMounted(() => {
     max-height: 300px;
     overflow-y: auto;
     margin-bottom: 16px;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.batch-password-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .batch-password-item {

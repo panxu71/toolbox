@@ -1,57 +1,36 @@
 <template>
     <div class="surname-lookup">
-        <PageHeader :title="pageTitle" @back="handleBack">
-            <template #actions>
-                <HeaderActionButton icon="refresh" tooltip="重置搜索" @click="resetSearch" />
-                <HeaderActionButton icon="clear" tooltip="清空选择" @click="clearSelection" />
-            </template>
-        </PageHeader>
+        <PageHeader :title="pageTitle" @back="handleBack" />
 
         <div class="converter-content">
             <!-- 搜索区域 -->
-            <div class="search-section">
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.35-4.35" />
-                        </svg>
-                        <input v-model="searchQuery" class="search-input" placeholder="输入姓氏进行查询，如：王、李、张..."
-                            @input="handleSearch" />
-                        <button v-if="searchQuery" class="clear-btn" @click="clearSearch" title="清空">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="quick-search">
-                        <span class="quick-label">热门姓氏：</span>
-                        <button v-for="surname in popularSurnames" :key="surname" class="quick-btn"
-                            @click="searchSurname(surname)">
-                            {{ surname }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <SearchSection :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event"
+                placeholder="输入姓氏进行查询，如：王、李、张..." :filters="filterOptions" :activeFilter="activeFilter"
+                @update:activeFilter="activeFilter = $event" />
 
             <!-- 搜索结果 -->
             <div v-if="searchResults.length > 0" class="results-section">
                 <h3 class="section-title">搜索结果</h3>
-                <div class="results-grid">
-                    <div v-for="result in searchResults" :key="result.surname" class="result-card"
-                        @click="selectSurname(result)">
-                        <HeaderActionButton icon="copy" tooltip="复制姓氏" class="copy-btn-corner"
-                            @click.stop="copySurnameFromList(result.surname)" />
-                        <div class="surname-content">
-                            <div class="pinyin-display">{{ result.pinyin }}</div>
-                            <div class="surname-display">{{ result.surname }}</div>
+                <div class="ranking-grid">
+                    <div v-for="result in searchResults" :key="result.surname" class="ranking-item"
+                        :class="getRankingClass(result.rank)" @click="selectSurname(result)">
+                        <button class="copy-btn-corner-small" @click.stop="copySurnameFromList(result.surname)"
+                            title="复制姓氏">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                        <div class="ranking-header">
+                            <div class="ranking-number">{{ result.rank }}</div>
                         </div>
-                        <div class="surname-info">
-                            <div class="rank">排名第 {{ result.rank }} 位</div>
-                            <div class="population">约 {{ result.population }} 万人</div>
+                        <div class="ranking-main">
+                            <div class="ranking-pinyin">{{ result.pinyin }}</div>
+                            <div class="ranking-surname">{{ result.surname }}</div>
+                        </div>
+                        <div class="ranking-footer">
+                            <div class="ranking-population">{{ result.population }}万人</div>
                         </div>
                     </div>
                 </div>
@@ -59,12 +38,18 @@
 
             <!-- 百家姓全览 -->
             <div v-if="!searchQuery && !selectedSurname" class="overview-section">
-                <h3 class="section-title">百家姓排行榜（前{{ allSurnames.length }}位）</h3>
+                <h3 class="section-title">百家姓排行榜（前{{ displayedSurnames.length }}位）</h3>
                 <div class="ranking-grid">
-                    <div v-for="surname in allSurnames" :key="surname.surname" class="ranking-item"
+                    <div v-for="surname in displayedSurnames" :key="surname.surname" class="ranking-item"
                         :class="getRankingClass(surname.rank)" @click="selectSurname(surname)">
-                        <HeaderActionButton icon="copy" tooltip="复制姓氏" class="copy-btn-corner-small"
-                            @click.stop="copySurnameFromList(surname.surname)" />
+                        <button class="copy-btn-corner-small" @click.stop="copySurnameFromList(surname.surname)"
+                            title="复制姓氏">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
                         <div class="ranking-header">
                             <div class="ranking-number">{{ surname.rank }}</div>
                         </div>
@@ -83,8 +68,12 @@
             <div v-if="selectedSurname" class="detail-section">
                 <div class="detail-card">
                     <div class="detail-header">
-                        <HeaderActionButton icon="back" tooltip="返回列表" @click="clearSelection"
-                            class="back-to-list-btn" />
+                        <button class="back-to-list-btn" @click="clearSelection" title="返回列表">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                        </button>
                         <div class="surname-title">
                             <div class="surname-main">
                                 <span class="surname-char">{{ selectedSurname.surname }}</span>
@@ -155,9 +144,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
+import SearchSection from './common/SearchSection.vue'
 import ScrollToTop from './common/ScrollToTop.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useNotification } from '../composables/useNotification'
@@ -199,10 +188,35 @@ const pageTitle = computed(() => {
 // 搜索相关
 const searchQuery = ref('')
 const selectedSurname = ref<SurnameInfo | null>(null)
+const activeFilter = ref('')
+
+// 监听筛选变化，当选择热门姓氏时设置搜索关键词
+watch(activeFilter, (newFilter) => {
+    if (newFilter && popularSurnames.value.includes(newFilter)) {
+        searchQuery.value = newFilter
+        selectedSurname.value = null
+    }
+})
+
+// 监听搜索框变化，当搜索框被清空时清除activeFilter
+watch(searchQuery, (newQuery) => {
+    if (!newQuery.trim()) {
+        activeFilter.value = ''
+    }
+})
 
 // 从配置文件读取数据
 const surnameData = ref<SurnameInfo[]>(surnameConfig.surnames)
 const popularSurnames = ref<string[]>(surnameConfig.popularSurnames)
+
+// 筛选选项 - 改为热门姓氏快速搜索
+const filterOptions = computed(() =>
+    popularSurnames.value.slice(0, 10).map(surname => ({
+        key: surname,
+        name: surname,
+        count: undefined
+    }))
+)
 
 // 生成完整的姓氏列表（如果需要扩展到100个）
 const generateExtendedSurnames = (): SurnameInfo[] => {
@@ -253,7 +267,10 @@ const allSurnames = ref<SurnameInfo[]>(generateExtendedSurnames())
 
 // 搜索结果
 const searchResults = computed(() => {
-    if (!searchQuery.value.trim()) return []
+    // 如果没有搜索关键词，返回空数组（不显示搜索结果区域）
+    if (!searchQuery.value.trim()) {
+        return []
+    }
 
     const query = searchQuery.value.trim()
     return allSurnames.value.filter(surname =>
@@ -262,29 +279,10 @@ const searchResults = computed(() => {
     )
 })
 
-// 搜索处理
-const handleSearch = () => {
-    selectedSurname.value = null
-}
-
-// 清空搜索
-const clearSearch = () => {
-    searchQuery.value = ''
-    selectedSurname.value = null
-}
-
-// 重置搜索
-const resetSearch = () => {
-    searchQuery.value = ''
-    selectedSurname.value = null
-    success('已重置搜索')
-}
-
-// 搜索指定姓氏
-const searchSurname = (surname: string) => {
-    searchQuery.value = surname
-    handleSearch()
-}
+// 显示的姓氏列表（用于百家姓全览）
+const displayedSurnames = computed(() => {
+    return allSurnames.value
+})
 
 // 选择姓氏
 const selectSurname = (surname: SurnameInfo) => {
@@ -296,7 +294,6 @@ const selectSurname = (surname: SurnameInfo) => {
 // 清除选择，返回列表
 const clearSelection = () => {
     selectedSurname.value = null
-    success('已清空选择')
 }
 
 // 从列表复制姓氏
@@ -353,104 +350,37 @@ onMounted(() => {
     margin: 0 auto;
     width: 100%;
     min-height: calc(100vh - 120px);
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
-/* 搜索区域 */
-.search-section {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
-.search-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-icon {
-    position: absolute;
-    left: 1rem;
-    color: var(--text-secondary);
-    z-index: 1;
-}
-
-.search-input {
-    width: 100%;
-    padding: 1rem 1rem 1rem 3rem;
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: var(--transition);
-    box-sizing: border-box;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.clear-btn {
-    position: absolute;
-    right: 1rem;
+/* 复制按钮样式 */
+.copy-btn-corner-small,
+.back-to-list-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--bg-tertiary);
-    border: none;
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.clear-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.quick-search {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.quick-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.quick-btn {
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     color: var(--text-secondary);
-    font-size: 0.875rem;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.quick-btn:hover {
+.copy-btn-corner-small:hover {
     background: var(--primary-color);
-    color: white;
     border-color: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
 }
 
 /* 结果区域 */
@@ -470,103 +400,6 @@ onMounted(() => {
     color: var(--text-primary);
     padding-bottom: 0.75rem;
     border-bottom: 2px solid var(--border-color);
-}
-
-.results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.result-card {
-    position: relative;
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 20px 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition);
-    overflow: hidden;
-    min-height: 140px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.result-card:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-secondary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.copy-btn-corner {
-    position: absolute !important;
-    top: 8px !important;
-    right: 8px !important;
-    width: 28px !important;
-    height: 28px !important;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2;
-}
-
-.result-card:hover .copy-btn-corner {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.surname-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 12px 0;
-}
-
-.surname-display {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1;
-}
-
-.result-card:hover .surname-display {
-    color: var(--primary-color);
-}
-
-.pinyin-display {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-style: italic;
-    opacity: 0.8;
-}
-
-.result-card:hover .pinyin-display {
-    color: var(--primary-color);
-    opacity: 1;
-}
-
-.surname-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.rank {
-    font-size: 0.875rem;
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.population {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
 }
 
 /* 排行榜 */
@@ -1013,11 +846,6 @@ onMounted(() => {
 
     .surname-main {
         align-items: center;
-    }
-
-    .quick-search {
-        flex-direction: column;
-        align-items: flex-start;
     }
 
     .ranking-grid {

@@ -2,18 +2,8 @@
   <div class="regex-tester-wrapper">
     <PageHeader title="正则表达式测试" @back="$emit('back')">
       <template #actions>
-        <HeaderActionButton
-          v-if="regexPattern"
-          icon="copy"
-          tooltip="复制正则表达式"
-          @click="copyRegex"
-        />
-        <HeaderActionButton
-          v-if="regexPattern"
-          icon="clear"
-          tooltip="清空正则表达式"
-          @click="clearRegex"
-        />
+        <HeaderActionButton v-if="regexPattern" icon="copy" tooltip="复制正则表达式" @click="copyRegex" />
+        <HeaderActionButton v-if="regexPattern" icon="clear" tooltip="清空正则表达式" @click="clearRegex" />
       </template>
     </PageHeader>
 
@@ -25,34 +15,19 @@
           <!-- 正则表达式输入 -->
           <div class="regex-input-section">
             <h3 class="section-title">正则表达式</h3>
-            
+
             <div class="regex-input-wrapper">
               <div class="regex-input-container">
                 <span class="regex-delimiter">/</span>
-                <input 
-                  v-model="regexPattern" 
-                  class="regex-input"
-                  placeholder="输入正则表达式"
-                  @input="testRegex"
-                />
+                <input v-model="regexPattern" class="regex-input" placeholder="输入正则表达式" @input="testRegex" />
                 <span class="regex-delimiter">/</span>
-                <input 
-                  v-model="regexFlags" 
-                  class="flags-input"
-                  placeholder="flags"
-                  maxlength="6"
-                  @input="testRegex"
-                />
+                <input v-model="regexFlags" class="flags-input" placeholder="flags" maxlength="6" @input="testRegex" />
               </div>
               <div class="regex-hint">
                 <span>常用标志：</span>
-                <button 
-                  v-for="flag in commonFlags" 
-                  :key="flag.flag"
-                  :class="['flag-btn', { active: regexFlags.includes(flag.flag) }]"
-                  @click="toggleFlag(flag.flag)"
-                  :title="flag.description"
-                >
+                <button v-for="flag in commonFlags" :key="flag.flag"
+                  :class="['flag-btn', { active: regexFlags.includes(flag.flag) }]" @click="toggleFlag(flag.flag)"
+                  :title="flag.description">
                   {{ flag.flag }}
                 </button>
               </div>
@@ -62,13 +37,8 @@
           <!-- 测试文本输入 -->
           <div class="test-text-section">
             <h4 class="subsection-title">测试文本</h4>
-            <textarea 
-              v-model="testText" 
-              class="test-textarea"
-              placeholder="输入要测试的文本内容..."
-              rows="6"
-              @input="testRegex"
-            ></textarea>
+            <textarea v-model="testText" class="test-textarea" placeholder="输入要测试的文本内容..." rows="6"
+              @input="testRegex"></textarea>
           </div>
 
           <!-- 匹配状态 -->
@@ -99,7 +69,7 @@
                     <td class="match-position-cell">{{ getMatchPosition(match) }}</td>
                     <td class="match-groups-cell">
                       <span v-if="match.length > 1" class="groups-info">
-                        {{ match.slice(1).map((group, i) => `组${i+1}: ${group || '(空)'}`).join(', ') }}
+                        {{match.slice(1).map((group, i) => `组${i + 1}: ${group || '(空)'}`).join(', ')}}
                       </span>
                       <span v-else class="no-groups">无</span>
                     </td>
@@ -119,15 +89,10 @@
         <!-- 右侧：正则示例区域 -->
         <div class="right-section">
           <h3 class="section-title">常用正则表达式</h3>
-          
+
           <div class="examples-grid">
-            <button 
-              v-for="example in regexExamples.common" 
-              :key="example.name"
-              class="example-btn" 
-              @click="setExample(example)"
-              :title="example.description"
-            >
+            <button v-for="example in regexExamples.common" :key="example.name" class="example-btn"
+              @click="setExample(example)" :title="example.description">
               <div class="example-name">{{ example.name }}</div>
             </button>
           </div>
@@ -388,7 +353,7 @@ const testRegex = () => {
   try {
     const regex = new RegExp(regexPattern.value, regexFlags.value)
     const allMatches: RegExpMatchArray[] = []
-    
+
     if (regexFlags.value.includes('g')) {
       // 全局匹配
       let match
@@ -427,18 +392,18 @@ const toggleFlag = (flag: string) => {
 // 设置示例
 const setExample = (example: any) => {
   regexPattern.value = example.pattern
-  
+
   // 根据不同的正则表达式设置合适的标志
   if (example.name === '空行' || example.name === '首尾空格') {
     regexFlags.value = 'gm'  // 全局 + 多行模式
-  } else if (example.name.includes('文件') || example.name === 'Excel文件' || 
-             example.name.includes('链接') || example.name.includes('URL') || 
-             example.name === 'API接口' || example.name === 'CDN资源' || example.name === 'GitHub链接') {
+  } else if (example.name.includes('文件') || example.name === 'Excel文件' ||
+    example.name.includes('链接') || example.name.includes('URL') ||
+    example.name === 'API接口' || example.name === 'CDN资源' || example.name === 'GitHub链接') {
     regexFlags.value = 'gi'  // 全局 + 忽略大小写
   } else {
     regexFlags.value = 'g'   // 默认全局模式
   }
-  
+
   // 设置对应的测试文本
   const testTexts: { [key: string]: string } = {
     '邮箱': '联系我们：admin@example.com 或 support@test.org\n客服邮箱：service@company.com.cn',
@@ -498,7 +463,7 @@ const setExample = (example: any) => {
     '传统车牌': '小型车：京A12345\n大型车：京A12345挂\n教练车：京A12345学\n警车：京A12345警\n港澳车：粤Z12345港\n使馆车：使001234',
     '新能源车牌': '小型新能源：京AD12345\n大型新能源：京AF12345\n纯电动：沪AD88888\n混合动力：粤BF66666\n燃料电池：川A1D234'
   }
-  
+
   testText.value = testTexts[example.name] || '请输入测试文本...'
   testRegex()
   showSuccess(`已设置${example.name}示例`)
@@ -548,6 +513,16 @@ const clearRegex = () => {
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  /* 隐藏滚动条但保持滚动功能 */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+.regex-tester-content::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 /* 主要内容区域：左右布局 */
@@ -583,6 +558,16 @@ const clearRegex = () => {
   flex: 0 0 300px;
   overflow-y: auto;
   max-height: 70vh;
+  /* 隐藏滚动条但保持滚动功能 */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+.right-section::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .section-title {

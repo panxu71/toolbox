@@ -937,7 +937,7 @@ const updateUrl = (category?: string, tool?: string) => {
 <template>
     <div class="app-container">
         <!-- 顶部导航栏 -->
-        <Header :currentTab="currentTab" :pageInfo="pageInfo" @refresh="getCurrentTab" @goHome="goHome" />
+        <Header :currentTab="currentTab" :pageInfo="pageInfo" @goHome="goHome" />
 
         <!-- 主内容区域 -->
         <div class="main-content">

@@ -66,7 +66,7 @@
                                 </div>
                                 <div class="time-unit">
                                     <span class="time-value milliseconds">{{ simpleTimer.display?.milliseconds || '000'
-                                        }}</span>
+                                    }}</span>
                                     <span class="time-label">毫秒</span>
                                 </div>
                             </div>
@@ -667,6 +667,16 @@ const clearAll = () => {
     margin: 0 auto;
     width: 100%;
     min-height: 0;
+    /* Hide scrollbars */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.timer-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 通用区域样式 */

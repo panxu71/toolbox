@@ -862,6 +862,16 @@ const formatFileSize = (bytes: number): string => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.generator-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .generator-section {

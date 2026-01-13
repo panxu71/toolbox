@@ -46,33 +46,22 @@
                     <div class="config-row">
                         <div class="config-group">
                             <label class="password-label">
-                                <input 
-                                    type="checkbox" 
-                                    v-model="usePassword" 
-                                    class="password-checkbox"
-                                />
+                                <input type="checkbox" v-model="usePassword" class="password-checkbox" />
                                 私钥密码保护 (可选)
                             </label>
                             <div class="password-input-container" :class="{ 'disabled': !usePassword }">
-                                <input 
-                                    type="password" 
-                                    v-model="privateKeyPassword" 
-                                    :disabled="!usePassword"
-                                    placeholder="输入私钥保护密码..."
-                                    class="password-input"
-                                />
-                                <button 
-                                    type="button" 
-                                    @click="togglePasswordVisibility" 
-                                    :disabled="!usePassword"
-                                    class="password-toggle-btn"
-                                    title="显示/隐藏密码"
-                                >
-                                    <svg v-if="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                <input type="password" v-model="privateKeyPassword" :disabled="!usePassword"
+                                    placeholder="输入私钥保护密码..." class="password-input" />
+                                <button type="button" @click="togglePasswordVisibility" :disabled="!usePassword"
+                                    class="password-toggle-btn" title="显示/隐藏密码">
+                                    <svg v-if="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                                         <line x1="1" y1="1" x2="23" y2="23" />
                                     </svg>
-                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
@@ -86,9 +75,11 @@
                             <label>密码强度</label>
                             <div class="password-strength" v-if="usePassword && privateKeyPassword">
                                 <div class="strength-bar">
-                                    <div class="strength-fill" :class="passwordStrength.level" :style="{ width: passwordStrength.percentage + '%' }"></div>
+                                    <div class="strength-fill" :class="passwordStrength.level"
+                                        :style="{ width: passwordStrength.percentage + '%' }"></div>
                                 </div>
-                                <span class="strength-text" :class="passwordStrength.level">{{ passwordStrength.text }}</span>
+                                <span class="strength-text" :class="passwordStrength.level">{{ passwordStrength.text
+                                }}</span>
                             </div>
                             <div v-else class="password-strength disabled">
                                 <div class="strength-bar">
@@ -100,7 +91,8 @@
                     </div>
                     <div class="generate-actions">
                         <button class="generate-btn" @click="generateKeyPair" :disabled="isGenerating">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                 <path d="M2 17l10 5 10-5" />
                                 <path d="M2 12l10 5 10-5" />
@@ -108,7 +100,8 @@
                             {{ isGenerating ? '生成中...' : '生成密钥对' }}
                         </button>
                         <button class="quick-generate-btn" @click="quickGenerate" :disabled="isGenerating">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12,6 12,12 16,14" />
                             </svg>
@@ -137,13 +130,15 @@
                                 </div>
                                 <div class="key-actions">
                                     <button class="copy-key-btn" @click="copyKey('public')" title="复制公钥">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
                                     </button>
                                     <button class="download-key-btn" @click="downloadKey('public')" title="下载公钥">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="7,10 12,15 17,10" />
                                             <line x1="12" y1="15" x2="12" y2="3" />
@@ -165,7 +160,8 @@
                                     <div class="key-type-container">
                                         <span class="key-type">私钥 (Private Key)</span>
                                         <span v-if="keyPair.keyInfo.passwordProtected" class="password-protected-badge">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                                                 <circle cx="12" cy="7" r="4" />
                                             </svg>
@@ -173,20 +169,22 @@
                                         </span>
                                     </div>
                                     <span class="key-description">
-                                        {{ keyPair.keyInfo.passwordProtected 
-                                            ? '已使用密码加密保护，请妥善保管密码和私钥' 
+                                        {{ keyPair.keyInfo.passwordProtected
+                                            ? '已使用密码加密保护，请妥善保管密码和私钥'
                                             : '用于解密数据和生成签名，请妥善保管' }}
                                     </span>
                                 </div>
                                 <div class="key-actions">
                                     <button class="copy-key-btn" @click="copyKey('private')" title="复制私钥">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
                                     </button>
                                     <button class="download-key-btn" @click="downloadKey('private')" title="下载私钥">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="7,10 12,15 17,10" />
                                             <line x1="12" y1="15" x2="12" y2="3" />
@@ -197,7 +195,8 @@
                             <div class="key-value private-key" :class="{ 'blurred': !showPrivateKey }">
                                 {{ keyPair.privateKey }}
                                 <div v-if="!showPrivateKey" class="privacy-overlay" @click="showPrivateKey = true">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
@@ -225,32 +224,26 @@
                     <div class="verify-form">
                         <div class="verify-input-group">
                             <label>公钥</label>
-                            <textarea 
-                                v-model="verifyPublicKey" 
-                                placeholder="请输入要验证的公钥..."
-                                class="verify-input"
-                                @input="validateKeys"
-                            ></textarea>
+                            <textarea v-model="verifyPublicKey" placeholder="请输入要验证的公钥..." class="verify-input"
+                                @input="validateKeys"></textarea>
                         </div>
                         <div class="verify-input-group">
                             <label>私钥</label>
-                            <textarea 
-                                v-model="verifyPrivateKey" 
-                                placeholder="请输入要验证的私钥..."
-                                class="verify-input"
-                                @input="validateKeys"
-                            ></textarea>
+                            <textarea v-model="verifyPrivateKey" placeholder="请输入要验证的私钥..." class="verify-input"
+                                @input="validateKeys"></textarea>
                         </div>
                     </div>
-                    
+
                     <div v-if="verifyResult" class="verify-result">
                         <div class="verify-result-header">
                             <h4>验证结果</h4>
                             <div class="verify-status" :class="verifyResult.valid ? 'valid' : 'invalid'">
-                                <svg v-if="verifyResult.valid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg v-if="verifyResult.valid" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
                                     <polyline points="20,6 9,17 4,12" />
                                 </svg>
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="18" y1="6" x2="6" y2="18" />
                                     <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
@@ -430,26 +423,26 @@ const passwordStrength = computed(() => {
     if (!password) {
         return { level: 'none', percentage: 0, text: '未设置' }
     }
-    
+
     let strength = 0
-    
+
     // 长度检查
     if (password.length >= 8) strength += 25
     if (password.length >= 12) strength += 15
     if (password.length >= 16) strength += 10
-    
+
     // 包含小写字母
     if (/[a-z]/.test(password)) strength += 15
-    
+
     // 包含大写字母
     if (/[A-Z]/.test(password)) strength += 15
-    
+
     // 包含数字
     if (/\d/.test(password)) strength += 10
-    
+
     // 包含特殊字符
     if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 10
-    
+
     if (strength < 30) {
         return { level: 'weak', percentage: strength, text: '弱' }
     } else if (strength < 60) {
@@ -464,7 +457,7 @@ const passwordStrength = computed(() => {
 const generateKeyPair = async () => {
     isGenerating.value = true
     showPrivateKey.value = false
-    
+
     try {
         // 使用Web Crypto API生成RSA密钥对
         const keyPairObj = await window.crypto.subtle.generateKey(
@@ -477,22 +470,22 @@ const generateKeyPair = async () => {
             true,
             ["encrypt", "decrypt"]
         )
-        
+
         // 导出公钥
         const publicKeyBuffer = await window.crypto.subtle.exportKey(
             outputFormat.value === 'jwk' ? 'jwk' : 'spki',
             keyPairObj.publicKey
         )
-        
+
         // 导出私钥
         const privateKeyBuffer = await window.crypto.subtle.exportKey(
             outputFormat.value === 'jwk' ? 'jwk' : 'pkcs8',
             keyPairObj.privateKey
         )
-        
+
         let publicKeyString: string
         let privateKeyString: string
-        
+
         if (outputFormat.value === 'jwk') {
             publicKeyString = JSON.stringify(publicKeyBuffer, null, 2)
             privateKeyString = JSON.stringify(privateKeyBuffer, null, 2)
@@ -500,12 +493,12 @@ const generateKeyPair = async () => {
             publicKeyString = formatPemKey(publicKeyBuffer as ArrayBuffer, 'PUBLIC KEY')
             privateKeyString = formatPemKey(privateKeyBuffer as ArrayBuffer, 'PRIVATE KEY')
         }
-        
+
         // 如果启用了密码保护，对私钥进行加密
         if (usePassword.value && privateKeyPassword.value) {
             privateKeyString = await encryptPrivateKey(privateKeyString, privateKeyPassword.value)
         }
-        
+
         keyPair.value = {
             publicKey: publicKeyString,
             privateKey: privateKeyString,
@@ -517,17 +510,17 @@ const generateKeyPair = async () => {
                 generated: new Date().toISOString()
             }
         }
-        
-        const successMessage = usePassword.value && privateKeyPassword.value 
-            ? 'RSA密钥对生成成功（私钥已加密保护）' 
+
+        const successMessage = usePassword.value && privateKeyPassword.value
+            ? 'RSA密钥对生成成功（私钥已加密保护）'
             : 'RSA密钥对生成成功'
         showSuccess(successMessage)
     } catch (error) {
         console.error('密钥生成失败:', error)
         // 生成模拟密钥对作为fallback
         await generateMockKeyPair()
-        const fallbackMessage = usePassword.value && privateKeyPassword.value 
-            ? '使用模拟密钥对（私钥已加密保护，浏览器不支持Web Crypto API）' 
+        const fallbackMessage = usePassword.value && privateKeyPassword.value
+            ? '使用模拟密钥对（私钥已加密保护，浏览器不支持Web Crypto API）'
             : '使用模拟密钥对（浏览器不支持Web Crypto API）'
         showSuccess(fallbackMessage)
     } finally {
@@ -594,9 +587,9 @@ K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5K5
 // 复制密钥
 const copyKey = async (keyType: 'public' | 'private') => {
     if (!keyPair.value) return
-    
+
     const keyValue = keyType === 'public' ? keyPair.value.publicKey : keyPair.value.privateKey
-    
+
     try {
         await navigator.clipboard.writeText(keyValue)
         showSuccess(`${keyType === 'public' ? '公钥' : '私钥'}已复制`)
@@ -608,10 +601,10 @@ const copyKey = async (keyType: 'public' | 'private') => {
 // 下载密钥
 const downloadKey = (keyType: 'public' | 'private') => {
     if (!keyPair.value) return
-    
+
     const keyValue = keyType === 'public' ? keyPair.value.publicKey : keyPair.value.privateKey
     const fileName = `rsa_${keyType}_key_${keySize.value}.${outputFormat.value === 'jwk' ? 'json' : 'pem'}`
-    
+
     const blob = new Blob([keyValue], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -619,7 +612,7 @@ const downloadKey = (keyType: 'public' | 'private') => {
     a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
-    
+
     showSuccess(`${keyType === 'public' ? '公钥' : '私钥'}已下载`)
 }
 
@@ -629,11 +622,11 @@ const validateKeys = () => {
         verifyResult.value = null
         return
     }
-    
+
     const publicKeyValid = validateSingleKey(verifyPublicKey.value, 'public')
     const privateKeyValid = validateSingleKey(verifyPrivateKey.value, 'private')
     const keyPairMatch = publicKeyValid && privateKeyValid && checkKeyPairMatch()
-    
+
     verifyResult.value = {
         valid: publicKeyValid && privateKeyValid && keyPairMatch,
         publicKeyValid,
@@ -646,13 +639,13 @@ const validateKeys = () => {
 // 验证单个密钥
 const validateSingleKey = (keyValue: string, keyType: 'public' | 'private'): boolean => {
     if (!keyValue.trim()) return false
-    
+
     // 简单的格式验证
     if (keyType === 'public') {
         return keyValue.includes('BEGIN PUBLIC KEY') && keyValue.includes('END PUBLIC KEY')
     } else {
         return keyValue.includes('BEGIN PRIVATE KEY') && keyValue.includes('END PRIVATE KEY') ||
-               keyValue.includes('BEGIN ENCRYPTED PRIVATE KEY') && keyValue.includes('END ENCRYPTED PRIVATE KEY')
+            keyValue.includes('BEGIN ENCRYPTED PRIVATE KEY') && keyValue.includes('END ENCRYPTED PRIVATE KEY')
     }
 }
 
@@ -680,7 +673,7 @@ const encryptPrivateKey = async (privateKey: string, password: string): Promise<
         const encoder = new TextEncoder()
         const keyData = encoder.encode(privateKey)
         const passwordData = encoder.encode(password)
-        
+
         // 简单的XOR加密（仅用于演示）
         const encrypted = new Uint8Array(keyData.length)
         for (let i = 0; i < keyData.length; i++) {
@@ -690,13 +683,13 @@ const encryptPrivateKey = async (privateKey: string, password: string): Promise<
                 encrypted[i] = keyByte ^ passwordByte
             }
         }
-        
+
         const encryptedBase64 = btoa(String.fromCharCode(...encrypted))
-        
+
         // 添加加密标识头
         const formattedEncrypted = encryptedBase64.match(/.{1,64}/g)
         const encryptedContent = formattedEncrypted ? formattedEncrypted.join('\n') : encryptedBase64
-        
+
         return `-----BEGIN ENCRYPTED PRIVATE KEY-----
 Proc-Type: 4,ENCRYPTED
 DEK-Info: AES-256-CBC,${btoa(password.substring(0, 16).padEnd(16, '0'))}
@@ -744,6 +737,16 @@ const clearAll = () => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.generator-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .generator-section {
@@ -1142,6 +1145,16 @@ const clearAll = () => {
     line-height: 1.4;
     white-space: pre-wrap;
     position: relative;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.key-value::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .key-value.private-key.blurred {
@@ -1387,15 +1400,15 @@ const clearAll = () => {
     .config-row {
         grid-template-columns: 1fr;
     }
-    
+
     .verify-form {
         grid-template-columns: 1fr;
     }
-    
+
     .algorithm-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .key-result-container {
         grid-template-columns: 1fr;
     }
@@ -1406,27 +1419,27 @@ const clearAll = () => {
         padding: 1rem;
         gap: 1.5rem;
     }
-    
+
     .generator-section {
         padding: 1rem;
     }
-    
+
     .generate-actions {
         flex-direction: column;
     }
-    
+
     .key-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .verify-detail-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     .verify-label {
         min-width: auto;
     }

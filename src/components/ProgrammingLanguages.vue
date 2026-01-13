@@ -1,69 +1,16 @@
 <template>
     <div class="programming-languages">
-        <div class="languages-header">
-            <button class="back-btn" @click="$emit('back')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                返回
-            </button>
-            <h2 class="languages-title">编程语言大全</h2>
-            <div class="languages-actions">
-                <button class="action-btn" @click="toggleView" :title="viewMode === 'grid' ? '切换到列表视图' : '切换到网格视图'">
-                    <svg v-if="viewMode === 'grid'" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="8" y1="6" x2="21" y2="6" />
-                        <line x1="8" y1="12" x2="21" y2="12" />
-                        <line x1="8" y1="18" x2="21" y2="18" />
-                        <line x1="3" y1="6" x2="3.01" y2="6" />
-                        <line x1="3" y1="12" x2="3.01" y2="12" />
-                        <line x1="3" y1="18" x2="3.01" y2="18" />
-                    </svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7" />
-                        <rect x="14" y="3" width="7" height="7" />
-                        <rect x="14" y="14" width="7" height="7" />
-                        <rect x="3" y="14" width="7" height="7" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <!-- 页面头部 -->
+        <PageHeader title="编程语言大全" @back="$emit('back')" />
 
-        <div class="languages-content">
+        <!-- 内容区域 -->
+        <div class="converter-content">
             <!-- 搜索和筛选 -->
-            <div class="filter-section">
-                <div class="search-box">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                    </svg>
-                    <input v-model="searchQuery" type="text" placeholder="搜索编程语言..." />
-                </div>
-                <div class="filter-tabs">
-                    <button class="filter-tab" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')">
-                        全部 ({{ languages.length }})
-                    </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'popular' }"
-                        @click="setFilter('popular')">
-                        热门 ({{ popularLanguages.length }})
-                    </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'web' }" @click="setFilter('web')">
-                        Web开发 ({{ webLanguages.length }})
-                    </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'mobile' }"
-                        @click="setFilter('mobile')">
-                        移动开发 ({{ mobileLanguages.length }})
-                    </button>
-                    <button class="filter-tab" :class="{ active: activeFilter === 'system' }"
-                        @click="setFilter('system')">
-                        系统编程 ({{ systemLanguages.length }})
-                    </button>
-                </div>
-            </div>
+            <SearchSection :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event" placeholder="搜索编程语言..."
+                :filters="filterOptions" :activeFilter="activeFilter" @update:activeFilter="activeFilter = $event" />
 
             <!-- 语言列表 -->
-            <div class="languages-list" :class="viewMode">
+            <div class="languages-list">
                 <div v-for="language in filteredLanguages" :key="language.id" class="language-card"
                     @click="selectLanguage(language)">
                     <div class="language-header">
@@ -98,85 +45,6 @@
                                     :style="{ width: language.popularity + '%', backgroundColor: '#10b981' }"></div>
                             </div>
                             <span class="stat-value">{{ language.popularity }}%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 语言详情弹窗 -->
-            <div v-if="selectedLanguage" class="language-modal-overlay" @click="closeLanguageModal">
-                <div class="language-modal" @click.stop>
-                    <div class="modal-header">
-                        <div class="modal-title-section">
-                            <div class="language-icon large" :style="{ backgroundColor: selectedLanguage.color }">
-                                {{ selectedLanguage.icon }}
-                            </div>
-                            <div>
-                                <h2>{{ selectedLanguage.name }}</h2>
-                                <p class="modal-subtitle">{{ selectedLanguage.description }}</p>
-                            </div>
-                        </div>
-                        <button class="close-btn" @click="closeLanguageModal">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="modal-content">
-                        <div class="modal-section">
-                            <h3>基本信息</h3>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <span class="info-label">发布年份:</span>
-                                    <span class="info-value">{{ selectedLanguage.year }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">设计者:</span>
-                                    <span class="info-value">{{ selectedLanguage.creator }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">类型:</span>
-                                    <span class="info-value">{{ selectedLanguage.type }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">范式:</span>
-                                    <span class="info-value">{{ selectedLanguage.paradigm }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-section">
-                            <h3>特点与优势</h3>
-                            <ul class="features-list">
-                                <li v-for="feature in selectedLanguage.features" :key="feature">{{ feature }}</li>
-                            </ul>
-                        </div>
-
-                        <div class="modal-section">
-                            <h3>主要用途</h3>
-                            <div class="use-cases">
-                                <span v-for="useCase in selectedLanguage.useCases" :key="useCase"
-                                    class="use-case-tag">{{ useCase }}</span>
-                            </div>
-                        </div>
-
-                        <div class="modal-section">
-                            <h3>学习资源</h3>
-                            <div class="resources-grid">
-                                <a v-for="resource in selectedLanguage.resources" :key="resource.name"
-                                    :href="resource.url" target="_blank" class="resource-link">
-                                    <span class="resource-icon">{{ resource.icon }}</span>
-                                    <span class="resource-name">{{ resource.name }}</span>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                        <polyline points="15,3 21,3 21,9" />
-                                        <line x1="10" y1="14" x2="21" y2="3" />
-                                    </svg>
-                                </a>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -301,12 +169,100 @@
                 </div>
             </div>
         </div>
+
+        <!-- 语言详情弹窗 -->
+        <Modal :visible="!!selectedLanguage" @update:visible="selectedLanguage = null" title="" :showHeader="false"
+            maxWidth="800px" maxHeight="90vh">
+            <div v-if="selectedLanguage" class="modal-body-content">
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <div class="language-icon large" :style="{ backgroundColor: selectedLanguage.color }">
+                            {{ selectedLanguage.icon }}
+                        </div>
+                        <div>
+                            <h2>{{ selectedLanguage.name }}</h2>
+                            <p class="modal-subtitle">{{ selectedLanguage.description }}</p>
+                        </div>
+                    </div>
+                    <button class="close-btn" @click="selectedLanguage = null">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <div class="modal-section">
+                        <h3>基本信息</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">发布年份:</span>
+                                <span class="info-value">{{ selectedLanguage.year }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">设计者:</span>
+                                <span class="info-value">{{ selectedLanguage.creator }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">类型:</span>
+                                <span class="info-value">{{ selectedLanguage.type }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">范式:</span>
+                                <span class="info-value">{{ selectedLanguage.paradigm }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h3>特点与优势</h3>
+                        <ul class="features-list">
+                            <li v-for="feature in selectedLanguage.features" :key="feature">{{ feature }}</li>
+                        </ul>
+                    </div>
+
+                    <div class="modal-section">
+                        <h3>主要用途</h3>
+                        <div class="use-cases">
+                            <span v-for="useCase in selectedLanguage.useCases" :key="useCase" class="use-case-tag">{{
+                                useCase
+                            }}</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h3>学习资源</h3>
+                        <div class="resources-grid">
+                            <a v-for="resource in selectedLanguage.resources" :key="resource.name" :href="resource.url"
+                                target="_blank" class="resource-link">
+                                <span class="resource-icon">{{ resource.icon }}</span>
+                                <span class="resource-name">{{ resource.name }}</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <polyline points="15,3 21,3 21,9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- 回到顶部 -->
+        <ScrollToTop :container="'.converter-content'" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
+import PageHeader from './common/PageHeader.vue'
+import SearchSection from './common/SearchSection.vue'
+import Modal from './common/Modal.vue'
+import ScrollToTop from './common/ScrollToTop.vue'
 
 defineEmits<{
     back: []
@@ -315,8 +271,7 @@ defineEmits<{
 // 使用页面标题管理
 usePageTitle('programming-languages')
 
-// 视图模式
-const viewMode = ref<'grid' | 'list'>('grid')
+// 搜索和筛选状态
 const searchQuery = ref('')
 const activeFilter = ref('all')
 const selectedLanguage = ref<any>(null)
@@ -373,7 +328,7 @@ const languages = ref([
         useCases: ['操作系统', '嵌入式系统', '系统软件', '驱动程序', '编译器'],
         resources: [
             { name: 'C语言教程', url: 'https://www.runoob.com/cprogramming/c-tutorial.html', icon: '📚' },
-            { name: 'GNU GCC', url: 'https://gcc.gnu.org/', icon: '🔧' },
+            { name: 'GNU GCC', url: 'https://gcc.gnu.org/', icon: '�' },
             { name: 'C标准库参考', url: 'https://en.cppreference.com/w/c', icon: '📖' }
         ]
     },
@@ -400,7 +355,7 @@ const languages = ref([
         useCases: ['系统软件', '游戏引擎', '嵌入式开发', '高性能计算', '操作系统'],
         resources: [
             { name: 'cppreference', url: 'https://zh.cppreference.com/', icon: '📚' },
-            { name: 'ISO C++', url: 'https://isocpp.org/', icon: '🌐' },
+            { name: 'ISO C++', url: 'https://isocpp.org/', icon: '�' },
             { name: 'Boost库', url: 'https://www.boost.org/', icon: '📦' }
         ]
     },
@@ -481,7 +436,7 @@ const languages = ref([
         useCases: ['Web前端', 'Node.js后端', '移动应用', '桌面应用', '游戏开发'],
         resources: [
             { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/zh-CN/docs/Web/JavaScript', icon: '📚' },
-            { name: 'JavaScript.info', url: 'https://zh.javascript.info/', icon: '📖' },
+            { name: 'JavaScript.info', url: 'https://zh.javascript.info/', icon: '�' },
             { name: 'Node.js官网', url: 'https://nodejs.org/', icon: '🌐' }
         ]
     },
@@ -723,7 +678,6 @@ const languages = ref([
         ],
         useCases: ['微服务', '云原生应用', '网络编程', '系统工具', 'DevOps工具'],
         resources: [
-            { name: 'Go官网', url: 'https://golang.org/', icon: '🌐' },
             { name: 'Go语言之旅', url: 'https://tour.golang.org/', icon: '🎯' },
             { name: 'Go包索引', url: 'https://pkg.go.dev/', icon: '📦' }
         ]
@@ -871,6 +825,15 @@ const webLanguages = computed(() => languages.value.filter(lang => lang.tags.inc
 const mobileLanguages = computed(() => languages.value.filter(lang => lang.tags.includes('mobile')))
 const systemLanguages = computed(() => languages.value.filter(lang => lang.tags.includes('system')))
 
+// 筛选选项
+const filterOptions = computed(() => [
+    { key: 'all', name: '全部', count: languages.value.length },
+    { key: 'popular', name: '热门', count: popularLanguages.value.length },
+    { key: 'web', name: 'Web开发', count: webLanguages.value.length },
+    { key: 'mobile', name: '移动开发', count: mobileLanguages.value.length },
+    { key: 'system', name: '系统编程', count: systemLanguages.value.length }
+])
+
 const filteredLanguages = computed(() => {
     let filtered = languages.value
 
@@ -905,20 +868,8 @@ const filteredLanguages = computed(() => {
 })
 
 // 方法
-const toggleView = () => {
-    viewMode.value = viewMode.value === 'grid' ? 'list' : 'grid'
-}
-
-const setFilter = (filter: string) => {
-    activeFilter.value = filter
-}
-
 const selectLanguage = (language: any) => {
     selectedLanguage.value = language
-}
-
-const closeLanguageModal = () => {
-    selectedLanguage.value = null
 }
 
 const getDifficultyColor = (difficulty: number): string => {
@@ -930,10 +881,6 @@ const getDifficultyText = (difficulty: number): string => {
     const texts = ['入门', '简单', '中等', '困难', '专家']
     return texts[difficulty - 1] || '未知'
 }
-
-onMounted(() => {
-    // 页面初始化逻辑
-})
 </script>
 
 <style scoped>
@@ -947,46 +894,26 @@ onMounted(() => {
     color: var(--text-primary);
 }
 
-.languages-header {
+.converter-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    /* 隐藏滚动条 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
-.back-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.back-btn:hover {
-    background: var(--bg-hover);
-    transform: translateY(-1px);
-}
-
-.languages-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.languages-actions {
-    display: flex;
-    gap: 0.5rem;
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .action-btn {
@@ -1008,98 +935,11 @@ onMounted(() => {
     transform: translateY(-1px);
 }
 
-.languages-content {
-    flex: 1;
-    padding: 1.5rem 1.5rem 3rem 1.5rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-}
-
-/* 筛选区域 */
-.filter-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-}
-
-.search-box {
-    position: relative;
-    max-width: 400px;
-}
-
-.search-box svg {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-}
-
-.search-box input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-.filter-tabs {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.filter-tab {
-    padding: 0.5rem 1rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.filter-tab:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.filter-tab.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
 /* 语言列表 */
 .languages-list {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
-}
-
-.languages-list.grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-}
-
-.languages-list.list {
-    grid-template-columns: 1fr;
 }
 
 .language-card {
@@ -1138,6 +978,12 @@ onMounted(() => {
     color: white;
     font-size: 0.625rem;
     flex-shrink: 0;
+}
+
+.language-icon.large {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.125rem;
 }
 
 .language-info {
@@ -1252,74 +1098,45 @@ onMounted(() => {
     text-align: right;
 }
 
-/* 语言详情弹窗 */
-.language-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
+/* Modal 内容样式 */
+.modal-body-content {
     padding: 1rem;
-}
-
-.language-modal {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
 .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
-    background: var(--bg-tertiary);
+    margin-bottom: 1rem;
 }
 
 .modal-title-section {
     display: flex;
     align-items: center;
-    gap: 1rem;
-}
-
-.language-icon.large {
-    width: 4rem;
-    height: 4rem;
-    font-size: 1.125rem;
+    gap: 0.75rem;
 }
 
 .modal-title-section h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
 }
 
 .modal-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin: 0.25rem 0 0 0;
 }
 
 .close-btn {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
     background: none;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     color: var(--text-secondary);
     cursor: pointer;
     display: flex;
@@ -1329,30 +1146,27 @@ onMounted(() => {
 }
 
 .close-btn:hover {
-    background: var(--bg-hover);
+    background: var(--bg-tertiary);
     color: var(--text-primary);
 }
 
 .modal-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .modal-section h3 {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
 }
 
 .info-item {
@@ -1362,13 +1176,13 @@ onMounted(() => {
 }
 
 .info-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
 .info-value {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-primary);
 }
 
@@ -1376,15 +1190,15 @@ onMounted(() => {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 0.5rem;
 }
 
 .features-list li {
-    padding: 0.5rem 0;
+    padding: 0.375rem 0;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-primary);
 }
 
@@ -1395,32 +1209,32 @@ onMounted(() => {
 .use-cases {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.375rem;
 }
 
 .use-case-tag {
-    padding: 0.5rem 1rem;
+    padding: 0.375rem 0.75rem;
     background: var(--primary-color-alpha);
     color: var(--primary-color);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
     font-weight: 500;
 }
 
 .resources-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
 }
 
 .resource-link {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
+    gap: 0.5rem;
+    padding: 0.75rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     text-decoration: none;
     color: var(--text-primary);
     transition: all 0.2s ease;
@@ -1433,12 +1247,12 @@ onMounted(() => {
 }
 
 .resource-icon {
-    font-size: 1.25rem;
+    font-size: 1rem;
 }
 
 .resource-name {
     flex: 1;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
@@ -1471,9 +1285,9 @@ onMounted(() => {
 
 .ranking-sources-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .ranking-source-card {
@@ -1481,12 +1295,12 @@ onMounted(() => {
     flex-direction: column;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
     text-decoration: none;
     color: var(--text-primary);
     transition: all 0.2s ease;
-    min-height: 200px;
+    min-height: 160px;
 }
 
 .ranking-source-card:hover {
@@ -1499,18 +1313,18 @@ onMounted(() => {
 .source-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 .source-icon {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.375rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1rem;
     color: white;
     flex-shrink: 0;
 }
@@ -1582,11 +1396,11 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .languages-content {
-        padding: 1rem 1rem 3rem 1rem;
+    .converter-content {
+        padding: 1rem;
     }
 
-    .languages-list.grid {
+    .languages-list {
         grid-template-columns: 1fr;
     }
 
@@ -1601,10 +1415,6 @@ onMounted(() => {
         flex-direction: row;
         justify-content: space-between;
         width: 100%;
-    }
-
-    .filter-section {
-        padding: 1rem;
     }
 
     .info-grid {

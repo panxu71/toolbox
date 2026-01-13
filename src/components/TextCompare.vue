@@ -1,10 +1,6 @@
 <template>
     <div class="text-compare">
-        <PageHeader title="文本比对" @back="$emit('back')">
-            <template #actions>
-                <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
-            </template>
-        </PageHeader>
+        <PageHeader title="文本比对" @back="$emit('back')" />
 
         <div class="compare-content">
             <!-- 文本比对工具 -->
@@ -167,10 +163,12 @@
                         <div class="diff-header">
                             <h4>差异详情</h4>
                             <div class="view-options">
-                                <button class="view-btn" :class="{ active: viewMode === 'unified' }" @click="viewMode = 'unified'">
+                                <button class="view-btn" :class="{ active: viewMode === 'unified' }"
+                                    @click="viewMode = 'unified'">
                                     统一视图
                                 </button>
-                                <button class="view-btn" :class="{ active: viewMode === 'split' }" @click="viewMode = 'split'">
+                                <button class="view-btn" :class="{ active: viewMode === 'split' }"
+                                    @click="viewMode = 'split'">
                                     并排视图
                                 </button>
                             </div>
@@ -180,21 +178,24 @@
                                 <span class="legend-item modified">~ 修改</span>
                             </div>
                         </div>
-                        
+
                         <!-- 统一视图 -->
                         <div v-if="viewMode === 'unified'" class="diff-content unified">
                             <template v-for="(diff, diffIndex) in compareResult.diffs" :key="diffIndex">
-                                <template v-for="(lineText, lineIndex) in diff.value.split('\n')" :key="`${diffIndex}-${lineIndex}`">
-                                    <div v-if="lineText || diff.value.endsWith('\n')"
-                                         class="diff-line" :class="diff.type">
+                                <template v-for="(lineText, lineIndex) in diff.value.split('\n')"
+                                    :key="`${diffIndex}-${lineIndex}`">
+                                    <div v-if="lineText || diff.value.endsWith('\n')" class="diff-line"
+                                        :class="diff.type">
                                         <span class="line-number">{{ lineIndex + 1 }}</span>
-                                        <span class="line-prefix">{{ diff.type === 'added' ? '+' : diff.type === 'removed' ? '-' : ' ' }}</span>
-                                        <span class="line-content" v-html="highlightDifferences(lineText, diff.type)"></span>
+                                        <span class="line-prefix">{{ diff.type === 'added' ? '+' : diff.type ===
+                                            'removed' ? '-' : ' ' }}</span>
+                                        <span class="line-content"
+                                            v-html="highlightDifferences(lineText, diff.type)"></span>
                                     </div>
                                 </template>
                             </template>
                         </div>
-                        
+
                         <!-- 并排视图 -->
                         <div v-if="viewMode === 'split'" class="diff-content split">
                             <div class="split-header">
@@ -205,12 +206,14 @@
                                 <div v-for="(pair, index) in splitDiffs" :key="index" class="diff-pair">
                                     <div class="diff-side left" :class="pair.left?.type || 'empty'">
                                         <span class="line-number">{{ pair.left?.lineNumber || '' }}</span>
-                                        <span class="line-content" v-if="pair.left" v-html="highlightDifferences(pair.left.content, pair.left.type)"></span>
+                                        <span class="line-content" v-if="pair.left"
+                                            v-html="highlightDifferences(pair.left.content, pair.left.type)"></span>
                                         <span class="line-content empty" v-else></span>
                                     </div>
                                     <div class="diff-side right" :class="pair.right?.type || 'empty'">
                                         <span class="line-number">{{ pair.right?.lineNumber || '' }}</span>
-                                        <span class="line-content" v-if="pair.right" v-html="highlightDifferences(pair.right.content, pair.right.type)"></span>
+                                        <span class="line-content" v-if="pair.right"
+                                            v-html="highlightDifferences(pair.right.content, pair.right.type)"></span>
                                         <span class="line-content empty" v-else></span>
                                     </div>
                                 </div>
@@ -249,7 +252,9 @@
                 <!-- 技术说明框 -->
                 <div class="diff-info">
                     <h4>⚡ 关于 Diff 算法</h4>
-                    <p>基于专业的 <a href="https://www.npmjs.com/package/diff" target="_blank" rel="noopener">diff</a> 库，采用 Myers 差分算法，被 Git、GitHub、VS Code 等工具广泛使用。该算法能够高效地计算两个文本序列之间的最小编辑距离，提供精确的差异分析结果。</p>
+                    <p>基于专业的 <a href="https://www.npmjs.com/package/diff" target="_blank" rel="noopener">diff</a> 库，采用
+                        Myers 差分算法，被
+                        Git、GitHub、VS Code 等工具广泛使用。该算法能够高效地计算两个文本序列之间的最小编辑距离，提供精确的差异分析结果。</p>
                     <div class="tech-features">
                         <div class="feature-row">
                             <span class="feature-label">🔍 算法优势：</span>
@@ -286,7 +291,6 @@ import { ref, computed, onMounted } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
 import * as Diff from 'diff'
 
 defineEmits<{
@@ -518,7 +522,7 @@ const compareTexts = () => {
 
     // 使用 diff 库进行比对
     const diffs = Diff.diffLines(processedA, processedB)
-    
+
     // 计算统计信息
     let addedLines = 0
     let removedLines = 0
@@ -565,18 +569,18 @@ const getSimilarityClass = (similarity: number): string => {
 // 计算并排视图数据
 const splitDiffs = computed(() => {
     if (!compareResult.value) return []
-    
+
     const pairs: Array<{
         left?: { type: string; content: string; lineNumber: number }
         right?: { type: string; content: string; lineNumber: number }
     }> = []
-    
+
     let leftLineNumber = 1
     let rightLineNumber = 1
-    
+
     compareResult.value.diffs.forEach(diff => {
         const lines = diff.value.split('\n').filter(line => line !== '' || diff.value.endsWith('\n'))
-        
+
         lines.forEach((line) => {
             if (diff.type === 'unchanged') {
                 pairs.push({
@@ -596,14 +600,14 @@ const splitDiffs = computed(() => {
             }
         })
     })
-    
+
     return pairs
 })
 
 // 高亮差异
 const highlightDifferences = (content: string, type: string): string => {
     if (type === 'unchanged') return escapeHtml(content)
-    
+
     return `<span class="highlight-${type}">${escapeHtml(content)}</span>`
 }
 
@@ -621,7 +625,7 @@ const showMessage = (text: string, type: 'success' | 'error') => {
     } else {
         showError(text)
     }
-    
+
     // 保留原有的toast消息系统作为备用
     message.value = text
     messageType.value = type
@@ -656,6 +660,16 @@ onMounted(() => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.compare-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .compare-section {
@@ -1293,11 +1307,11 @@ onMounted(() => {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
-    
+
     .feature-card {
         padding: 1rem;
     }
-    
+
     .feature-icon {
         font-size: 2rem;
         margin-bottom: 0.5rem;

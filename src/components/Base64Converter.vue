@@ -283,12 +283,12 @@ const encodeText = () => {
 
     try {
         let base64 = btoa(new TextEncoder().encode(inputText.value).reduce((data, byte) => data + String.fromCharCode(byte), ''))
-        
+
         if (isUrlSafe.value) {
             // URL安全格式：替换 + 为 -，/ 为 _，移除 =
             base64 = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
         }
-        
+
         encodedText.value = base64
         showSuccess('编码成功')
     } catch (error) {
@@ -305,7 +305,7 @@ const decodeText = () => {
 
     try {
         let base64 = inputText.value
-        
+
         if (isUrlSafe.value) {
             // 还原URL安全格式
             base64 = base64.replace(/-/g, '+').replace(/_/g, '/')
@@ -314,7 +314,7 @@ const decodeText = () => {
                 base64 += '='
             }
         }
-        
+
         const binaryString = atob(base64)
         const bytes = new Uint8Array(binaryString.length)
         for (let i = 0; i < binaryString.length; i++) {
@@ -527,6 +527,16 @@ onMounted(() => {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .converter-section {

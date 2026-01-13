@@ -42,8 +42,7 @@
                                 @input="autoEncode"></textarea>
                             <div class="input-info">
                                 <span class="char-count">字符数: {{ inputText.length }}</span>
-                                <span class="url-valid"
-                                    :class="getUrlStatusClass(inputText)">
+                                <span class="url-valid" :class="getUrlStatusClass(inputText)">
                                     {{ getUrlStatus(inputText) }}
                                 </span>
                             </div>
@@ -75,8 +74,7 @@
                                 readonly></textarea>
                             <div class="output-info">
                                 <span class="char-count">字符数: {{ encodedText.length }}</span>
-                                <span class="url-valid"
-                                    :class="getUrlStatusClass(encodedText)">
+                                <span class="url-valid" :class="getUrlStatusClass(encodedText)">
                                     {{ getUrlStatus(encodedText) }}
                                 </span>
                             </div>
@@ -171,8 +169,8 @@
                                     <span class="param-separator">=</span>
                                     <span class="param-value">{{ param.value }}</span>
                                     <button class="copy-param-btn" @click="copyParam(param)" title="复制此参数">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                         </svg>
@@ -302,7 +300,7 @@ const isValidUrl = (url: string): boolean => {
 // 获取URL状态文本
 const getUrlStatus = (url: string): string => {
     if (!url) return ''
-    
+
     // 先检查是否是有效的URL
     try {
         new URL(url)
@@ -326,7 +324,7 @@ const getUrlStatus = (url: string): string => {
 // 获取URL状态样式类
 const getUrlStatusClass = (url: string): string => {
     if (!url) return ''
-    
+
     // 先检查是否是有效的URL
     try {
         new URL(url)
@@ -436,7 +434,7 @@ const openUrl = () => {
     }
 
     let urlToOpen = encodedText.value
-    
+
     // 如果是编码后的URL，先解码再打开
     try {
         new URL(encodedText.value)
@@ -494,7 +492,7 @@ const parseUrlComponents = () => {
 // 复制所有参数
 const copyParams = async () => {
     const paramsText = urlParams.value.map(param => `${param.key}=${param.value}`).join('&')
-    
+
     try {
         await navigator.clipboard.writeText(paramsText)
         showSuccess('参数已复制到剪贴板')
@@ -551,6 +549,16 @@ const clearAll = () => {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .converter-section {

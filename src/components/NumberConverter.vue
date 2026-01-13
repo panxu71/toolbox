@@ -2,7 +2,6 @@
     <div class="number-converter">
         <PageHeader :title="pageTitle" @back="$emit('back')">
             <template #actions>
-                <HeaderActionButton icon="copy" tooltip="复制结果" @click="copyActiveResult" />
                 <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
             </template>
         </PageHeader>
@@ -676,20 +675,6 @@ const copyResult = async (value: string) => {
     }
 }
 
-// 复制当前激活的结果
-const copyActiveResult = async () => {
-    const activeResults = {
-        'number': results.value.number,
-        'roman': results.value.roman,
-        'chinese': results.value.chinese
-    }
-
-    const activeValue = activeResults[inputType.value]
-    if (activeValue && activeValue !== '-' && activeValue !== '错误') {
-        await copyResult(activeValue)
-    }
-}
-
 // 设置示例值
 const setExample = (value: number) => {
     inputType.value = 'number'
@@ -722,6 +707,16 @@ convertNumber()
     width: 100%;
     min-height: calc(100vh - 80px);
     overflow-y: auto;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 快速示例 - 已合并到input-panel */

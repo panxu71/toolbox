@@ -598,6 +598,16 @@ const clearAll = () => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* Hide scrollbars */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.calculator-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 计算区域 */

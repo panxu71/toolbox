@@ -4,33 +4,9 @@
 
         <div class="dynasty-content">
             <!-- 搜索和筛选区域 - 只在列表页面显示 -->
-            <div v-if="!selectedDynasty" class="search-section">
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.35-4.35" />
-                        </svg>
-                        <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索朝代名称、皇帝姓名..."
-                            @input="filterDynasties" />
-                        <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="period-filter">
-                        <button v-for="period in periods" :key="period.key"
-                            :class="['period-btn', { active: activePeriod === period.key }]"
-                            @click="setActivePeriod(period.key)">
-                            {{ period.name }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <SearchSection v-if="!selectedDynasty" :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event"
+                placeholder="搜索朝代名称、皇帝姓名..." :filters="periodFilters" :activeFilter="activePeriod"
+                @update:activeFilter="activePeriod = $event" />
 
             <!-- 朝代时间轴 -->
             <div v-if="!selectedDynasty" class="timeline-section">
@@ -196,6 +172,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import PageHeader from './common/PageHeader.vue'
+import SearchSection from './common/SearchSection.vue'
 import ScrollToTop from './common/ScrollToTop.vue'
 import cardsConfig from '../config/cards.json'
 
@@ -232,6 +209,17 @@ const periods = [
     { key: 'imperial', name: '帝制' },
     { key: 'modern', name: '近现代' }
 ]
+
+// 筛选选项 - 为SearchSection组件提供
+const periodFilters = computed(() =>
+    periods.map(period => ({
+        key: period.key,
+        name: period.name,
+        count: period.key === 'all'
+            ? dynasties.value.length
+            : dynasties.value.filter(d => d.period === period.key).length
+    }))
+)
 
 // 朝代接口定义
 interface Emperor {
@@ -1063,22 +1051,6 @@ const filteredDynasties = computed(() => {
     return filtered
 })
 
-// 过滤朝代
-const filterDynasties = () => {
-    // 触发计算属性重新计算
-}
-
-// 清空搜索
-const clearSearch = () => {
-    searchQuery.value = ''
-    filterDynasties()
-}
-
-// 设置活动时期
-const setActivePeriod = (period: string) => {
-    activePeriod.value = period
-}
-
 // 获取时期标题
 const getPeriodTitle = () => {
     const period = periods.find(p => p.key === activePeriod.value)
@@ -1137,13 +1109,19 @@ const scrollToDynasty = (dynastyName: string) => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
-/* 搜索区域样式 */
-.search-section {
-    margin-bottom: 2rem;
+.dynasty-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
+/* 时间轴区域样式 */
 .section-header {
     display: flex;
     align-items: center;
@@ -1329,9 +1307,12 @@ const scrollToDynasty = (dynastyName: string) => {
 }
 
 @keyframes highlightPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 0 3px var(--primary-color-alpha);
     }
+
     50% {
         box-shadow: 0 0 0 6px var(--primary-color-alpha);
     }

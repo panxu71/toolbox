@@ -424,6 +424,16 @@ convertNumber()
     width: 100%;
     min-height: calc(100vh - 80px);
     overflow-y: auto;
+    /* Hide scrollbars */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 转换区域 */

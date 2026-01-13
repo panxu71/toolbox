@@ -1,41 +1,12 @@
 <template>
     <div class="mime-type-reference">
-        <PageHeader :title="pageTitle" @back="handleBack">
-            <template #actions>
-                <HeaderActionButton icon="download" tooltip="导出数据" @click="exportData" />
-                <HeaderActionButton icon="refresh" tooltip="重置筛选" @click="resetFilters" />
-            </template>
-        </PageHeader>
+        <PageHeader :title="pageTitle" @back="handleBack" />
 
         <div class="converter-content">
             <!-- 搜索和筛选 -->
-            <div class="search-section">
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.35-4.35" />
-                        </svg>
-                        <input v-model="searchQuery" type="text" placeholder="搜索文件扩展名或MIME类型..." class="search-input"
-                            @input="filterMimeTypes" />
-                        <button v-if="searchQuery" @click="clearSearch" class="clear-search-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="category-filter">
-                        <button v-for="category in categories" :key="category.key"
-                            @click="setActiveCategory(category.key)"
-                            :class="['category-btn', { active: activeCategory === category.key }]">
-                            {{ category.name }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <SearchSection :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event"
+                placeholder="搜索文件扩展名或MIME类型..." :filters="categoryFilters" :activeFilter="activeCategory"
+                @update:activeFilter="activeCategory = $event" />
 
             <!-- MIME类型表格 -->
             <div class="mime-table-section">
@@ -68,8 +39,14 @@
                                     <span class="description">{{ mimeType.description }}</span>
                                 </td>
                                 <td class="action-cell">
-                                    <HeaderActionButton icon="copy" tooltip="复制MIME类型"
-                                        @click="copyMimeType(mimeType.mimeType)" class="copy-btn-table" />
+                                    <button @click="copyMimeType(mimeType.mimeType)" class="copy-btn-table"
+                                        title="复制MIME类型">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -101,9 +78,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
+import SearchSection from './common/SearchSection.vue'
 import ScrollToTop from './common/ScrollToTop.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useNotification } from '../composables/useNotification'
@@ -152,6 +129,17 @@ const categories = [
     { key: 'application', name: '应用程序' },
     { key: 'font', name: '字体' }
 ]
+
+// 筛选选项 - 为SearchSection组件提供
+const categoryFilters = computed(() =>
+    categories.map(category => ({
+        key: category.key,
+        name: category.name,
+        count: category.key === 'all'
+            ? mimeTypes.value.length
+            : mimeTypes.value.filter(m => m.category === category.key).length
+    }))
+)
 
 // MIME类型数据
 const mimeTypes = ref<MimeTypeInfo[]>([
@@ -256,31 +244,6 @@ const totalPages = computed(() => {
     return Math.ceil(filteredMimeTypes.value.length / pageSize)
 })
 
-// 过滤MIME类型
-const filterMimeTypes = () => {
-    currentPage.value = 1
-}
-
-// 清空搜索
-const clearSearch = () => {
-    searchQuery.value = ''
-    filterMimeTypes()
-}
-
-// 重置筛选
-const resetFilters = () => {
-    searchQuery.value = ''
-    activeCategory.value = 'all'
-    currentPage.value = 1
-    success('已重置筛选条件')
-}
-
-// 设置活动分类
-const setActiveCategory = (category: string) => {
-    activeCategory.value = category
-    currentPage.value = 1
-}
-
 // 获取分类标题
 const getCategoryTitle = () => {
     const category = categories.find(c => c.key === activeCategory.value)
@@ -305,30 +268,6 @@ const copyMimeType = async (mimeType: string) => {
     }
 }
 
-// 导出数据
-const exportData = () => {
-    const data = filteredMimeTypes.value.map(item => ({
-        扩展名: item.extension,
-        MIME类型: item.mimeType,
-        描述: item.description,
-        分类: item.category
-    }))
-
-    const jsonStr = JSON.stringify(data, null, 2)
-    const blob = new Blob([jsonStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'mime-types.json'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    success('数据已导出为 mime-types.json')
-}
-
 // 处理返回事件
 const handleBack = () => {
     emit('back')
@@ -337,6 +276,11 @@ const handleBack = () => {
 // 初始化
 onMounted(() => {
     success(`共收录 ${mimeTypes.value.length} 种文件类型`)
+})
+
+// 监听搜索和筛选变化，重置分页
+watch([searchQuery, activeCategory], () => {
+    currentPage.value = 1
 })
 </script>
 <style scoped>
@@ -356,6 +300,16 @@ onMounted(() => {
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 /* 搜索区域样式 */
@@ -556,6 +510,26 @@ onMounted(() => {
 .copy-btn-table {
     width: 32px !important;
     height: 32px !important;
+}
+
+.copy-btn-table {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.copy-btn-table:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
 }
 
 /* 分页样式 */

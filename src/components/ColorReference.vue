@@ -1,38 +1,12 @@
 <template>
     <div class="color-reference">
-        <PageHeader :title="pageTitle" @back="handleBack">
-            <template #actions>
-                <HeaderActionButton icon="refresh" tooltip="重置筛选" @click="resetFilters" />
-                <HeaderActionButton icon="clear" tooltip="清空选择" @click="clearSelection" />
-            </template>
-        </PageHeader>
+        <PageHeader :title="pageTitle" @back="handleBack" />
 
         <div class="converter-content">
-            <!-- 搜索和筛选 -->
-            <div class="search-section">
-                <div class="search-wrapper">
-                    <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索颜色名称或代码..."
-                        @input="filterColors" />
-                    <div class="filter-buttons">
-                        <button :class="['filter-btn', { active: selectedCategory === 'all' }]"
-                            @click="setCategory('all')">
-                            全部
-                        </button>
-                        <button :class="['filter-btn', { active: selectedCategory === 'basic' }]"
-                            @click="setCategory('basic')">
-                            基础色
-                        </button>
-                        <button :class="['filter-btn', { active: selectedCategory === 'web' }]"
-                            @click="setCategory('web')">
-                            网页安全色
-                        </button>
-                        <button :class="['filter-btn', { active: selectedCategory === 'material' }]"
-                            @click="setCategory('material')">
-                            Material Design
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <!-- 搜索区域 -->
+            <SearchSection :searchQuery="searchQuery" @update:searchQuery="searchQuery = $event"
+                placeholder="搜索颜色名称或代码..." :filters="filterOptions" :activeFilter="activeFilter"
+                @update:activeFilter="activeFilter = $event" />
 
             <!-- 颜色网格 -->
             <div class="colors-grid">
@@ -103,11 +77,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import PageHeader from './common/PageHeader.vue'
-import HeaderActionButton from './common/HeaderActionButton.vue'
+import SearchSection from './common/SearchSection.vue'
 import ScrollToTop from './common/ScrollToTop.vue'
 import Modal from './common/Modal.vue'
+import HeaderActionButton from './common/HeaderActionButton.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useNotification } from '../composables/useNotification'
 import cardsConfig from '../config/cards.json'
@@ -142,9 +117,22 @@ const pageTitle = computed(() => {
 
 // 搜索和筛选
 const searchQuery = ref('')
-const selectedCategory = ref('all')
+const activeFilter = ref('all')
 const selectedColor = ref<Color | null>(null)
 const showColorModal = ref(false)
+
+// 筛选选项 - 为SearchSection组件提供
+const filterOptions = computed(() => [
+    { key: 'all', name: '全部', count: colors.value.length },
+    { key: 'basic', name: '基础色', count: colors.value.filter(c => c.category === 'basic').length },
+    { key: 'web', name: '网页安全色', count: colors.value.filter(c => c.category === 'web').length },
+    { key: 'material', name: 'Material Design', count: colors.value.filter(c => c.category === 'material').length }
+])
+
+// 监听筛选变化
+watch([searchQuery, activeFilter], () => {
+    selectedColor.value = null
+})
 
 // DOM引用
 // const colorDetailsRef = ref<HTMLElement | null>(null) // 不再需要
@@ -276,8 +264,8 @@ const filteredColors = computed(() => {
     let result = colors.value
 
     // 按分类筛选
-    if (selectedCategory.value !== 'all') {
-        result = result.filter(color => color.category === selectedCategory.value)
+    if (activeFilter.value !== 'all') {
+        result = result.filter(color => color.category === activeFilter.value)
     }
 
     // 按搜索词筛选
@@ -293,33 +281,9 @@ const filteredColors = computed(() => {
     return result
 })
 
-// 设置分类
-const setCategory = (category: string) => {
-    selectedCategory.value = category
-    selectedColor.value = null
-}
-
-// 筛选颜色
-const filterColors = () => {
-    selectedColor.value = null
-}
-
 // 处理返回事件
 const handleBack = () => {
     emit('back')
-}
-
-// 重置筛选
-const resetFilters = () => {
-    searchQuery.value = ''
-    selectedCategory.value = 'all'
-    selectedColor.value = null
-}
-
-// 清空选择
-const clearSelection = () => {
-    selectedColor.value = null
-    showColorModal.value = false
 }
 
 // 复制功能
@@ -390,68 +354,16 @@ onMounted(() => {
     margin: 0 auto;
     width: 100%;
     min-height: calc(100vh - 120px);
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
-/* 搜索区域 */
-.search-section {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.search-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.search-input {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: var(--transition);
-    box-sizing: border-box;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.filter-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: 0.75rem 1.5rem;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.filter-btn:hover {
-    background: var(--border-color);
-    color: var(--text-primary);
-}
-
-.filter-btn.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 颜色网格 */
@@ -664,7 +576,6 @@ onMounted(() => {
         gap: 1.5rem;
     }
 
-    .search-section,
     .color-details {
         padding: 1.5rem;
     }
@@ -687,10 +598,6 @@ onMounted(() => {
     .large-preview {
         width: 100px;
         height: 100px;
-    }
-
-    .filter-buttons {
-        justify-content: center;
     }
 
     /* 弹窗内容移动端适配 */

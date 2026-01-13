@@ -4,9 +4,12 @@
             <template #actions>
                 <div class="formatter-actions">
                     <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
-                    <HeaderActionButton icon="copy" tooltip="复制全部" @click="copyAllUuids" :disabled="uuids.length === 0" />
-                    <HeaderActionButton icon="format" tooltip="复制JSON" @click="copyAllAsJson" :disabled="uuids.length === 0" />
-                    <HeaderActionButton icon="download" tooltip="导出文件" @click="exportUuids" :disabled="uuids.length === 0" />
+                    <HeaderActionButton icon="copy" tooltip="复制全部" @click="copyAllUuids"
+                        :disabled="uuids.length === 0" />
+                    <HeaderActionButton icon="format" tooltip="复制JSON" @click="copyAllAsJson"
+                        :disabled="uuids.length === 0" />
+                    <HeaderActionButton icon="download" tooltip="导出文件" @click="exportUuids"
+                        :disabled="uuids.length === 0" />
                 </div>
             </template>
         </PageHeader>
@@ -17,7 +20,8 @@
                 <div class="section-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                 <path d="M2 17l10 5 10-5" />
                                 <path d="M2 12l10 5 10-5" />
@@ -40,20 +44,25 @@
                                 <option value="v7">UUID v7 (时间戳+随机)</option>
                             </select>
                         </div>
-                        
+
                         <div class="control-group">
                             <label>生成数量</label>
                             <div class="quantity-controls">
-                                <input v-model.number="quantity" type="number" min="1" max="1000" class="quantity-input" />
+                                <input v-model.number="quantity" type="number" min="1" max="1000"
+                                    class="quantity-input" />
                                 <div class="quantity-buttons">
-                                    <button class="quantity-btn" @click="setQuantity(1)" :class="{ active: quantity === 1 }">1</button>
-                                    <button class="quantity-btn" @click="setQuantity(10)" :class="{ active: quantity === 10 }">10</button>
-                                    <button class="quantity-btn" @click="setQuantity(50)" :class="{ active: quantity === 50 }">50</button>
-                                    <button class="quantity-btn" @click="setQuantity(100)" :class="{ active: quantity === 100 }">100</button>
+                                    <button class="quantity-btn" @click="setQuantity(1)"
+                                        :class="{ active: quantity === 1 }">1</button>
+                                    <button class="quantity-btn" @click="setQuantity(10)"
+                                        :class="{ active: quantity === 10 }">10</button>
+                                    <button class="quantity-btn" @click="setQuantity(50)"
+                                        :class="{ active: quantity === 50 }">50</button>
+                                    <button class="quantity-btn" @click="setQuantity(100)"
+                                        :class="{ active: quantity === 100 }">100</button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="control-group">
                             <label>格式选项</label>
                             <div class="format-options">
@@ -71,10 +80,11 @@
                                 </label>
                             </div>
                         </div>
-                        
+
                         <div class="generate-actions">
                             <button class="generate-btn" @click="generateUuid">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                     <path d="M2 17l10 5 10-5" />
                                     <path d="M2 12l10 5 10-5" />
@@ -89,22 +99,24 @@
                             <h4>生成结果</h4>
                             <span class="count-info">共 {{ uuids.length }} 个UUID</span>
                         </div>
-                        
+
                         <div v-if="uuids.length === 0" class="empty-state">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                                 <path d="M2 17l10 5 10-5" />
                                 <path d="M2 12l10 5 10-5" />
                             </svg>
                             <p>点击"生成UUID"按钮开始生成</p>
                         </div>
-                        
+
                         <div v-else class="uuid-list">
                             <div v-for="(uuid, index) in uuids" :key="index" class="uuid-item">
                                 <div class="uuid-index">{{ index + 1 }}</div>
                                 <div class="uuid-value">{{ uuid }}</div>
                                 <button class="copy-uuid-btn" @click="copyUuid(uuid)" title="复制">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                                         <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                                     </svg>
@@ -120,7 +132,8 @@
                 <div class="section-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="20,6 9,17 4,12" />
                             </svg>
                         </div>
@@ -130,22 +143,24 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="uuid-validator">
                     <div class="validator-input">
                         <label>输入UUID</label>
-                        <input v-model="validateInput" placeholder="请输入要验证的UUID..." 
-                            class="validate-input" @input="validateUuid" />
+                        <input v-model="validateInput" placeholder="请输入要验证的UUID..." class="validate-input"
+                            @input="validateUuid" />
                     </div>
-                    
+
                     <div v-if="validationResult" class="validation-result">
                         <div class="validation-header">
                             <h4>验证结果</h4>
                             <div class="validation-status" :class="validationResult.isValid ? 'valid' : 'invalid'">
-                                <svg v-if="validationResult.isValid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg v-if="validationResult.isValid" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="20,6 9,17 4,12" />
                                 </svg>
-                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="18" y1="6" x2="6" y2="18" />
                                     <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
@@ -179,7 +194,8 @@
                 <div class="section-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                                 <path d="M12 17h.01" />
@@ -191,7 +207,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="uuid-info">
                     <div class="info-grid">
                         <div v-for="info in uuidVersionInfo" :key="info.version" class="info-card">
@@ -594,6 +610,16 @@ generateUuid()
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.generator-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .generator-section {
@@ -835,6 +861,16 @@ generateUuid()
     gap: 0.5rem;
     max-height: 380px;
     overflow-y: auto;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.uuid-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .uuid-item {

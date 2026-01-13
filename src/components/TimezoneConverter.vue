@@ -708,6 +708,16 @@ const clearAll = () => {
     margin: 0 auto;
     width: 100%;
     min-height: 0;
+    /* Hide scrollbars */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.converter-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 /* 通用区域样式 */
