@@ -415,9 +415,6 @@ const executeFunction = async (action: string) => {
             case 'compareText':
                 openPage('text-compare')
                 return // 不需要loading状态
-            case 'countString':
-                openPage('string-counter')
-                return // 不需要loading状态
             case 'countStringNew':
                 openPage('string-counter-new')
                 return // 不需要loading状态

@@ -95,7 +95,7 @@
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
                                     <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -188,7 +188,7 @@
                                     <div class="detail-item">
                                         <span class="label">经纬度:</span>
                                         <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">ASN:</span>
@@ -299,10 +299,37 @@ interface ApiSourceConfig {
 const apiFetchers = {
     // 获取Coding.tools数据
     fetchCodingToolsData: async (): Promise<IpInfo> => {
-        try {
-            const url = import.meta.env.DEV ? '/api/coding-tools' : 'https://coding.tools/cn/my-ip-address'
+        // 生产环境直接使用支持CORS的IPapi.co
+        if (import.meta.env.PROD) {
+            try {
+                const response = await fetch('https://ipapi.co/json/')
+                if (!response.ok) throw new Error(`HTTP ${response.status}`)
+                const data = await response.json()
+                return {
+                    ip: data.ip || '未知',
+                    country: data.country_name || '',
+                    region: data.region || '',
+                    city: data.city || '',
+                    location: `${data.city || ''} ${data.region || ''} ${data.country_name || ''}`.trim() || '未知位置',
+                    isp: data.org || '',
+                    timezone: data.timezone || '',
+                    lat: data.latitude,
+                    lon: data.longitude,
+                    source: 'IPapi.co'
+                }
+            } catch (error) {
+                return {
+                    ip: '获取失败',
+                    location: '请求失败',
+                    source: 'IPapi.co',
+                    error: error instanceof Error ? error.message : '网络错误'
+                }
+            }
+        }
 
-            const response = await fetch(url, {
+        // 开发环境使用原来的代理
+        try {
+            const response = await fetch('/api/coding-tools', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -313,35 +340,17 @@ const apiFetchers = {
                 body: 'queryIp='
             })
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`)
-            }
-
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
             const text = await response.text()
-
-            let data
-            try {
-                data = JSON.parse(text)
-            } catch (parseError) {
-                throw new Error('服务器返回HTML而不是JSON，可能需要特殊认证')
-            }
+            const data = JSON.parse(text)
 
             if (data.ip) {
                 const countryMap: { [key: string]: string } = {
-                    'China': '中国',
-                    'United States': '美国',
-                    'Japan': '日本',
-                    'South Korea': '韩国',
-                    'United Kingdom': '英国',
-                    'Germany': '德国',
-                    'France': '法国',
-                    'Canada': '加拿大',
-                    'Australia': '澳大利亚',
-                    'Singapore': '新加坡'
+                    'China': '中国', 'United States': '美国', 'Japan': '日本', 'South Korea': '韩国',
+                    'United Kingdom': '英国', 'Germany': '德国', 'France': '法国', 'Canada': '加拿大',
+                    'Australia': '澳大利亚', 'Singapore': '新加坡'
                 }
-
                 const country = countryMap[data.country_name] || data.country_name || ''
-
                 return {
                     ip: data.ip || '未知',
                     country: country,
@@ -1242,44 +1251,50 @@ const queryHistory = ref<IpInfo[]>([])
 
 // 从代理或background script获取IP.me的IP信息
 const fetchIpMeData = async (): Promise<IpInfo> => {
-    try {
-        // 开发环境使用代理
-        const url = import.meta.env.DEV ? '/api/ip-me' : 'https://ip.me'
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`)
-        }
-
-        const text = await response.text()
-
-        // IP.me 返回纯文本IP地址
-        const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
-        if (ipMatch) {
+    if (import.meta.env.DEV) {
+        // 开发环境使用vite代理
+        try {
+            const response = await fetch('/api/ip-me')
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            const text = await response.text()
+            const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
             return {
-                ip: ipMatch[0],
+                ip: ipMatch?.[0] || '未知',
                 country: '',
                 region: '',
                 city: '',
                 location: '位置信息需要其他API获取',
                 source: 'IP.me'
             }
-        } else {
-            throw new Error('无法解析IP地址')
+        } catch (error) {
+            return {
+                ip: '获取失败',
+                location: '请求失败',
+                source: 'IP.me',
+                error: error instanceof Error ? error.message : '网络错误'
+            }
         }
-    } catch (error) {
-        return {
-            ip: '获取失败',
-            location: '请求失败',
-            source: 'IP.me',
-            error: error instanceof Error ? error.message : '网络错误'
+    } else {
+        // 生产环境使用HTTPBin（支持CORS）
+        try {
+            const response = await fetch('https://httpbin.org/ip')
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            const data = await response.json()
+            return {
+                ip: data.origin || '未知',
+                country: '',
+                region: '',
+                city: '',
+                location: '仅提供IP地址',
+                source: 'HTTPBin'
+            }
+        } catch (error) {
+            return {
+                ip: '获取失败',
+                location: '请求失败',
+                source: 'HTTPBin',
+                error: error instanceof Error ? error.message : '网络错误'
+            }
         }
     }
 }
