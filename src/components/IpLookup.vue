@@ -27,12 +27,12 @@
                     </div>
                     <div v-if="currentIpInfo.length > 0" class="api-results">
                         <div v-for="(info, index) in currentIpInfo" :key="index" class="ip-card"
-                            :class="{ 'primary-source': (info.source && (info.source.includes('推荐') || info.source === 'IP.me')), 'loading-card': info.loading }">
+                            :class="{ 'primary-source': (info.source && info.source === 'IP.me'), 'loading-card': info.loading }">
                             <div class="source-header">
                                 <span class="source-name" :class="{ 'skeleton-text': info.loading }">{{ info.loading ?
                                     '' :
                                     (info.source || '未知来源') }}</span>
-                                <span v-if="info.source && (info.source.includes('推荐') || info.source === 'IP.me') && !info.loading" class="primary-badge">推荐</span>
+                                <span v-if="info.source && info.source === 'IP.me' && !info.loading" class="primary-badge">推荐</span>
                                 <span v-if="info.error && !info.loading" class="error-badge">失败</span>
                             </div>
 
@@ -75,6 +75,10 @@
                                     <span class="label">国家/地区:</span>
                                     <span class="value">{{ info.country || '-' }}</span>
                                 </div>
+                                <div v-if="info.countryCode" class="detail-item">
+                                    <span class="label">国家代码:</span>
+                                    <span class="value">{{ info.countryCode }}</span>
+                                </div>
                                 <div class="detail-item">
                                     <span class="label">省份/州:</span>
                                     <span class="value">{{ info.region || '-' }}</span>
@@ -83,9 +87,17 @@
                                     <span class="label">城市:</span>
                                     <span class="value">{{ info.city || '-' }}</span>
                                 </div>
+                                <div v-if="info.postalCode" class="detail-item">
+                                    <span class="label">邮政编码:</span>
+                                    <span class="value">{{ info.postalCode }}</span>
+                                </div>
                                 <div class="detail-item">
                                     <span class="label">ISP:</span>
                                     <span class="value">{{ info.isp || '-' }}</span>
+                                </div>
+                                <div v-if="info.organization && info.organization !== info.isp" class="detail-item">
+                                    <span class="label">组织:</span>
+                                    <span class="value">{{ info.organization }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">时区:</span>
@@ -168,6 +180,10 @@
                                         <span class="label">国家/地区:</span>
                                         <span class="value">{{ info.country || '-' }}</span>
                                     </div>
+                                    <div v-if="info.countryCode" class="detail-item">
+                                        <span class="label">国家代码:</span>
+                                        <span class="value">{{ info.countryCode }}</span>
+                                    </div>
                                     <div class="detail-item">
                                         <span class="label">省份/州:</span>
                                         <span class="value">{{ info.region || '-' }}</span>
@@ -176,9 +192,17 @@
                                         <span class="label">城市:</span>
                                         <span class="value">{{ info.city || '-' }}</span>
                                     </div>
+                                    <div v-if="info.postalCode" class="detail-item">
+                                        <span class="label">邮政编码:</span>
+                                        <span class="value">{{ info.postalCode }}</span>
+                                    </div>
                                     <div class="detail-item">
                                         <span class="label">ISP:</span>
                                         <span class="value">{{ info.isp || '-' }}</span>
+                                    </div>
+                                    <div v-if="info.organization && info.organization !== info.isp" class="detail-item">
+                                        <span class="label">组织:</span>
+                                        <span class="value">{{ info.organization }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">时区:</span>
@@ -262,6 +286,7 @@ const pageTitle = computed(() => {
 // 使用通知系统
 const { success, error, copySuccess, copyError } = useNotification()
 
+// 国家数据接口
 interface IpInfo {
     ip: string
     country?: string
@@ -1274,38 +1299,109 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
         }
     } else {
-        // 生产环境：只用allorigins代理
+        // 生产环境：尝试JSONP方式访问ip.me
         try {
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://ip.me')}`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
+            const result = await new Promise<IpInfo>((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    cleanup()
+                    reject(new Error('请求超时 (10秒)'))
+                }, 10000)
+                
+                const callbackName = 'ipCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                
+                const cleanup = () => {
+                    clearTimeout(timeout)
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script)
+                    }
+                    if ((window as any)[callbackName]) {
+                        delete (window as any)[callbackName]
+                    }
+                }
+                
+                // 设置全局回调函数
+                ;(window as any)[callbackName] = (data: any) => {
+                    cleanup()
+                    
+                    // 处理不同可能的数据格式
+                    let ip = ''
+                    if (typeof data === 'string') {
+                        // 如果返回的是字符串，尝试提取IP
+                        const ipMatch = data.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+                        ip = ipMatch ? ipMatch[0] : data
+                    } else if (data && data.ip) {
+                        // 如果返回的是对象且有ip字段
+                        ip = data.ip
+                    } else if (data && typeof data === 'object') {
+                        // 如果是对象，尝试找到IP字段
+                        ip = data.query || data.address || data.clientIP || ''
+                    }
+                    
+                    resolve({
+                        ip: ip || '未知',
+                        country: data.country || '',
+                        region: data.region || data.regionName || '',
+                        city: data.city || '',
+                        location: `${data.city || ''} ${data.region || data.regionName || ''} ${data.country || ''}`.trim() || '仅提供IP地址',
+                        isp: data.isp || data.org || '',
+                        timezone: data.timezone || '',
+                        lat: data.lat || data.latitude,
+                        lon: data.lon || data.longitude,
+                        source: 'IP.me'
+                    })
+                }
+                
+                // 创建script标签尝试JSONP
+                const script = document.createElement('script')
+                
+                // 尝试多种可能的JSONP URL格式
+                const urls = [
+                    `https://ip.me?callback=${callbackName}`,
+                    `https://ip.me?jsonp=${callbackName}`,
+                    `https://ip.me/json?callback=${callbackName}`,
+                    `https://ip.me/api?callback=${callbackName}`
+                ]
+                
+                let urlIndex = 0
+                
+                const tryNextUrl = () => {
+                    if (urlIndex >= urls.length) {
+                        cleanup()
+                        reject(new Error('ip.me 不支持 JSONP 访问'))
+                        return
+                    }
+                    
+                    const currentUrl = urls[urlIndex]
+                    if (!currentUrl) {
+                        cleanup()
+                        reject(new Error('无效的URL'))
+                        return
+                    }
+                    
+                    script.src = currentUrl
+                    urlIndex++
+                    
+                    script.onerror = () => {
+                        // 如果当前URL失败，尝试下一个
+                        setTimeout(tryNextUrl, 100)
+                    }
+                    
+                    document.head.appendChild(script)
+                }
+                
+                // 开始尝试第一个URL
+                tryNextUrl()
             })
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            
-            const data = await response.json()
-            const text = data.contents || ''
-            const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
-            
-            if (ipMatch) {
-                return {
-                    ip: ipMatch[0],
-                    country: '',
-                    region: '',
-                    city: '',
-                    location: '通过代理获取',
-                    source: 'IP.me'
-                }
-            } else {
-                throw new Error('无法解析IP地址')
-            }
+            return result
             
         } catch (error) {
+            // JSONP失败，返回错误信息
             return {
                 ip: '获取失败',
                 location: '请求失败',
                 source: 'IP.me',
-                error: error instanceof Error ? error.message : '网络错误'
+                error: `CORS限制: ${error instanceof Error ? error.message : '未知错误'}`
             }
         }
     }
@@ -1316,7 +1412,7 @@ const getCurrentIpInfo = async () => {
     loadingCurrent.value = true
     currentError.value = ''
 
-    // 创建两个骨架屏卡片：IP.me（优先）+ 选择的API源
+    // 创建两个骨架屏卡片：IP.me + 选择的API源
     const skeletonCards: IpInfo[] = [
         {
             ip: '',
@@ -1336,7 +1432,7 @@ const getCurrentIpInfo = async () => {
     try {
         // 并发请求两个API源
         const promises = [
-            // IP.me（优先尝试）
+            // IP.me（尝试多种方式访问）
             (async () => {
                 try {
                     await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))

@@ -1,8 +1,8 @@
 # 🧰 Toolbox - 现代化开发者工具箱
 
-> 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 38+ 实用功能
+> 专业的在线开发者工具集合，提供 JSON 处理、代码格式化、加密解密、进制转换、时间处理等 50+ 实用功能
 
-[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/panxu71/toolbox)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/panxu71/toolbox)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Vue](https://img.shields.io/badge/vue-3.5-brightgreen.svg)](https://vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-blue.svg)](https://www.typescriptlang.org/)
@@ -82,6 +82,7 @@ npx serve -s docs -p 8080
 - **在线提词器** - 专业级提词器工具，支持自动滚动、全屏显示、镜像模式、聚焦区域、防息屏功能，适用于演讲、直播、视频录制等场景
 
 ### 🔍 查询工具
+- **屏幕测试** - 检测屏幕显示质量、坏点、色彩准确性等
 - **文本比对** - 比较两个文本的差异，支持文件上传
 - **字符串长度统计** - 统计文本字符数、字节数、单词数等详细信息
 - **ASCII 编码查询** - 查询字符的 ASCII 编码值和完整 ASCII 表
@@ -90,6 +91,9 @@ npx serve -s docs -p 8080
 - **百家姓查询** - 查询中国传统百家姓的排名、起源和分布
 - **MIME-Type 速查表** - 常用文件类型的 MIME-Type 快速查询
 - **历史朝代查询** - 中国历史朝代信息查询和时间轴浏览
+- **世界国家和首都** - 按洲浏览世界各国及其首都信息，支持高级筛选（人口、面积、发达程度）
+- **Emoji符号大全** - 按分类浏览和复制各种Emoji表情符号
+- **IP地址查询** - 查询IP地址的地理位置、ISP等详细信息，支持多数据源对比
 
 ### 🧭 导航工具
 - **编程语言大全** - 查看各种编程语言的特点、用途和学习资源
@@ -247,12 +251,16 @@ npm run type-check
 
 ## 📊 项目统计
 
-- 🛠️ **38+ 实用工具** - 覆盖开发常用场景
+- 🛠️ **50+ 实用工具** - 覆盖开发常用场景
 - 📱 **双端支持** - Web 版本 + Chrome 扩展
 - 🌍 **多语言支持** - 中文界面，国际化友好
 - ⚡ **高性能** - 本地处理，响应迅速
 - 🎨 **现代设计** - 简洁美观的用户界面
 - 🧭 **7大分类** - JSON工具、时间工具、加密解密、转换工具、生成工具、查询工具、导航工具
+- 🔍 **智能搜索** - 全局工具搜索和分类筛选
+- 📊 **数据可视化** - 支持图表展示和数据分析
+- 🌐 **多数据源** - IP查询等工具支持多个数据源对比
+- 🎯 **高级筛选** - 国家查询等工具支持多维度筛选
 
 ## 📄 许可证
 
