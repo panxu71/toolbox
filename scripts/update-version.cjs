@@ -42,8 +42,8 @@ let readmeContent = fs.readFileSync(readmePath, 'utf8')
 
 // 更新版本徽章
 readmeContent = readmeContent.replace(
-    /\[!\[Version\]\(https:\/\/img\.shields\.io\/badge\/version-[^-]+-blue\.svg\)\]/,
-    `[![Version](https://img.shields.io/badge/version-${version}-blue.svg)]`
+    /\[!\[Version\]\(https:\/\/img\.shields\.io\/badge\/version-[^-]+-blue\.svg\)\]\([^)]+\)/,
+    `[![Version](https://img.shields.io/badge/version-${version}-blue.svg)](https://github.com/panxu71/toolbox)`
 )
 
 fs.writeFileSync(readmePath, readmeContent, 'utf8')

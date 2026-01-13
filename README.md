@@ -115,11 +115,38 @@ npm run dev              # 启动开发服务器
 npm run web              # 构建 Web 版本 (docs/)
 npm run pack:ext         # 构建并打包 Chrome 扩展为 zip
 
+# 版本管理
+npm run update-version   # 更新所有文件中的版本号
+
 # 本地预览
 npx serve -s docs -p 8080  # 预览已构建的Web版本
 
 # 其他命令
 npm run type-check       # TypeScript 类型检查
+```
+
+### 🔄 版本管理说明
+
+`npm run update-version` 是版本同步工具，**不会自动递增版本号**，作用是：
+
+- 📖 从 `package.json` 读取当前版本号
+- 🔄 同步版本号到所有相关文件：`src/config/version.ts`、`README.md`、`manifest.json`、打包脚本
+
+#### 版本更新流程
+
+**方式1: 手动更新**
+```bash
+# 1. 手动编辑 package.json 中的 version 字段
+# 2. 运行同步脚本
+npm run update-version
+```
+
+**方式2: 使用 npm version 命令**
+```bash
+npm version patch        # 2.1.0 → 2.1.1 (修复版本)
+npm version minor        # 2.1.0 → 2.2.0 (功能版本)  
+npm version major        # 2.1.0 → 3.0.0 (重大版本)
+npm run update-version   # 同步到所有文件
 ```
 
 ## 🎨 界面特性

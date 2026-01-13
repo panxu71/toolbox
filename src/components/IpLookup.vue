@@ -1223,6 +1223,39 @@ const apiFetchers = {
                 error: error instanceof Error ? error.message : '网络错误'
             }
         }
+    },
+
+    // 获取GeoJS数据
+    fetchGeoJsData: async (): Promise<IpInfo> => {
+        try {
+            const response = await fetch('https://get.geojs.io/v1/ip/geo.json')
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            const data = await response.json()
+            
+            return {
+                ip: data.ip || '未知',
+                country: data.country || '',
+                region: data.region || '',
+                city: data.city || '',
+                location: `${data.city || ''} ${data.region || ''} ${data.country || ''}`.trim() || '未知位置',
+                isp: data.organization_name || data.organization || '',
+                timezone: data.timezone || '',
+                lat: data.latitude ? parseFloat(data.latitude) : undefined,
+                lon: data.longitude ? parseFloat(data.longitude) : undefined,
+                countryCode: data.country_code || '',
+                postalCode: '', // GeoJS不提供邮政编码
+                organization: data.organization_name || '',
+                asn: data.asn ? `AS${data.asn}` : '',
+                source: 'GeoJS'
+            }
+        } catch (error) {
+            return {
+                ip: '获取失败',
+                location: '请求失败',
+                source: 'GeoJS',
+                error: error instanceof Error ? error.message : '网络错误'
+            }
+        }
     }
 }
 
@@ -1247,7 +1280,8 @@ const API_SOURCES_CONFIG: ApiSourceConfig[] = [
     { id: 'ustc', name: 'USTC', description: '中科大源', fetcher: apiFetchers.fetchUstcData },
     { id: 'ip-api', name: 'IP-API', description: '批量查询', fetcher: apiFetchers.fetchIpApiData },
     { id: 'cip-cc', name: 'CIP.cc', description: '纯文本', fetcher: apiFetchers.fetchCipCcData },
-    { id: 'ipinfo', name: 'IPinfo.io', description: '仅IP和ASN', fetcher: apiFetchers.fetchIpinfoData }
+    { id: 'ipinfo', name: 'IPinfo.io', description: '仅IP和ASN', fetcher: apiFetchers.fetchIpinfoData },
+    { id: 'geojs', name: 'GeoJS', description: '详细地理信息', fetcher: apiFetchers.fetchGeoJsData }
 ]
 
 // 导出API源列表（用于下拉选择）
@@ -1274,6 +1308,7 @@ const queryError = ref('')
 const queryHistory = ref<IpInfo[]>([])
 
 // 从代理或background script获取IP.me的IP信息
+// 从代理或background script获取IP.me的IP信息
 const fetchIpMeData = async (): Promise<IpInfo> => {
     if (import.meta.env.DEV) {
         // 开发环境使用vite代理访问ip.me
@@ -1299,109 +1334,66 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
         }
     } else {
-        // 生产环境：尝试JSONP方式访问ip.me
+        // 生产环境：使用公共CORS代理访问 ip.me
         try {
-            const result = await new Promise<IpInfo>((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    cleanup()
-                    reject(new Error('请求超时 (10秒)'))
-                }, 10000)
-                
-                const callbackName = 'ipCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-                
-                const cleanup = () => {
-                    clearTimeout(timeout)
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script)
-                    }
-                    if ((window as any)[callbackName]) {
-                        delete (window as any)[callbackName]
-                    }
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://ip.me')}`, {
+                method: 'GET',
+                headers: { 
+                    'Accept': 'application/json'
                 }
-                
-                // 设置全局回调函数
-                ;(window as any)[callbackName] = (data: any) => {
-                    cleanup()
-                    
-                    // 处理不同可能的数据格式
-                    let ip = ''
-                    if (typeof data === 'string') {
-                        // 如果返回的是字符串，尝试提取IP
-                        const ipMatch = data.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
-                        ip = ipMatch ? ipMatch[0] : data
-                    } else if (data && data.ip) {
-                        // 如果返回的是对象且有ip字段
-                        ip = data.ip
-                    } else if (data && typeof data === 'object') {
-                        // 如果是对象，尝试找到IP字段
-                        ip = data.query || data.address || data.clientIP || ''
-                    }
-                    
-                    resolve({
-                        ip: ip || '未知',
-                        country: data.country || '',
-                        region: data.region || data.regionName || '',
-                        city: data.city || '',
-                        location: `${data.city || ''} ${data.region || data.regionName || ''} ${data.country || ''}`.trim() || '仅提供IP地址',
-                        isp: data.isp || data.org || '',
-                        timezone: data.timezone || '',
-                        lat: data.lat || data.latitude,
-                        lon: data.lon || data.longitude,
-                        source: 'IP.me'
-                    })
-                }
-                
-                // 创建script标签尝试JSONP
-                const script = document.createElement('script')
-                
-                // 尝试多种可能的JSONP URL格式
-                const urls = [
-                    `https://ip.me?callback=${callbackName}`,
-                    `https://ip.me?jsonp=${callbackName}`,
-                    `https://ip.me/json?callback=${callbackName}`,
-                    `https://ip.me/api?callback=${callbackName}`
-                ]
-                
-                let urlIndex = 0
-                
-                const tryNextUrl = () => {
-                    if (urlIndex >= urls.length) {
-                        cleanup()
-                        reject(new Error('ip.me 不支持 JSONP 访问'))
-                        return
-                    }
-                    
-                    const currentUrl = urls[urlIndex]
-                    if (!currentUrl) {
-                        cleanup()
-                        reject(new Error('无效的URL'))
-                        return
-                    }
-                    
-                    script.src = currentUrl
-                    urlIndex++
-                    
-                    script.onerror = () => {
-                        // 如果当前URL失败，尝试下一个
-                        setTimeout(tryNextUrl, 100)
-                    }
-                    
-                    document.head.appendChild(script)
-                }
-                
-                // 开始尝试第一个URL
-                tryNextUrl()
             })
             
-            return result
+            if (!response.ok) throw new Error(`代理错误: HTTP ${response.status}`)
+            
+            const data = await response.json()
+            const html = data.contents || ''
+            
+            if (!html) throw new Error('代理返回空内容')
+            
+            // 解析IP地址
+            const ipMatch = html.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+            if (!ipMatch) throw new Error('无法从HTML中提取IP地址')
+            
+            // 尝试解析详细信息
+            const parseTableValue = (label: string): string => {
+                const regex = new RegExp(`<th>${label}:</th>\\s*<td><code>([^<]+)</code></td>`, 'i')
+                const match = html.match(regex)
+                return match ? match[1].trim() : ''
+            }
+            
+            const city = parseTableValue('City')
+            const country = parseTableValue('Country')
+            const countryCode = parseTableValue('Country Code')
+            const latitude = parseTableValue('Latitude')
+            const longitude = parseTableValue('Longitude')
+            const postalCode = parseTableValue('Postal Code')
+            const organization = parseTableValue('Organization')
+            const asn = parseTableValue('ASN')
+            const ispName = parseTableValue('ISP Name')
+            
+            return {
+                ip: ipMatch[0],
+                country: country || '',
+                region: '',
+                city: city || '',
+                location: `${city} ${country}`.trim() || '仅提供IP地址',
+                isp: ispName || organization || '',
+                timezone: '',
+                lat: latitude ? parseFloat(latitude) : undefined,
+                lon: longitude ? parseFloat(longitude) : undefined,
+                asn: asn ? `AS${asn}` : '',
+                countryCode: countryCode || '',
+                postalCode: postalCode || '',
+                organization: organization || '',
+                source: 'IP.me'
+            }
             
         } catch (error) {
-            // JSONP失败，返回错误信息
             return {
                 ip: '获取失败',
                 location: '请求失败',
                 source: 'IP.me',
-                error: `CORS限制: ${error instanceof Error ? error.message : '未知错误'}`
+                error: error instanceof Error ? error.message : '网络错误'
             }
         }
     }
