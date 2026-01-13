@@ -217,23 +217,56 @@ export default defineConfig({
       '/api/whatismyip': {
         target: 'https://whatismyipaddress.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/whatismyip/, '/zh-tw/index'),
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/whatismyip/, '/ip.php'),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
+            // 完全模拟真实浏览器请求头，移除可疑的头部
+            proxyReq.setHeader('Host', 'whatismyipaddress.com');
             proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
             proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
-            proxyReq.setHeader('Accept-Language', 'zh-TW,zh;q=0.9,en;q=0.8');
+            proxyReq.setHeader('Accept-Language', 'en-US,en;q=0.9');
             proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
-            proxyReq.setHeader('Cache-Control', 'no-cache');
-            proxyReq.setHeader('Pragma', 'no-cache');
-            proxyReq.setHeader('Sec-Ch-Ua', '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
-            proxyReq.setHeader('Sec-Ch-Ua-Mobile', '?0');
-            proxyReq.setHeader('Sec-Ch-Ua-Platform', '"Windows"');
+            proxyReq.setHeader('Connection', 'keep-alive');
+            proxyReq.setHeader('Upgrade-Insecure-Requests', '1');
             proxyReq.setHeader('Sec-Fetch-Dest', 'document');
             proxyReq.setHeader('Sec-Fetch-Mode', 'navigate');
             proxyReq.setHeader('Sec-Fetch-Site', 'none');
             proxyReq.setHeader('Sec-Fetch-User', '?1');
-            proxyReq.setHeader('Upgrade-Insecure-Requests', '1');
+            proxyReq.setHeader('Cache-Control', 'max-age=0');
+
+            // 移除所有可能暴露代理的请求头
+            proxyReq.removeHeader('X-Forwarded-For');
+            proxyReq.removeHeader('X-Real-IP');
+            proxyReq.removeHeader('X-Forwarded-Proto');
+            proxyReq.removeHeader('X-Forwarded-Host');
+            proxyReq.removeHeader('Via');
+            proxyReq.removeHeader('X-Forwarded-Server');
+            proxyReq.removeHeader('Referer'); // 移除暴露本地环境的Referer
+            proxyReq.removeHeader('Origin');
+
+            // 移除可能被Cloudflare检测的头部
+            proxyReq.removeHeader('Sec-CH-UA');
+            proxyReq.removeHeader('Sec-CH-UA-Mobile');
+            proxyReq.removeHeader('Sec-CH-UA-Platform');
+            proxyReq.removeHeader('DNT');
+
+            console.log('Proxying request to whatismyipaddress.com/ip.php');
+          });
+
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('Response status from whatismyipaddress.com:', proxyRes.statusCode);
+            if (proxyRes.statusCode !== 200) {
+              console.log('Response headers:', proxyRes.headers);
+            }
+            // 移除可能导致问题的响应头
+            delete proxyRes.headers['x-frame-options'];
+            delete proxyRes.headers['content-security-policy'];
+            delete proxyRes.headers['x-content-type-options'];
+          });
+
+          proxy.on('error', (err, req, res) => {
+            console.error('Proxy error for /api/whatismyip:', err.message);
           });
         }
       },
