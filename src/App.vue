@@ -1120,4 +1120,11 @@ const updateUrl = (category?: string, tool?: string) => {
     min-width: 0;
     background: var(--bg-primary);
 }
+
+/* 功能页面样式 - 确保在flex布局下正确显示 */
+.main-content>*:not(.content-area):not(.navigation) {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+}
 </style>
