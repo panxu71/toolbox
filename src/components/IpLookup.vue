@@ -27,12 +27,12 @@
                     </div>
                     <div v-if="currentIpInfo.length > 0" class="api-results">
                         <div v-for="(info, index) in currentIpInfo" :key="index" class="ip-card"
-                            :class="{ 'primary-source': info.source === 'IP.me', 'loading-card': info.loading }">
+                            :class="{ 'primary-source': (info.source && (info.source.includes('推荐') || info.source === 'IP.me')), 'loading-card': info.loading }">
                             <div class="source-header">
                                 <span class="source-name" :class="{ 'skeleton-text': info.loading }">{{ info.loading ?
                                     '' :
-                                    info.source }}</span>
-                                <span v-if="info.source === 'IP.me' && !info.loading" class="primary-badge">推荐</span>
+                                    (info.source || '未知来源') }}</span>
+                                <span v-if="info.source && (info.source.includes('推荐') || info.source === 'IP.me') && !info.loading" class="primary-badge">推荐</span>
                                 <span v-if="info.error && !info.loading" class="error-badge">失败</span>
                             </div>
 
@@ -64,9 +64,8 @@
                             <!-- 错误状态 -->
                             <div v-else class="error-info">
                                 <div class="error-message">{{ info.error }}</div>
-                                <a v-if="info.source === 'IP.me'" href="https://ip.me" target="_blank"
-                                    class="visit-link">
-                                    访问 IP.me
+                                <a v-if="info.source?.includes('IP.me')" href="https://ip.me" target="_blank" class="visit-link">
+                                    直接访问 IP.me
                                 </a>
                             </div>
 
@@ -1252,7 +1251,7 @@ const queryHistory = ref<IpInfo[]>([])
 // 从代理或background script获取IP.me的IP信息
 const fetchIpMeData = async (): Promise<IpInfo> => {
     if (import.meta.env.DEV) {
-        // 开发环境使用vite代理
+        // 开发环境使用vite代理访问ip.me
         try {
             const response = await fetch('/api/ip-me')
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -1275,46 +1274,38 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
         }
     } else {
-        // 生产环境先尝试通过公共代理访问IP.me
+        // 生产环境：只用allorigins代理
         try {
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://ip.me')}`)
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://ip.me')}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            })
+            
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            
             const data = await response.json()
             const text = data.contents || ''
             const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+            
             if (ipMatch) {
                 return {
                     ip: ipMatch[0],
                     country: '',
                     region: '',
                     city: '',
-                    location: '位置信息需要其他API获取',
+                    location: '通过代理获取',
                     source: 'IP.me'
                 }
             } else {
                 throw new Error('无法解析IP地址')
             }
+            
         } catch (error) {
-            // 如果IP.me代理失败，降级使用HTTPBin
-            try {
-                const response = await fetch('https://httpbin.org/ip')
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                const data = await response.json()
-                return {
-                    ip: data.origin || '未知',
-                    country: '',
-                    region: '',
-                    city: '',
-                    location: '仅提供IP地址',
-                    source: 'HTTPBin (IP.me不可用)'
-                }
-            } catch (fallbackError) {
-                return {
-                    ip: '获取失败',
-                    location: '请求失败',
-                    source: 'IP.me',
-                    error: error instanceof Error ? error.message : '网络错误'
-                }
+            return {
+                ip: '获取失败',
+                location: '请求失败',
+                source: 'IP.me',
+                error: error instanceof Error ? error.message : '网络错误'
             }
         }
     }
@@ -1325,7 +1316,7 @@ const getCurrentIpInfo = async () => {
     loadingCurrent.value = true
     currentError.value = ''
 
-    // 创建两个骨架屏卡片：IP.me（推荐）+ 选择的API源
+    // 创建两个骨架屏卡片：IP.me（优先）+ 选择的API源
     const skeletonCards: IpInfo[] = [
         {
             ip: '',
@@ -1345,7 +1336,7 @@ const getCurrentIpInfo = async () => {
     try {
         // 并发请求两个API源
         const promises = [
-            // 推荐的IP.me
+            // IP.me（优先尝试）
             (async () => {
                 try {
                     await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
