@@ -95,7 +95,7 @@
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
                                     <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -188,7 +188,7 @@
                                     <div class="detail-item">
                                         <span class="label">经纬度:</span>
                                         <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">ASN:</span>
@@ -1275,25 +1275,46 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             }
         }
     } else {
-        // 生产环境使用HTTPBin（支持CORS）
+        // 生产环境先尝试通过公共代理访问IP.me
         try {
-            const response = await fetch('https://httpbin.org/ip')
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://ip.me')}`)
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
             const data = await response.json()
-            return {
-                ip: data.origin || '未知',
-                country: '',
-                region: '',
-                city: '',
-                location: '仅提供IP地址',
-                source: 'HTTPBin'
+            const text = data.contents || ''
+            const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+            if (ipMatch) {
+                return {
+                    ip: ipMatch[0],
+                    country: '',
+                    region: '',
+                    city: '',
+                    location: '位置信息需要其他API获取',
+                    source: 'IP.me'
+                }
+            } else {
+                throw new Error('无法解析IP地址')
             }
         } catch (error) {
-            return {
-                ip: '获取失败',
-                location: '请求失败',
-                source: 'HTTPBin',
-                error: error instanceof Error ? error.message : '网络错误'
+            // 如果IP.me代理失败，降级使用HTTPBin
+            try {
+                const response = await fetch('https://httpbin.org/ip')
+                if (!response.ok) throw new Error(`HTTP ${response.status}`)
+                const data = await response.json()
+                return {
+                    ip: data.origin || '未知',
+                    country: '',
+                    region: '',
+                    city: '',
+                    location: '仅提供IP地址',
+                    source: 'HTTPBin (IP.me不可用)'
+                }
+            } catch (fallbackError) {
+                return {
+                    ip: '获取失败',
+                    location: '请求失败',
+                    source: 'IP.me',
+                    error: error instanceof Error ? error.message : '网络错误'
+                }
             }
         }
     }
@@ -1304,7 +1325,7 @@ const getCurrentIpInfo = async () => {
     loadingCurrent.value = true
     currentError.value = ''
 
-    // 创建两个骨架屏卡片：IP.me（默认）+ 选择的API源
+    // 创建两个骨架屏卡片：IP.me（推荐）+ 选择的API源
     const skeletonCards: IpInfo[] = [
         {
             ip: '',
@@ -1324,7 +1345,7 @@ const getCurrentIpInfo = async () => {
     try {
         // 并发请求两个API源
         const promises = [
-            // 默认的IP.me
+            // 推荐的IP.me
             (async () => {
                 try {
                     await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))

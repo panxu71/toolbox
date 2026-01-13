@@ -1874,24 +1874,6 @@ const drawModule = (ctx: CanvasRenderingContext2D, x: number, y: number, size: n
             ctx.closePath()
             ctx.fill()
             break
-        case 'star':
-            // 星形 - 外圆内星形
-            ctx.beginPath()
-            ctx.arc(x + size / 2, y + size / 2, actualSize / 2, 0, 2 * Math.PI)
-            ctx.fill()
-            // 内部空心圆
-            ctx.globalCompositeOperation = 'destination-out'
-            ctx.beginPath()
-            ctx.arc(x + size / 2, y + size / 2, actualSize / 3, 0, 2 * Math.PI)
-            ctx.fill()
-            ctx.globalCompositeOperation = 'source-over'
-            // 中心星形（四角星）
-            const starCenterX = x + size / 2
-            const starCenterY = y + size / 2
-            const starSize = actualSize / 8
-            ctx.fillRect(starCenterX - starSize, starCenterY - starSize / 3, starSize * 2, starSize * 2 / 3)
-            ctx.fillRect(starCenterX - starSize / 3, starCenterY - starSize, starSize * 2 / 3, starSize * 2)
-            break
         case 'bubble':
             // 气泡 - 外方内圆角方形，右上角有缺口
             ctx.fillRect(x + (size - actualSize) / 2, y + (size - actualSize) / 2, actualSize, actualSize)
