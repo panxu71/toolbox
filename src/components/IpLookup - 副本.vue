@@ -32,8 +32,7 @@
                                 <span class="source-name" :class="{ 'skeleton-text': info.loading }">{{ info.loading ?
                                     '' :
                                     (info.source || '未知来源') }}</span>
-                                <span v-if="info.source && info.source === 'IP.me' && !info.loading"
-                                    class="primary-badge">推荐</span>
+                                <span v-if="info.source && info.source === 'IP.me' && !info.loading" class="primary-badge">推荐</span>
                                 <span v-if="info.error && !info.loading" class="error-badge">失败</span>
                             </div>
 
@@ -65,8 +64,7 @@
                             <!-- 错误状态 -->
                             <div v-else class="error-info">
                                 <div class="error-message">{{ info.error }}</div>
-                                <a v-if="info.source?.includes('IP.me')" href="https://ip.me" target="_blank"
-                                    class="visit-link">
+                                <a v-if="info.source?.includes('IP.me')" href="https://ip.me" target="_blank" class="visit-link">
                                     直接访问 IP.me
                                 </a>
                             </div>
@@ -108,7 +106,7 @@
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
                                     <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -213,7 +211,7 @@
                                     <div class="detail-item">
                                         <span class="label">经纬度:</span>
                                         <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">ASN:</span>
@@ -265,43 +263,6 @@ import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import ScrollToTop from './common/ScrollToTop.vue'
 import cardsConfig from '../config/cards.json'
-
-// 代理API配置
-const PROXY_API_URL = 'https://api.panxu71.workers.dev'
-
-// 通用代理请求函数
-const proxyFetch = async (url: string, options: RequestInit = {}) => {
-    const params = new URLSearchParams({
-        url: url,
-        method: options.method || 'GET'
-    })
-
-    if (options.headers) {
-        params.append('headers', JSON.stringify(options.headers))
-    }
-
-    if (options.method === 'POST' && options.body) {
-        const urlWithParams = new URL(PROXY_API_URL)
-        urlWithParams.searchParams.append('url', url)
-        urlWithParams.searchParams.append('method', 'POST')
-        if (options.headers) {
-            urlWithParams.searchParams.append('headers', JSON.stringify(options.headers))
-        }
-
-        const response = await fetch(urlWithParams.toString(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: options.body,
-            credentials: 'include'
-        })
-        return response
-    } else {
-        const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-            credentials: 'include'
-        })
-        return response
-    }
-}
 
 defineEmits<{
     back: []
@@ -362,40 +323,50 @@ interface ApiSourceConfig {
 const apiFetchers = {
     // 获取Coding.tools数据
     fetchCodingToolsData: async (): Promise<IpInfo> => {
-        try {
-            let response
-            if (import.meta.env.DEV) {
-                // 开发环境使用vite代理
-                response = await fetch('/api/coding-tools', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept': 'application/json, text/plain, */*',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Cache-Control': 'no-cache'
-                    },
-                    body: 'queryIp='
-                })
-            } else {
-                // 生产环境使用后端代理
-                response = await proxyFetch('https://coding.tools/cn/my-ip-address', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept': 'application/json, text/plain, */*',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Referer': 'https://coding.tools/cn/my-ip-address',
-                        'Origin': 'https://coding.tools',
-                        'Cache-Control': 'no-cache'
-                    },
-                    body: 'queryIp='
-                })
+        // 生产环境直接使用支持CORS的IPapi.co
+        if (import.meta.env.PROD) {
+            try {
+                const response = await fetch('https://ipapi.co/json/')
+                if (!response.ok) throw new Error(`HTTP ${response.status}`)
+                const data = await response.json()
+                return {
+                    ip: data.ip || '未知',
+                    country: data.country_name || '',
+                    region: data.region || '',
+                    city: data.city || '',
+                    location: `${data.city || ''} ${data.region || ''} ${data.country_name || ''}`.trim() || '未知位置',
+                    isp: data.org || '',
+                    timezone: data.timezone || '',
+                    lat: data.latitude,
+                    lon: data.longitude,
+                    source: 'IPapi.co'
+                }
+            } catch (error) {
+                return {
+                    ip: '获取失败',
+                    location: '请求失败',
+                    source: 'IPapi.co',
+                    error: error instanceof Error ? error.message : '网络错误'
+                }
             }
+        }
+
+        // 开发环境使用原来的代理
+        try {
+            const response = await fetch('/api/coding-tools', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json, text/plain, */*',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
+                },
+                body: 'queryIp='
+            })
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-            const result = await response.json()
-            const data = result.body ? JSON.parse(result.body) : result
+            const text = await response.text()
+            const data = JSON.parse(text)
 
             if (data.ip) {
                 const countryMap: { [key: string]: string } = {
@@ -432,40 +403,21 @@ const apiFetchers = {
     // 获取whatismyipaddress.com数据
     fetchWhatIsMyIpData: async (): Promise<IpInfo> => {
         try {
-            let text = ''
+            const url = import.meta.env.DEV ? '/api/whatismyip' : 'https://whatismyipaddress.com/'
 
-            if (import.meta.env.DEV) {
-                const response = await fetch('/api/whatismyip', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                text = await response.text()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: 'https://whatismyipaddress.com/',
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
-
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const data = await response.json()
-                text = data.body || data || ''
-                if (typeof text !== 'string') {
-                    text = JSON.stringify(text)
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
+
+            const text = await response.text()
 
             // 从HTML中提取IP地址
             const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
@@ -495,28 +447,12 @@ const apiFetchers = {
     // 获取HTTPBin数据
     fetchHttpbinData: async (): Promise<IpInfo> => {
         try {
-            let data
-
-            if (import.meta.env.DEV) {
-                const response = await fetch('https://httpbin.org/ip')
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                data = await response.json()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: 'https://httpbin.org/ip',
-                    method: 'GET'
-                })
-
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const result = await response.json()
-                data = result.body ? JSON.parse(result.body) : result
+            const response = await fetch('https://httpbin.org/ip')
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
 
+            const data = await response.json()
             return {
                 ip: data.origin || '未知',
                 country: '',
@@ -538,41 +474,19 @@ const apiFetchers = {
     // 获取ICanHazIP数据
     fetchICanHazIpData: async (): Promise<IpInfo> => {
         try {
-            let text = ''
-
-            if (import.meta.env.DEV) {
-                const response = await fetch('https://icanhazip.com', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/plain',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                text = await response.text()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: 'https://icanhazip.com',
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'text/plain',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
-
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const data = await response.json()
-                text = data.body || data || ''
-                if (typeof text !== 'string') {
-                    text = String(text)
+            const response = await fetch('https://icanhazip.com', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
 
+            const text = await response.text()
             const ip = text.trim()
 
             // 验证IP地址格式
@@ -602,41 +516,19 @@ const apiFetchers = {
     // 获取AWS CheckIP数据
     fetchCheckIpData: async (): Promise<IpInfo> => {
         try {
-            let text = ''
-
-            if (import.meta.env.DEV) {
-                const response = await fetch('https://checkip.amazonaws.com', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/plain',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                text = await response.text()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: 'https://checkip.amazonaws.com',
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'text/plain',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
-
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const data = await response.json()
-                text = data.body || data || ''
-                if (typeof text !== 'string') {
-                    text = String(text)
+            const response = await fetch('https://checkip.amazonaws.com', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
 
+            const text = await response.text()
             const ip = text.trim()
 
             // 验证IP地址格式
@@ -668,39 +560,21 @@ const apiFetchers = {
         try {
             // 生成随机数参数
             const randomParam = Math.floor(Math.random() * 100000000)
-            let data
+            const url = `https://www.ipuu.net/ipuu/user/getIP?r=${randomParam}`
 
-            if (import.meta.env.DEV) {
-                const url = `https://www.ipuu.net/ipuu/user/getIP?r=${randomParam}`
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                data = await response.json()
-            } else {
-                // 生产环境使用代理
-                const url = `https://www.ipuu.net/ipuu/user/getIP?r=${randomParam}`
-                const params = new URLSearchParams({
-                    url: url,
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            })
 
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const result = await response.json()
-                data = result.body ? JSON.parse(result.body) : result
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
+
+            const data = await response.json()
 
             // IPUU.net返回格式：{"code":200,"data":"163.125.214.143","msg":"获取用户端IP成功"}
             if (data.code === 200 && data.data) {
@@ -737,37 +611,20 @@ const apiFetchers = {
             // 生成随机参数
             const randomParam = Math.floor(Math.random() * 100000000)
             const url = `https://api-ipv4.ip.sb/geoip?z=${randomParam}`
-            let data
 
-            if (import.meta.env.DEV) {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                data = await response.json()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: url,
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            })
 
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const result = await response.json()
-                data = result.body ? JSON.parse(result.body) : result
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
+
+            const data = await response.json()
 
             // IP.SB返回详细的地理位置信息
             if (data.ip) {
@@ -800,41 +657,19 @@ const apiFetchers = {
     // 获取LoliCP数据
     fetchLoliCpData: async (): Promise<IpInfo> => {
         try {
-            let text = ''
-
-            if (import.meta.env.DEV) {
-                const response = await fetch('https://ip.lolicp.com/', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                text = await response.text()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: 'https://ip.lolicp.com/',
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
-
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const data = await response.json()
-                text = data.body || data || ''
-                if (typeof text !== 'string') {
-                    text = String(text)
+            const response = await fetch('https://ip.lolicp.com/', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
 
+            const text = await response.text()
             const ip = text.trim()
 
             // 验证IP地址格式
@@ -867,37 +702,20 @@ const apiFetchers = {
             // 生成随机参数
             const randomParam = Math.floor(Math.random() * 100000000)
             const url = `https://data.video.iqiyi.com/v.f4v?z=${randomParam}`
-            let data
 
-            if (import.meta.env.DEV) {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-                data = await response.json()
-            } else {
-                // 生产环境使用代理
-                const params = new URLSearchParams({
-                    url: url,
-                    method: 'GET',
-                    headers: JSON.stringify({
-                        'Accept': 'application/json, text/plain, */*',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    })
-                })
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            })
 
-                const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                    credentials: 'include'
-                })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-                const result = await response.json()
-                data = result.body ? JSON.parse(result.body) : result
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
             }
+
+            const data = await response.json()
 
             // 爱奇艺返回格式：{"t": "CNC|GuangDong_ShenZhen-163.125.214.143", ...}
             if (data.t) {
@@ -1405,39 +1223,6 @@ const apiFetchers = {
                 error: error instanceof Error ? error.message : '网络错误'
             }
         }
-    },
-
-    // 获取GeoJS数据
-    fetchGeoJsData: async (): Promise<IpInfo> => {
-        try {
-            const response = await fetch('https://get.geojs.io/v1/ip/geo.json')
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            const data = await response.json()
-
-            return {
-                ip: data.ip || '未知',
-                country: data.country || '',
-                region: data.region || '',
-                city: data.city || '',
-                location: `${data.city || ''} ${data.region || ''} ${data.country || ''}`.trim() || '未知位置',
-                isp: data.organization_name || data.organization || '',
-                timezone: data.timezone || '',
-                lat: data.latitude ? parseFloat(data.latitude) : undefined,
-                lon: data.longitude ? parseFloat(data.longitude) : undefined,
-                countryCode: data.country_code || '',
-                postalCode: '', // GeoJS不提供邮政编码
-                organization: data.organization_name || '',
-                asn: data.asn ? `AS${data.asn}` : '',
-                source: 'GeoJS'
-            }
-        } catch (error) {
-            return {
-                ip: '获取失败',
-                location: '请求失败',
-                source: 'GeoJS',
-                error: error instanceof Error ? error.message : '网络错误'
-            }
-        }
     }
 }
 
@@ -1462,8 +1247,7 @@ const API_SOURCES_CONFIG: ApiSourceConfig[] = [
     { id: 'ustc', name: 'USTC', description: '中科大源', fetcher: apiFetchers.fetchUstcData },
     { id: 'ip-api', name: 'IP-API', description: '批量查询', fetcher: apiFetchers.fetchIpApiData },
     { id: 'cip-cc', name: 'CIP.cc', description: '纯文本', fetcher: apiFetchers.fetchCipCcData },
-    { id: 'ipinfo', name: 'IPinfo.io', description: '仅IP和ASN', fetcher: apiFetchers.fetchIpinfoData },
-    { id: 'geojs', name: 'GeoJS', description: '详细地理信息', fetcher: apiFetchers.fetchGeoJsData }
+    { id: 'ipinfo', name: 'IPinfo.io', description: '仅IP和ASN', fetcher: apiFetchers.fetchIpinfoData }
 ]
 
 // 导出API源列表（用于下拉选择）
@@ -1491,79 +1275,148 @@ const queryHistory = ref<IpInfo[]>([])
 
 // 从代理或background script获取IP.me的IP信息
 const fetchIpMeData = async (): Promise<IpInfo> => {
-    try {
-        let html = ''
-
-        if (import.meta.env.DEV) {
-            // 开发环境使用 vite 代理
+    if (import.meta.env.DEV) {
+        // 开发环境使用vite代理访问ip.me
+        try {
             const response = await fetch('/api/ip-me')
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            html = await response.text()
-        } else {
-            // 生产环境使用远程代理 API
-            const targetUrl = 'https://ip.me'
-            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}&method=GET`)
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-
-            const data = await response.json()
-            console.log('IP.me 代理返回数据:', data)
-
-            // 处理代理返回的数据
-            html = data.data || data.body || data || ''
-
-            // 如果返回的不是字符串，尝试转换
-            if (typeof html !== 'string') {
-                html = JSON.stringify(html)
+            const text = await response.text()
+            const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+            return {
+                ip: ipMatch?.[0] || '未知',
+                country: '',
+                region: '',
+                city: '',
+                location: '位置信息需要其他API获取',
+                source: 'IP.me'
+            }
+        } catch (error) {
+            return {
+                ip: '获取失败',
+                location: '请求失败',
+                source: 'IP.me',
+                error: error instanceof Error ? error.message : '网络错误'
             }
         }
-
-        if (!html) throw new Error('代理返回空内容')
-
-        // 解析IP地址
-        const ipMatch = html.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
-        if (!ipMatch) throw new Error('无法从HTML中提取IP地址')
-
-        // 尝试解析详细信息
-        const parseTableValue = (label: string): string => {
-            const regex = new RegExp(`<th>${label}:</th>\\s*<td><code>([^<]+)</code></td>`, 'i')
-            const match = html.match(regex)
-            return match?.[1]?.trim() || ''
-        }
-
-        const city = parseTableValue('City')
-        const country = parseTableValue('Country')
-        const countryCode = parseTableValue('Country Code')
-        const latitude = parseTableValue('Latitude')
-        const longitude = parseTableValue('Longitude')
-        const postalCode = parseTableValue('Postal Code')
-        const organization = parseTableValue('Organization')
-        const asn = parseTableValue('ASN')
-        const ispName = parseTableValue('ISP Name')
-
-        return {
-            ip: ipMatch[0],
-            country: country || '',
-            region: '',
-            city: city || '',
-            location: `${city} ${country}`.trim() || '仅提供IP地址',
-            isp: ispName || organization || '',
-            timezone: '',
-            lat: latitude ? parseFloat(latitude) : undefined,
-            lon: longitude ? parseFloat(longitude) : undefined,
-            asn: asn ? `AS${asn}` : '',
-            countryCode: countryCode || '',
-            postalCode: postalCode || '',
-            organization: organization || '',
-            source: 'IP.me'
-        }
-    } catch (error) {
-        console.error('IP.me 请求错误:', error)
-        return {
-            ip: '获取失败',
-            location: '请求失败',
-            source: 'IP.me',
-            error: error instanceof Error ? error.message : '网络错误'
+    } else {
+        // 生产环境：尝试多种方式访问ip.me
+        
+        // 方案1: 尝试使用 JSONP 方式（通过动态创建script标签）
+        try {
+            const result = await new Promise<string>((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    cleanup()
+                    reject(new Error('请求超时'))
+                }, 10000)
+                
+                const callbackName = 'ipCallback_' + Date.now()
+                
+                // 创建script标签尝试JSONP
+                const script = document.createElement('script')
+                script.src = `https://ip.me?callback=${callbackName}`
+                
+                const cleanup = () => {
+                    clearTimeout(timeout)
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script)
+                    }
+                    if ((window as any)[callbackName]) {
+                        delete (window as any)[callbackName]
+                    }
+                }
+                
+                // 设置回调函数
+                ;(window as any)[callbackName] = (data: any) => {
+                    cleanup()
+                    resolve(data)
+                }
+                
+                script.onerror = () => {
+                    cleanup()
+                    reject(new Error('JSONP请求失败'))
+                }
+                
+                document.head.appendChild(script)
+            })
+            
+            // 如果JSONP成功，解析结果
+            return {
+                ip: result || '未知',
+                country: '',
+                region: '',
+                city: '',
+                location: '仅提供IP地址',
+                source: 'IP.me'
+            }
+            
+        } catch (jsonpError) {
+            // 方案2: 如果JSONP失败，尝试使用img标签的onerror事件
+            try {
+                const ip = await new Promise<string>((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('请求超时'))
+                    }, 10000)
+                    
+                    // 创建一个隐藏的iframe来尝试访问ip.me
+                    const iframe = document.createElement('iframe')
+                    iframe.style.display = 'none'
+                    iframe.style.width = '0'
+                    iframe.style.height = '0'
+                    
+                    const cleanup = () => {
+                        clearTimeout(timeout)
+                        if (iframe.parentNode) {
+                            iframe.parentNode.removeChild(iframe)
+                        }
+                    }
+                    
+                    iframe.onload = () => {
+                        try {
+                            // 尝试读取iframe内容（可能会因为同源策略失败）
+                            const doc = iframe.contentDocument || iframe.contentWindow?.document
+                            if (doc) {
+                                const text = doc.body?.textContent || ''
+                                const ipMatch = text.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
+                                if (ipMatch) {
+                                    cleanup()
+                                    resolve(ipMatch[0])
+                                    return
+                                }
+                            }
+                        } catch (e) {
+                            // 同源策略阻止，这是预期的
+                        }
+                        cleanup()
+                        reject(new Error('无法读取iframe内容'))
+                    }
+                    
+                    iframe.onerror = () => {
+                        cleanup()
+                        reject(new Error('iframe加载失败'))
+                    }
+                    
+                    iframe.src = 'https://ip.me'
+                    document.body.appendChild(iframe)
+                })
+                
+                return {
+                    ip: ip,
+                    country: '',
+                    region: '',
+                    city: '',
+                    location: '仅提供IP地址',
+                    source: 'IP.me'
+                }
+                
+            } catch (iframeError) {
+                // 方案3: 所有方案都失败，返回错误信息
+                return {
+                    ip: '获取失败',
+                    location: '请求失败',
+                    source: 'IP.me',
+                    error: `CORS限制: ${jsonpError instanceof Error ? jsonpError.message : '未知错误'}`
+                }
+            }
         }
     }
 }
