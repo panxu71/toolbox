@@ -108,7 +108,7 @@
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
                                     <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -213,7 +213,7 @@
                                     <div class="detail-item">
                                         <span class="label">经纬度:</span>
                                         <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">ASN:</span>
@@ -1502,13 +1502,7 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
         } else {
             // 生产环境使用远程代理 API
             const targetUrl = 'https://ip.me'
-            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}&method=GET`, {
-                method: 'GET',
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                }
-            })
+            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}&method=GET`)
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
@@ -1516,7 +1510,7 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             console.log('IP.me 代理返回数据:', data)
 
             // 处理代理返回的数据
-            html = data.body || data || ''
+            html = data.data || data.body || data || ''
 
             // 如果返回的不是字符串，尝试转换
             if (typeof html !== 'string') {
