@@ -267,7 +267,7 @@ import ScrollToTop from './common/ScrollToTop.vue'
 import cardsConfig from '../config/cards.json'
 
 // 代理API配置
-const PROXY_API_URL = 'https://api.panxu71.workers.dev'
+const PROXY_API_URL = 'https://difficult-ape-32.panxu71.deno.net'
 
 // 通用代理请求函数
 const proxyFetch = async (url: string, options: RequestInit = {}) => {
