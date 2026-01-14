@@ -1523,9 +1523,9 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
         const ipMatch = html.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/)
         if (!ipMatch) throw new Error('无法从HTML中提取IP地址')
 
-        // 尝试解析详细信息
+        // 尝试解析详细信息（处理HTML中的换行符和空格）
         const parseTableValue = (label: string): string => {
-            const regex = new RegExp(`<th>${label}:</th>\\s*<td><code>([^<]+)</code></td>`, 'i')
+            const regex = new RegExp(`<th>${label}:</th>\\s*<td[^>]*>\\s*<code>([^<]+)</code>`, 'i')
             const match = html.match(regex)
             return match?.[1]?.trim() || ''
         }
