@@ -1500,22 +1500,21 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
             html = await response.text()
         } else {
-            // 生产环境使用远程代理 API
+            // 生产环境使用 Cloudflare Workers 代理
             const targetUrl = 'https://ip.me'
-            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}&method=GET`)
+            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}`)
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
+            // Cloudflare Workers 返回 JSON 格式: {success: true, content: "HTML内容"}
             const data = await response.json()
-            console.log('IP.me 代理返回数据:', data)
-
-            // 处理代理返回的数据
-            html = data.data || data.body || data || ''
-
-            // 如果返回的不是字符串，尝试转换
-            if (typeof html !== 'string') {
-                html = JSON.stringify(html)
+            
+            if (!data.success) {
+                throw new Error(data.error || '代理请求失败')
             }
+            
+            html = data.content || ''
+            console.log('IP.me 代理返回数据长度:', html.length)
         }
 
         if (!html) throw new Error('代理返回空内容')
