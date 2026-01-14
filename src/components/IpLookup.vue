@@ -108,7 +108,7 @@
                                 <div class="detail-item">
                                     <span class="label">经纬度:</span>
                                     <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">ASN:</span>
@@ -213,7 +213,7 @@
                                     <div class="detail-item">
                                         <span class="label">经纬度:</span>
                                         <span class="value">{{ (info.lat && info.lon) ? `${info.lat}, ${info.lon}` : '-'
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">ASN:</span>
@@ -267,7 +267,7 @@ import ScrollToTop from './common/ScrollToTop.vue'
 import cardsConfig from '../config/cards.json'
 
 // 代理API配置
-const PROXY_API_URL = 'https://tinypan.ct.ws/api.php/api.php'
+const PROXY_API_URL = 'https://tinypan.ct.ws/api.php'
 
 // 通用代理请求函数
 const proxyFetch = async (url: string, options: RequestInit = {}) => {
@@ -1501,17 +1501,13 @@ const fetchIpMeData = async (): Promise<IpInfo> => {
             html = await response.text()
         } else {
             // 生产环境使用远程代理 API
-            const params = new URLSearchParams({
-                url: 'https://ip.me',
+            const targetUrl = 'https://ip.me'
+            const response = await fetch(`${PROXY_API_URL}?url=${encodeURIComponent(targetUrl)}&method=GET`, {
                 method: 'GET',
-                headers: JSON.stringify({
+                headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                })
-            })
-
-            const response = await fetch(`${PROXY_API_URL}?${params.toString()}`, {
-                credentials: 'include'
+                }
             })
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
