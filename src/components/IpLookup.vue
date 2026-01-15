@@ -275,12 +275,12 @@ const proxyFetch = async (url: string, options: RequestInit = {}) => {
 
     // 如果是浏览器插件环境，直接请求
     if (isExtension) {
-        console.log('🔌 插件环境，直接请求:', url)
+        // console.log('🔌 插件环境，直接请求:', url)
         return await fetch(url, options)
     }
 
     // Web 环境，使用代理
-    console.log('🌐 Web 环境，使用代理请求:', url)
+    // console.log('🌐 Web 环境，使用代理请求:', url)
 
     const proxyBody: any = {
         url: url,
