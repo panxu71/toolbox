@@ -4,7 +4,8 @@
             <template #actions>
                 <div class="formatter-actions">
                     <HeaderActionButton icon="clear" tooltip="清空所有" @click="clearAll" />
-                    <HeaderActionButton icon="copy" tooltip="复制响应" @click="copyResponse" :disabled="!response.data && !response.error" />
+                    <HeaderActionButton icon="copy" tooltip="复制响应" @click="copyResponse"
+                        :disabled="!response.data && !response.error" />
                 </div>
             </template>
         </PageHeader>
@@ -14,7 +15,8 @@
                 <div class="request-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
                         </div>
@@ -53,15 +55,17 @@
                             <option value="HEAD">HEAD</option>
                             <option value="OPTIONS">OPTIONS</option>
                         </select>
-                        <input v-model="request.url" type="text" class="url-input" 
+                        <input v-model="request.url" type="text" class="url-input"
                             placeholder="请输入API接口地址，如：https://jsonplaceholder.typicode.com/posts"
                             @keyup.enter="sendRequest" />
-                        <button class="send-btn" @click="sendRequest" :disabled="loading || !request.url.trim()" 
+                        <button class="send-btn" @click="sendRequest" :disabled="loading || !request.url.trim()"
                             :class="{ loading, [request.method.toLowerCase()]: true }">
-                            <svg v-if="loading" class="loading-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg v-if="loading" class="loading-icon" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 12a9 9 0 11-6.219-8.56" />
                             </svg>
-                            <svg v-else class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg v-else class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
                             </svg>
@@ -74,7 +78,8 @@
                         <div class="section-header">
                             <h4>请求头 (Headers)</h4>
                             <button class="add-btn" @click="addHeader">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
@@ -87,7 +92,8 @@
                                 <span class="separator">:</span>
                                 <input v-model="header.value" type="text" placeholder="Header值" class="header-value" />
                                 <button class="remove-btn" @click="removeHeader(index)">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -101,7 +107,8 @@
                         <div class="section-header">
                             <h4>查询参数 (Query Parameters)</h4>
                             <button class="add-btn" @click="addParam">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
@@ -114,7 +121,8 @@
                                 <span class="separator">=</span>
                                 <input v-model="param.value" type="text" placeholder="参数值" class="param-value" />
                                 <button class="remove-btn" @click="removeParam(index)">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -136,11 +144,11 @@
                                 <option value="binary">📁 Binary File</option>
                             </select>
                         </div>
-                        
+
                         <!-- JSON Body -->
                         <div v-if="request.bodyType === 'json'" class="json-body">
-                            <textarea v-model="request.jsonBody" class="json-textarea" 
-                                placeholder='请输入JSON数据，例如：&#10;{&#10;  "title": "测试标题",&#10;  "body": "测试内容",&#10;  "userId": 1&#10;}' 
+                            <textarea v-model="request.jsonBody" class="json-textarea"
+                                placeholder='请输入JSON数据，例如：&#10;{&#10;  "title": "测试标题",&#10;  "body": "测试内容",&#10;  "userId": 1&#10;}'
                                 rows="8"></textarea>
                             <div class="json-actions">
                                 <button class="format-btn" @click="formatJson">格式化</button>
@@ -176,12 +184,15 @@
                             <div v-if="formUrlEncodedMode === 'form'" class="form-mode">
                                 <div v-if="request.formUrlEncodedData.length > 0" class="form-container">
                                     <div class="form-list">
-                                        <div v-for="(field, index) in request.formUrlEncodedData" :key="index" class="form-row">
+                                        <div v-for="(field, index) in request.formUrlEncodedData" :key="index"
+                                            class="form-row">
                                             <input v-model="field.key" type="text" placeholder="参数名" class="form-key" />
                                             <span class="separator">=</span>
-                                            <input v-model="field.value" type="text" placeholder="参数值" class="form-value" />
+                                            <input v-model="field.value" type="text" placeholder="参数值"
+                                                class="form-value" />
                                             <button class="remove-btn" @click="removeFormUrlEncodedField(index)">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
@@ -190,7 +201,8 @@
                                     </div>
                                 </div>
                                 <button class="add-btn" @click="addFormUrlEncodedField">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
@@ -200,8 +212,8 @@
 
                             <!-- 批量编辑模式 -->
                             <div v-if="formUrlEncodedMode === 'bulk'" class="bulk-mode">
-                                <textarea v-model="formUrlEncodedBulkText" class="bulk-textarea" 
-                                    placeholder='批量编辑参数，每行一个参数，支持等号(=)或冒号(:)分割&#10;格式1：参数名=参数值&#10;格式2：参数名:参数值&#10;&#10;例如：&#10;name=张三&#10;email:test@example.com&#10;age=25&#10;city:北京&#10;token=abc123:def456' 
+                                <textarea v-model="formUrlEncodedBulkText" class="bulk-textarea"
+                                    placeholder='批量编辑参数，每行一个参数，支持等号(=)或冒号(:)分割&#10;格式1：参数名=参数值&#10;格式2：参数名:参数值&#10;&#10;例如：&#10;name=张三&#10;email:test@example.com&#10;age=25&#10;city:北京&#10;token=abc123:def456'
                                     rows="8" @blur="parseBulkFormUrlEncoded"></textarea>
                                 <div class="bulk-actions">
                                     <button class="format-btn" @click="formatBulkFormUrlEncoded">格式化</button>
@@ -218,7 +230,8 @@
                                     <span class="separator">=</span>
                                     <input v-model="field.value" type="text" placeholder="字段值" class="form-value" />
                                     <button class="remove-btn" @click="removeFormDataField(index)">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
                                             <line x1="18" y1="6" x2="6" y2="18"></line>
                                             <line x1="6" y1="6" x2="18" y2="18"></line>
                                         </svg>
@@ -226,7 +239,8 @@
                                 </div>
                             </div>
                             <button class="add-btn" @click="addFormDataField">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
@@ -236,8 +250,8 @@
 
                         <!-- XML Body -->
                         <div v-if="request.bodyType === 'xml'" class="xml-body">
-                            <textarea v-model="request.xmlBody" class="xml-textarea" 
-                                placeholder='请输入XML数据，例如：&#10;<?xml version="1.0" encoding="UTF-8"?>&#10;<root>&#10;    <name>测试用户</name>&#10;    <email>test@example.com</email>&#10;    <message>这是一个测试消息</message>&#10;</root>' 
+                            <textarea v-model="request.xmlBody" class="xml-textarea"
+                                placeholder='请输入XML数据，例如：&#10;<?xml version="1.0" encoding="UTF-8"?>&#10;<root>&#10;    <name>测试用户</name>&#10;    <email>test@example.com</email>&#10;    <message>这是一个测试消息</message>&#10;</root>'
                                 rows="8"></textarea>
                             <div class="xml-actions">
                                 <button class="format-btn" @click="formatXml">格式化</button>
@@ -247,16 +261,18 @@
 
                         <!-- Raw Text -->
                         <div v-if="request.bodyType === 'raw'" class="raw-body">
-                            <textarea v-model="request.rawBody" class="raw-textarea" 
-                                placeholder="请输入原始文本数据" rows="8"></textarea>
+                            <textarea v-model="request.rawBody" class="raw-textarea" placeholder="请输入原始文本数据"
+                                rows="8"></textarea>
                         </div>
 
                         <!-- Binary File -->
                         <div v-if="request.bodyType === 'binary'" class="binary-body">
                             <div class="file-upload">
-                                <input type="file" ref="fileInput" @change="handleFileSelect" class="file-input" id="binary-file" />
+                                <input type="file" ref="fileInput" @change="handleFileSelect" class="file-input"
+                                    id="binary-file" />
                                 <label for="binary-file" class="file-label">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7,10 12,15 17,10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -271,7 +287,8 @@
                                     <span class="file-type">{{ request.binaryFile.type || '未知类型' }}</span>
                                 </div>
                                 <button class="remove-file-btn" @click="removeBinaryFile">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -287,8 +304,11 @@
                 <div class="response-header">
                     <div class="header-content">
                         <div class="header-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                                </path>
                             </svg>
                         </div>
                         <div class="header-text">
@@ -319,7 +339,8 @@
                     </div>
                     <div v-else class="empty-response">
                         <div class="empty-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <path d="M12 6v6l4 2"></path>
                             </svg>
@@ -567,12 +588,12 @@ const formatXml = () => {
         let formatted = request.xmlBody
             .replace(/></g, '>\n<')
             .replace(/^\s*\n/gm, '')
-        
+
         // 添加缩进
         const lines = formatted.split('\n')
         let indent = 0
         const indentSize = 2
-        
+
         formatted = lines.map(line => {
             const trimmed = line.trim()
             if (trimmed.startsWith('</')) {
@@ -584,7 +605,7 @@ const formatXml = () => {
             }
             return result
         }).join('\n')
-        
+
         request.xmlBody = formatted
         showSuccess('XML格式化成功')
     } catch (error) {
@@ -665,6 +686,7 @@ const clearAll = () => {
 }
 
 // 发送请求
+// 发送请求
 const sendRequest = async () => {
     if (!request.url.trim()) {
         showError('请输入API接口地址')
@@ -681,10 +703,10 @@ const sendRequest = async () => {
     const startTime = Date.now()
 
     try {
-        // 构建URL
-        let url = request.url.trim()
-        if (!url.match(/^https?:\/\//)) {
-            url = 'https://' + url
+        // 构建目标URL
+        let targetUrl = request.url.trim()
+        if (!targetUrl.match(/^https?:\/\//)) {
+            targetUrl = 'https://' + targetUrl
         }
 
         if (request.method === 'GET' && request.params.length > 0) {
@@ -696,7 +718,7 @@ const sendRequest = async () => {
             })
             const queryString = params.toString()
             if (queryString) {
-                url += (url.includes('?') ? '&' : '?') + queryString
+                targetUrl += (targetUrl.includes('?') ? '&' : '?') + queryString
             }
         }
 
@@ -708,21 +730,31 @@ const sendRequest = async () => {
             }
         })
 
-        // 构建请求配置
+        // 代理 API URL
+        const proxyUrl = 'https://difficult-ape-32.panxu71.deno.net'
+
+        // 构建代理请求配置
         const config: RequestInit = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+
+        // 构建代理请求体
+        const proxyBody: any = {
+            url: targetUrl,
             method: request.method,
-            headers,
-            mode: 'cors'
+            headers: headers
         }
 
         // 构建请求体
         if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
             if (request.bodyType === 'json' && request.jsonBody) {
                 try {
-                    JSON.parse(request.jsonBody)
-                    config.body = request.jsonBody
+                    proxyBody.body = JSON.parse(request.jsonBody)
                     if (!headers['Content-Type']) {
-                        headers['Content-Type'] = 'application/json'
+                        proxyBody.headers['Content-Type'] = 'application/json'
                     }
                 } catch (error) {
                     throw new Error('JSON格式错误，请检查请求体')
@@ -734,64 +766,52 @@ const sendRequest = async () => {
                         params.append(field.key, field.value)
                     }
                 })
-                config.body = params.toString()
-                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                proxyBody.body = params.toString()
+                proxyBody.headers['Content-Type'] = 'application/x-www-form-urlencoded'
             } else if (request.bodyType === 'form-data' && request.formDataFields.length > 0) {
-                const formData = new FormData()
+                const formData: Record<string, string> = {}
                 request.formDataFields.forEach(field => {
                     if (field.key && field.value) {
-                        formData.append(field.key, field.value)
+                        formData[field.key] = field.value
                     }
                 })
-                config.body = formData
-                // 不设置Content-Type，让浏览器自动设置multipart/form-data边界
-                delete headers['Content-Type']
+                proxyBody.body = formData
+                proxyBody.headers['Content-Type'] = 'multipart/form-data'
             } else if (request.bodyType === 'xml' && request.xmlBody) {
-                config.body = request.xmlBody
-                headers['Content-Type'] = 'application/xml'
+                proxyBody.body = request.xmlBody
+                proxyBody.headers['Content-Type'] = 'application/xml'
             } else if (request.bodyType === 'raw' && request.rawBody) {
-                config.body = request.rawBody
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = 'text/plain'
+                proxyBody.body = request.rawBody
+                if (!proxyBody.headers['Content-Type']) {
+                    proxyBody.headers['Content-Type'] = 'text/plain'
                 }
             } else if (request.bodyType === 'binary' && request.binaryFile) {
-                config.body = request.binaryFile
-                headers['Content-Type'] = request.binaryFile.type || 'application/octet-stream'
+                // Binary 文件暂不支持通过代理
+                throw new Error('二进制文件上传暂不支持代理模式')
             }
         }
 
-        // 发送请求
-        const fetchResponse = await fetch(url, config)
+        config.body = JSON.stringify(proxyBody)
+
+        // 发送请求到代理
+        const fetchResponse = await fetch(proxyUrl, config)
         const endTime = Date.now()
 
-        response.status = fetchResponse.status
         response.time = endTime - startTime
 
-        // 获取响应头
-        const responseHeaders: Record<string, string> = {}
-        fetchResponse.headers.forEach((value, key) => {
-            responseHeaders[key] = value
-        })
-        response.headers = responseHeaders
+        // 获取代理响应
+        const proxyResponse = await fetchResponse.json()
 
-        // 获取响应体
-        const contentType = fetchResponse.headers.get('content-type')
-        let responseData: any
+        response.status = proxyResponse.status || fetchResponse.status
+        response.headers = proxyResponse.headers || {}
+        response.data = proxyResponse.data || proxyResponse.body
 
-        if (contentType && contentType.includes('application/json')) {
-            try {
-                responseData = await fetchResponse.json()
-            } catch (error) {
-                responseData = await fetchResponse.text()
-            }
-        } else {
-            responseData = await fetchResponse.text()
-        }
-
-        response.data = responseData
-
-        if (!fetchResponse.ok) {
+        if (proxyResponse.error) {
+            response.error = proxyResponse.error
+            showError('请求失败')
+        } else if (!fetchResponse.ok) {
             response.error = `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`
+            showError('请求失败')
         } else {
             showSuccess('请求发送成功')
         }
@@ -801,7 +821,7 @@ const sendRequest = async () => {
         response.time = endTime - startTime
 
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            response.error = 'CORS跨域错误或网络连接失败'
+            response.error = '代理服务连接失败或网络错误'
         } else if (error.message.includes('JSON格式错误')) {
             response.error = error.message
         } else {
@@ -1359,8 +1379,13 @@ const copyResponse = async () => {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .file-upload {

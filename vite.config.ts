@@ -172,7 +172,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 3000
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    'import.meta.env.BUILD_TARGET': JSON.stringify(buildTarget)
   },
   resolve: {
     alias: {
