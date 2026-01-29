@@ -71,21 +71,28 @@
                 </div>
                 <div class="json-output-container">
                     <div v-if="formattedJson || parsedJsonForTree" class="json-output-wrapper">
-                        <div class="line-numbers">
-                            <div v-for="(_, index) in visibleLines" :key="index" class="line-number">
-                                {{ index + 1 }}
+                        <!-- 树视图 -->
+                        <div v-if="viewMode === 'tree' && parsedJsonForTree" class="json-tree-view">
+                            <div class="line-numbers">
+                                <div v-for="(_, index) in visibleLines" :key="index" class="line-number">
+                                    {{ index + 1 }}
+                                </div>
+                            </div>
+                            <div class="json-tree-container">
+                                <JsonTreeNode :data="parsedJsonForTree" :level="0" @toggle="updateVisibleLines"
+                                    @copy="handleNodeCopy" @delete="handleNodeDelete" />
                             </div>
                         </div>
 
-                        <!-- 树视图 -->
-                        <div v-if="viewMode === 'tree' && parsedJsonForTree" class="json-tree-container">
-                            <JsonTreeNode :data="parsedJsonForTree" :level="0" @toggle="updateVisibleLines"
-                                @copy="handleNodeCopy" @delete="handleNodeDelete" />
-                        </div>
-
                         <!-- 文本视图 -->
-                        <div v-else-if="viewMode === 'text' && formattedJson" class="json-output"
-                            v-html="highlightedJson" />
+                        <div v-else-if="viewMode === 'text' && formattedJson" class="json-text-view">
+                            <div class="line-numbers">
+                                <div v-for="(_, index) in visibleLines" :key="index" class="line-number">
+                                    {{ index + 1 }}
+                                </div>
+                            </div>
+                            <div class="json-output" v-html="highlightedJson" />
+                        </div>
                     </div>
                     <div v-else class="output-placeholder">
                         <p>格式化后的JSON将显示在这里</p>
@@ -97,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
@@ -147,7 +154,7 @@ const inputJson = ref('')
 const formattedJson = ref('')
 const inputError = ref('')
 const isAutoFormatting = ref(false)
-const viewMode = ref<'tree' | 'text'>('tree') // 新增：视图模式切换
+const viewMode = ref<'tree' | 'text'>('text') // 默认使用文本视图，这样更容易看到行号同步效果
 
 // JSON统计信息
 const jsonStats = computed(() => {
@@ -211,17 +218,10 @@ const visibleLines = computed(() => {
     if (viewMode.value === 'text') {
         return formattedJsonLines.value
     } else {
-        // 树视图模式下，行数由树节点动态计算
-        return Array.from({ length: calculateTreeLines() }, (_, i) => i)
+        // 树视图模式下，使用格式化后的JSON行数
+        return formattedJsonLines.value
     }
 })
-
-// 计算树视图的行数
-const calculateTreeLines = (): number => {
-    // 这里简化处理，实际应该根据展开状态计算
-    if (!parsedJsonForTree.value) return 0
-    return JSON.stringify(parsedJsonForTree.value, null, 2).split('\n').length
-}
 
 // 递归统计对象中的键数量
 const countKeys = (obj: any): number => {
@@ -406,6 +406,9 @@ const formatJson = () => {
         formattedJson.value = JSON.stringify(parsed, null, 2)
         inputError.value = ''
         showSuccess('格式化成功')
+        
+        // 设置滚动同步
+        setupScrollSync()
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
         showError('格式化失败')
@@ -441,6 +444,9 @@ const minifyJson = () => {
         formattedJson.value = JSON.stringify(parsed)
         inputError.value = ''
         showSuccess('压缩成功')
+        
+        // 设置滚动同步
+        setupScrollSync()
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
         showError('压缩失败')
@@ -461,7 +467,7 @@ const escapeJson = () => {
 // 去转义JSON
 const unescapeJson = () => {
     if (!inputJson.value.trim()) {
-        showMessage('请输入JSON内容', 'error')
+        showError('请输入JSON内容')
         return
     }
 
@@ -562,8 +568,91 @@ const loadExample = (exampleNumber: number) => {
         formattedJson.value = JSON.stringify(example.data, null, 2)
         inputError.value = ''
         showSuccess(`已加载${example.name}示例数据`)
+        
+        // 设置滚动同步
+        setupScrollSync()
     }
 }
+
+// 设置滚动同步
+const setupScrollSync = () => {
+    // 等待DOM更新完成
+    nextTick(() => {
+        // 文本视图的滚动同步
+        const textView = document.querySelector('.json-text-view')
+        if (textView) {
+            const lineNumbers = textView.querySelector('.line-numbers')
+            const jsonOutput = textView.querySelector('.json-output')
+            
+            if (lineNumbers && jsonOutput) {
+                // 移除之前的事件监听器（如果存在）
+                const existingHandler = (jsonOutput as any)._scrollHandler
+                if (existingHandler) {
+                    jsonOutput.removeEventListener('scroll', existingHandler)
+                }
+                
+                // 创建新的滚动处理函数
+                const handleTextScroll = () => {
+                    if (lineNumbers && jsonOutput) {
+                        lineNumbers.scrollTop = jsonOutput.scrollTop
+                        // 调试信息
+                        console.log('文本视图滚动同步:', jsonOutput.scrollTop)
+                    }
+                }
+                
+                // 保存处理函数引用，便于后续移除
+                ;(jsonOutput as any)._scrollHandler = handleTextScroll
+                
+                // 添加滚动事件监听器
+                jsonOutput.addEventListener('scroll', handleTextScroll)
+                
+                console.log('文本视图滚动同步已设置') // 调试用
+            }
+        }
+        
+        // 树视图的滚动同步
+        const treeView = document.querySelector('.json-tree-view')
+        if (treeView) {
+            const lineNumbers = treeView.querySelector('.line-numbers')
+            const treeContainer = treeView.querySelector('.json-tree-container')
+            
+            if (lineNumbers && treeContainer) {
+                // 移除之前的事件监听器（如果存在）
+                const existingHandler = (treeContainer as any)._scrollHandler
+                if (existingHandler) {
+                    treeContainer.removeEventListener('scroll', existingHandler)
+                }
+                
+                // 创建新的滚动处理函数
+                const handleTreeScroll = () => {
+                    if (lineNumbers && treeContainer) {
+                        lineNumbers.scrollTop = treeContainer.scrollTop
+                        // 调试信息
+                        console.log('树视图滚动同步:', treeContainer.scrollTop)
+                    }
+                }
+                
+                // 保存处理函数引用，便于后续移除
+                ;(treeContainer as any)._scrollHandler = handleTreeScroll
+                
+                // 添加滚动事件监听器
+                treeContainer.addEventListener('scroll', handleTreeScroll)
+                
+                console.log('树视图滚动同步已设置') // 调试用
+            }
+        }
+    })
+}
+
+// 组件挂载后设置滚动同步
+onMounted(() => {
+    setupScrollSync()
+})
+
+// 监听视图模式变化，重新设置滚动同步
+watch(viewMode, () => {
+    setupScrollSync()
+})
 </script>
 
 <style scoped>
@@ -579,7 +668,7 @@ const loadExample = (exampleNumber: number) => {
 .formatter-content {
     flex: 1;
     display: grid;
-    grid-template-columns: 4fr 6fr;
+    grid-template-columns: 45fr 55fr;
     gap: 1px;
     background: var(--border-color);
     min-height: 0;
@@ -762,7 +851,20 @@ const loadExample = (exampleNumber: number) => {
 
 .json-output-wrapper {
     display: flex;
+    flex-direction: column;
     height: 100%;
+}
+
+.json-tree-view {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+}
+
+.json-text-view {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
 }
 
 .line-numbers {
@@ -776,6 +878,11 @@ const loadExample = (exampleNumber: number) => {
     user-select: none;
     min-width: 40px;
     text-align: right;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+    /* 确保行号容器可以滚动 */
+    max-height: 100%;
 }
 
 .line-number {
