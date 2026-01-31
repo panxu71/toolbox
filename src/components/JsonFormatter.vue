@@ -394,7 +394,33 @@ const downloadJsonFile = () => {
     }
 }
 
-// 格式化JSON
+// 尝试修复常见的JSON格式问题
+const tryFixJsonFormat = (jsonString: string): string => {
+    try {
+        // 先尝试直接解析
+        JSON.parse(jsonString)
+        return jsonString
+    } catch {
+        // 如果解析失败，尝试修复常见问题
+        let fixed = jsonString.trim()
+        
+        // 1. 修复属性名没有引号的问题
+        // 匹配 {word: 或 ,word: 的模式，给word加上双引号
+        fixed = fixed.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":')
+        
+        // 2. 修复单引号为双引号
+        fixed = fixed.replace(/'/g, '"')
+        
+        // 3. 尝试解析修复后的字符串
+        try {
+            JSON.parse(fixed)
+            return fixed
+        } catch {
+            // 如果还是失败，返回原字符串
+            return jsonString
+        }
+    }
+}
 const formatJson = () => {
     if (!inputJson.value.trim()) {
         showError('请输入JSON内容')
@@ -402,7 +428,16 @@ const formatJson = () => {
     }
 
     try {
-        const parsed = JSON.parse(inputJson.value)
+        // 尝试修复常见的JSON格式问题
+        const fixedJson = tryFixJsonFormat(inputJson.value)
+        
+        // 如果修复后的JSON与原始不同，更新输入框
+        if (fixedJson !== inputJson.value) {
+            inputJson.value = fixedJson
+            showSuccess('已自动修复JSON格式问题')
+        }
+        
+        const parsed = JSON.parse(fixedJson)
         formattedJson.value = JSON.stringify(parsed, null, 2)
         inputError.value = ''
         showSuccess('格式化成功')
@@ -423,9 +458,18 @@ const validateJson = () => {
     }
 
     try {
-        JSON.parse(inputJson.value)
+        // 尝试修复常见的JSON格式问题
+        const fixedJson = tryFixJsonFormat(inputJson.value)
+        
+        // 如果修复后的JSON与原始不同，更新输入框并提示
+        if (fixedJson !== inputJson.value) {
+            inputJson.value = fixedJson
+            showSuccess('已自动修复JSON格式问题，格式正确')
+        } else {
+            showSuccess('JSON格式正确')
+        }
+        
         inputError.value = ''
-        showSuccess('JSON格式正确')
     } catch (error) {
         inputError.value = `JSON格式错误: ${(error as Error).message}`
         showError('JSON格式错误')
@@ -440,7 +484,16 @@ const minifyJson = () => {
     }
 
     try {
-        const parsed = JSON.parse(inputJson.value)
+        // 尝试修复常见的JSON格式问题
+        const fixedJson = tryFixJsonFormat(inputJson.value)
+        
+        // 如果修复后的JSON与原始不同，更新输入框
+        if (fixedJson !== inputJson.value) {
+            inputJson.value = fixedJson
+            showSuccess('已自动修复JSON格式问题')
+        }
+        
+        const parsed = JSON.parse(fixedJson)
         formattedJson.value = JSON.stringify(parsed)
         inputError.value = ''
         showSuccess('压缩成功')
