@@ -189,7 +189,8 @@ onMounted(() => {
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     line-height: 1.5;
     overflow: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-all;
     tab-size: 4;
 }
 

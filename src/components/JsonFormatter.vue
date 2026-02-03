@@ -22,9 +22,9 @@
                             </svg>
                             自动格式化中...
                         </span>
-                        <span v-else-if="inputJson && !inputError" class="format-hint">
+                        <!-- <span v-else-if="inputJson && !inputError" class="format-hint">
                             粘贴内容将自动格式化
-                        </span>
+                        </span> -->
                     </div>
                     <div class="section-actions">
                         <div class="button-group">
@@ -86,12 +86,14 @@
 
                         <!-- 文本视图 -->
                         <div v-else-if="viewMode === 'text' && formattedJson" class="json-text-view">
-                            <div class="line-numbers">
-                                <div v-for="(_, index) in visibleLines" :key="index" class="line-number">
-                                    {{ index + 1 }}
-                                </div>
-                            </div>
-                            <div class="json-output" v-html="highlightedJson" />
+                            <CodeViewer 
+                                :code="formattedJson"
+                                language="json"
+                                :show-line-numbers="true"
+                                :show-fullscreen-button="true"
+                                :is-fullscreen="isFullscreen"
+                                @toggle-fullscreen="toggleFullscreen"
+                            />
                         </div>
                     </div>
                     <div v-else class="output-placeholder">
@@ -104,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useDownload } from '../composables/useDownload'
 import { useClipboard } from '../composables/useClipboard'
@@ -112,6 +114,7 @@ import { useNotification } from '../composables/useNotification'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
 import JsonTreeNode from './common/JsonTreeNode.vue'
+import CodeViewer from './common/CodeViewer.vue'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 import cardsConfig from '../config/cards.json'
@@ -154,6 +157,7 @@ const inputJson = ref('')
 const formattedJson = ref('')
 const inputError = ref('')
 const isAutoFormatting = ref(false)
+const isFullscreen = ref(false)
 const viewMode = ref<'tree' | 'text'>('text') // 默认使用文本视图，这样更容易看到行号同步效果
 
 // JSON统计信息
@@ -187,14 +191,6 @@ const jsonStats = computed(() => {
     }
 
     return { lines, size, keys, depth, complexity, complexityText }
-})
-
-// JSON语法高亮
-const highlightedJson = computed(() => {
-    if (!formattedJson.value || typeof formattedJson.value !== 'string') return ''
-
-    const result = hljs.highlight(formattedJson.value, { language: 'json' })
-    return result.value
 })
 
 // 格式化后的JSON行数组
@@ -353,11 +349,18 @@ const handleNodeDelete = (nodeInfo: { key: string | number | null, path: string 
 
         // 更新输入和输出
         const newJsonString = JSON.stringify(newJsonData, null, 2)
+        
         inputJson.value = newJsonString
         formattedJson.value = newJsonString
 
+        // 强制触发重新渲染
+        nextTick(() => {
+            updateVisibleLines()
+        })
+
         showSuccess('节点已删除')
     } catch (error) {
+        console.error('删除节点失败:', error)
         showError('删除失败')
     }
 }
@@ -368,6 +371,32 @@ const clearAll = () => {
     formattedJson.value = ''
     inputError.value = ''
     showSuccess('已清空所有内容')
+}
+
+// 全屏功能
+const toggleFullscreen = async () => {
+    try {
+        const outputSection = document.querySelector('.output-section')
+        if (!outputSection) return
+        
+        if (!document.fullscreenElement) {
+            // 进入全屏
+            await outputSection.requestFullscreen()
+            isFullscreen.value = true
+        } else {
+            // 退出全屏
+            await document.exitFullscreen()
+            isFullscreen.value = false
+        }
+    } catch (error) {
+        console.error('全屏操作失败:', error)
+        showError('全屏功能不支持或被阻止')
+    }
+}
+
+// 监听全屏状态变化
+const handleFullscreenChange = () => {
+    isFullscreen.value = !!document.fullscreenElement
 }
 
 // 复制结果
@@ -562,27 +591,7 @@ const unescapeJson = () => {
 // 加载示例
 const loadExample = (exampleNumber: number) => {
     const examples = {
-        1: {
-            name: "用户信息",
-            data: {
-                "id": 1001,
-                "name": "张三",
-                "email": "zhangsan@example.com",
-                "age": 28,
-                "isActive": true,
-                "address": {
-                    "street": "中山路123号",
-                    "city": "北京",
-                    "zipCode": "100000",
-                    "country": "中国"
-                },
-                "hobbies": ["阅读", "游泳", "编程"],
-                "profile": {
-                    "avatar": "https://example.com/avatar.jpg",
-                    "bio": "热爱技术的软件工程师"
-                }
-            }
-        },
+        1: {"message":"success感谢又拍云(upyun.com)提供CDN赞助","status":200,"date":"20260203","time":"2026-02-03 21:17:55","cityInfo":{"city":"天津市","citykey":"101030100","parent":"天津","updateTime":"19:06"},"data":{"shidu":"46%","pm25":122.0,"pm10":175.0,"quality":"中度","wendu":"3.3","ganmao":"儿童、老年人及心脏、呼吸系统疾病患者人群应减少长时间或高强度户外锻炼，一般人群适量减少户外运动","forecast":[{"date":"03","high":"高温 10℃","low":"低温 -3℃","ymd":"2026-02-03","week":"星期二","sunrise":"07:16","sunset":"17:33","aqi":187,"fx":"西南风","fl":"2级","type":"霾","notice":"雾霾来袭，戴好口罩再出门"},{"date":"04","high":"高温 10℃","low":"低温 -1℃","ymd":"2026-02-04","week":"星期三","sunrise":"07:15","sunset":"17:35","aqi":191,"fx":"西北风","fl":"1级","type":"霾","notice":"雾霾来袭，戴好口罩再出门"},{"date":"05","high":"高温 4℃","low":"低温 -2℃","ymd":"2026-02-05","week":"星期四","sunrise":"07:14","sunset":"17:36","aqi":93,"fx":"东南风","fl":"2级","type":"多云","notice":"阴晴之间，谨防紫外线侵扰"},{"date":"06","high":"高温 0℃","low":"低温 -5℃","ymd":"2026-02-06","week":"星期五","sunrise":"07:13","sunset":"17:37","aqi":37,"fx":"北风","fl":"2级","type":"阴","notice":"不要被阴云遮挡住好心情"},{"date":"07","high":"高温 2℃","low":"低温 -8℃","ymd":"2026-02-07","week":"星期六","sunrise":"07:12","sunset":"17:38","aqi":38,"fx":"西南风","fl":"2级","type":"多云","notice":"阴晴之间，谨防紫外线侵扰"},{"date":"08","high":"高温 4℃","low":"低温 -6℃","ymd":"2026-02-08","week":"星期日","sunrise":"07:10","sunset":"17:39","aqi":40,"fx":"东南风","fl":"2级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"09","high":"高温 4℃","low":"低温 -5℃","ymd":"2026-02-09","week":"星期一","sunrise":"07:09","sunset":"17:40","aqi":106,"fx":"东南风","fl":"2级","type":"霾","notice":"雾霾来袭，戴好口罩再出门"},{"date":"10","high":"高温 7℃","low":"低温 -2℃","ymd":"2026-02-10","week":"星期二","sunrise":"07:08","sunset":"17:42","aqi":133,"fx":"南风","fl":"2级","type":"霾","notice":"雾霾来袭，戴好口罩再出门"},{"date":"11","high":"高温 9℃","low":"低温 -2℃","ymd":"2026-02-11","week":"星期三","sunrise":"07:07","sunset":"17:43","aqi":55,"fx":"西北风","fl":"2级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"12","high":"高温 9℃","low":"低温 -1℃","ymd":"2026-02-12","week":"星期四","sunrise":"07:06","sunset":"17:44","aqi":92,"fx":"东南风","fl":"2级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"13","high":"高温 8℃","low":"低温 0℃","ymd":"2026-02-13","week":"星期五","sunrise":"07:05","sunset":"17:45","aqi":96,"fx":"东北风","fl":"3级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"14","high":"高温 9℃","low":"低温 -1℃","ymd":"2026-02-14","week":"星期六","sunrise":"07:04","sunset":"17:46","aqi":71,"fx":"北风","fl":"3级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"15","high":"高温 6℃","low":"低温 -1℃","ymd":"2026-02-15","week":"星期日","sunrise":"07:02","sunset":"17:47","aqi":39,"fx":"西北风","fl":"3级","type":"晴","notice":"愿你拥有比阳光明媚的心情"},{"date":"16","high":"高温 9℃","low":"低温 0℃","ymd":"2026-02-16","week":"星期一","sunrise":"07:01","sunset":"17:48","aqi":71,"fx":"南风","fl":"2级","type":"多云","notice":"阴晴之间，谨防紫外线侵扰"},{"date":"17","high":"高温 8℃","low":"低温 4℃","ymd":"2026-02-17","week":"星期二","sunrise":"07:00","sunset":"17:49","aqi":33,"fx":"东南风","fl":"2级","type":"阴","notice":"不要被阴云遮挡住好心情"}],"yesterday":{"date":"02","high":"高温 5℃","low":"低温 -4℃","ymd":"2026-02-02","week":"星期一","sunrise":"07:16","sunset":"17:32","aqi":60,"fx":"西北风","fl":"2级","type":"晴","notice":"愿你拥有比阳光明媚的心情"}}},
         2: {
             name: "商品列表",
             data: {
@@ -648,8 +657,6 @@ const setupScrollSync = () => {
                 const handleTextScroll = () => {
                     if (lineNumbers && jsonOutput) {
                         lineNumbers.scrollTop = jsonOutput.scrollTop
-                        // 调试信息
-                        console.log('文本视图滚动同步:', jsonOutput.scrollTop)
                     }
                 }
                 
@@ -658,8 +665,6 @@ const setupScrollSync = () => {
                 
                 // 添加滚动事件监听器
                 jsonOutput.addEventListener('scroll', handleTextScroll)
-                
-                console.log('文本视图滚动同步已设置') // 调试用
             }
         }
         
@@ -680,8 +685,6 @@ const setupScrollSync = () => {
                 const handleTreeScroll = () => {
                     if (lineNumbers && treeContainer) {
                         lineNumbers.scrollTop = treeContainer.scrollTop
-                        // 调试信息
-                        console.log('树视图滚动同步:', treeContainer.scrollTop)
                     }
                 }
                 
@@ -690,8 +693,6 @@ const setupScrollSync = () => {
                 
                 // 添加滚动事件监听器
                 treeContainer.addEventListener('scroll', handleTreeScroll)
-                
-                console.log('树视图滚动同步已设置') // 调试用
             }
         }
     })
@@ -700,6 +701,13 @@ const setupScrollSync = () => {
 // 组件挂载后设置滚动同步
 onMounted(() => {
     setupScrollSync()
+    // 监听全屏状态变化
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+    document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 
 // 监听视图模式变化，重新设置滚动同步
@@ -915,6 +923,7 @@ watch(viewMode, () => {
 }
 
 .json-text-view {
+    position: relative;
     display: flex;
     height: 100%;
     overflow: hidden;
@@ -1029,5 +1038,26 @@ watch(viewMode, () => {
     .button-group {
         flex-wrap: wrap;
     }
+}
+
+/* 全屏模式样式 */
+.output-section:fullscreen {
+    background: var(--bg-primary);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.output-section:fullscreen .section-header {
+    display: none;
+}
+
+.output-section:fullscreen .json-output-container {
+    flex: 1;
+    height: 100vh;
+}
+
+.output-section:fullscreen .json-text-view {
+    height: 100%;
 }
 </style>
