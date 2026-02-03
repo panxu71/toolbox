@@ -21,23 +21,11 @@
                     <div class="section-header">
                         <h3>代码输入</h3>
                         <div class="header-right">
-                            <div class="config-section">
-                                <label>缩进:</label>
-                                <select v-model="formatConfig.indentType" class="config-select">
-                                    <option value="spaces">空格</option>
-                                    <option value="tabs">制表符</option>
-                                </select>
-                                <select v-model="formatConfig.indentSize" class="config-select">
-                                    <option value="2">2</option>
-                                    <option value="4">4</option>
-                                    <option value="8">8</option>
-                                </select>
-                            </div>
+                            <button class="import-btn" @click="importFile">
+                                导入文件
+                            </button>
                             <div class="operation-buttons">
-                                <button class="operation-btn format-btn" @click="formatCode"
-                                    :disabled="!inputCode.trim()">
-                                    格式化
-                                </button>
+                                
                                 <button class="operation-btn minify-btn" @click="minifyCode"
                                     :disabled="!inputCode.trim()">
                                     压缩
@@ -46,20 +34,16 @@
                                     :disabled="!inputCode.trim()">
                                     验证
                                 </button>
+                                <button class="operation-btn format-btn" @click="formatCode"
+                                    :disabled="!inputCode.trim()">
+                                    格式化
+                                </button>
                             </div>
-                            <button class="import-btn" @click="importFile">
-                                导入文件
-                            </button>
                         </div>
                     </div>
                     <div class="code-editor">
                         <textarea v-model="inputCode" :placeholder="getPlaceholder()" class="code-input"
-                            @input="updateStats"></textarea>
-                        <div class="line-numbers" v-if="inputCode">
-                            <div v-for="(_, index) in inputCode.split('\n')" :key="index" class="line-number">
-                                {{ index + 1 }}
-                            </div>
-                        </div>
+                            @input="updateStats" @paste="handlePaste"></textarea>
                     </div>
                     <div class="section-footer">
                         <div class="stats-info">
@@ -75,9 +59,28 @@
                 <div class="output-section">
                     <div class="section-header">
                         <h3>处理结果</h3>
+                        <div class="header-right">
+                            <div v-if="!isFullscreen" class="config-section">
+                                <label>缩进:</label>
+                                <select v-model="formatConfig.indent" class="config-select">
+                                    <option value="spaces-2">空格2</option>
+                                    <option value="spaces-4">空格4</option>
+                                    <option value="spaces-8">空格8</option>
+                                    <option value="tabs">制表符</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="code-editor">
-                        <textarea v-if="outputCode" v-model="outputCode" class="code-output" readonly></textarea>
+                        <CodeViewer 
+                            v-if="outputCode"
+                            :code="outputCode"
+                            :language="selectedLanguage"
+                            :is-fullscreen="isFullscreen"
+                            :show-line-numbers="true"
+                            :show-fullscreen-button="true"
+                            @toggle-fullscreen="toggleFullscreen"
+                        />
                         <div v-else class="empty-output">
                             <div class="empty-content">
                                 <div class="empty-icon">
@@ -88,12 +91,7 @@
                                     </svg>
                                 </div>
                                 <h4>等待处理</h4>
-                                <p>选择下方的操作按钮来处理代码</p>
-                            </div>
-                        </div>
-                        <div class="line-numbers" v-if="outputCode">
-                            <div v-for="(_, index) in outputCode.split('\n')" :key="index" class="line-number">
-                                {{ index + 1 }}
+                                <p>选择左侧的操作按钮来处理代码</p>
                             </div>
                         </div>
                     </div>
@@ -134,9 +132,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from './common/PageHeader.vue'
 import HeaderActionButton from './common/HeaderActionButton.vue'
+import CodeViewer from './common/CodeViewer.vue'
 import { usePageTitle } from '../composables/usePageTitle'
 import { useNotification } from '../composables/useNotification'
 import { useClipboard } from '../composables/useClipboard'
@@ -144,7 +143,6 @@ import { useDownload } from '../composables/useDownload'
 import cardsConfig from '../config/cards.json'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
-import parserHtml from 'prettier/parser-html'
 import parserPostcss from 'prettier/parser-postcss'
 import { html as beautifyHtml } from 'js-beautify'
 
@@ -174,11 +172,11 @@ const pageTitle = computed(() => {
 const selectedLanguage = ref('html')
 const inputCode = ref('')
 const outputCode = ref('')
+const isFullscreen = ref(false)
 
 // 格式化配置
 const formatConfig = ref({
-    indentType: 'tabs',
-    indentSize: '2'
+    indent: 'tabs'
 })
 
 // 代码统计
@@ -213,6 +211,19 @@ const getPlaceholder = () => {
             return 'body {\nmargin: 0;\npadding: 0;\nfont-family: Arial, sans-serif;\n}'
         default:
             return '请输入代码...'
+    }
+}
+
+// 处理粘贴事件
+const handlePaste = async () => {
+    // 等待粘贴内容更新到 inputCode
+    await nextTick()
+    
+    // 如果粘贴后有内容，自动格式化
+    if (inputCode.value.trim()) {
+        setTimeout(() => {
+            formatCode()
+        }, 100) // 稍微延迟确保内容已更新
     }
 }
 
@@ -333,6 +344,57 @@ const downloadOutput = () => {
     showSuccess('文件下载已开始')
 }
 
+// 全屏功能
+const toggleFullscreen = async () => {
+    try {
+        const outputSection = document.querySelector('.output-section')
+        if (!outputSection) return
+        
+        if (!document.fullscreenElement) {
+            // 进入全屏
+            await outputSection.requestFullscreen()
+            isFullscreen.value = true
+        } else {
+            // 退出全屏
+            await document.exitFullscreen()
+            isFullscreen.value = false
+        }
+    } catch (error) {
+        console.error('全屏操作失败:', error)
+        showError('全屏功能不支持或被阻止')
+    }
+}
+
+const closeFullscreen = async () => {
+    try {
+        if (document.fullscreenElement) {
+            await document.exitFullscreen()
+        }
+        isFullscreen.value = false
+    } catch (error) {
+        console.error('退出全屏失败:', error)
+    }
+}
+
+const handleEscapeKey = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && document.fullscreenElement) {
+        closeFullscreen()
+    }
+}
+
+// 监听全屏状态变化
+const handleFullscreenChange = () => {
+    isFullscreen.value = !!document.fullscreenElement
+    
+    if (document.fullscreenElement) {
+        // 进入全屏时添加键盘监听
+        document.addEventListener('keydown', handleEscapeKey)
+    } else {
+        // 退出全屏时移除键盘监听
+        document.removeEventListener('keydown', handleEscapeKey)
+    }
+}
+
 // 格式化代码
 const formatCode = async () => {
     if (!inputCode.value.trim()) {
@@ -342,8 +404,12 @@ const formatCode = async () => {
 
     try {
         let formatted = ''
-        const indentSize = parseInt(formatConfig.value.indentSize)
-        const useTabs = formatConfig.value.indentType === 'tabs'
+        
+        // 解析缩进配置
+        const useTabs = formatConfig.value.indent === 'tabs'
+        const indentSize = useTabs ? 4 : parseInt(formatConfig.value.indent.split('-')[1] || '4')
+        
+        console.log('格式化配置:', { indentSize, useTabs, language: selectedLanguage.value })
 
         if (selectedLanguage.value === 'html') {
             try {
@@ -369,7 +435,7 @@ const formatCode = async () => {
                 formatted = await prettier.format(inputCode.value, {
                     parser: 'css',
                     plugins: [parserPostcss],
-                    tabWidth: indentSize,
+                    tabWidth: useTabs ? 4 : indentSize, // 制表符模式下使用固定宽度4
                     useTabs: useTabs,
                     semi: true,
                     singleQuote: false,
@@ -385,7 +451,7 @@ const formatCode = async () => {
                 formatted = await prettier.format(inputCode.value, {
                     parser: 'babel',
                     plugins: [parserBabel],
-                    tabWidth: indentSize,
+                    tabWidth: useTabs ? 4 : indentSize, // 制表符模式下使用固定宽度4
                     useTabs: useTabs,
                     semi: true,
                     singleQuote: true,
@@ -599,6 +665,34 @@ const validateCode = async () => {
 // 监听输入变化
 inputCode.value && updateStats()
 outputCode.value && updateOutputStats()
+
+// 监听缩进配置变化，自动重新格式化
+watch(formatConfig, (newConfig, oldConfig) => {
+    console.log('缩进配置变化:', {
+        old: oldConfig,
+        new: newConfig,
+        hasOutput: !!outputCode.value,
+        hasInput: !!inputCode.value.trim()
+    })
+    
+    // 如果有输出代码，自动重新格式化
+    if (outputCode.value && inputCode.value.trim()) {
+        console.log('开始重新格式化...')
+        formatCode()
+    }
+}, { deep: true })
+
+// 组件挂载后监听全屏状态变化
+onMounted(() => {
+    // 监听全屏状态变化
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+    document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    document.removeEventListener('keydown', handleEscapeKey)
+})
 </script>
 
 <style scoped>
@@ -770,7 +864,7 @@ outputCode.value && updateOutputStats()
 .code-output {
     width: 100%;
     height: 100%;
-    padding: 1rem 1rem 1rem 3rem;
+    padding: 1rem;
     background: transparent;
     border: none;
     color: var(--text-primary);
@@ -782,21 +876,9 @@ outputCode.value && updateOutputStats()
     tab-size: 4;
 }
 
-.line-numbers {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 2.5rem;
-    height: 100%;
-    background: var(--bg-tertiary);
-    border-right: 1px solid var(--border-color);
-    padding: 1rem 0.5rem;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: var(--text-secondary);
-    user-select: none;
-    overflow: hidden;
+/* 只有输入区域的 textarea */
+.code-input {
+    padding-left: 1rem;
 }
 
 .line-number {
@@ -804,6 +886,7 @@ outputCode.value && updateOutputStats()
     padding-right: 0.5rem;
     height: 1.3em;
 }
+
 
 .empty-output {
     height: 100%;
@@ -885,6 +968,18 @@ outputCode.value && updateOutputStats()
     border-radius: 0.25rem;
     color: var(--text-primary);
     font-size: 0.75rem;
+}
+
+.config-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-tertiary);
+}
+
+.config-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 .feature-description {
@@ -973,5 +1068,26 @@ outputCode.value && updateOutputStats()
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
+}
+
+/* 全屏模式样式 */
+.output-section:fullscreen {
+    background: var(--bg-primary);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.output-section:fullscreen .section-header {
+    display: none;
+}
+
+.output-section:fullscreen .code-editor {
+    flex: 1;
+    height: 100vh;
+}
+
+.output-section:fullscreen .section-footer {
+    display: none;
 }
 </style>
